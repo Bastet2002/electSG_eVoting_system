@@ -151,5 +151,8 @@ int main()
   cout << "Printing out test int to byte" << endl;
   int_to_scalar_byte(input_1, num);
   print_hex(input_1, crypto_core_ed25519_SCALARBYTES);
+
+  cout << "Hello, from docker" << endl;
+  cout << "Hello, from docker" << endl;
   return 0;
 }

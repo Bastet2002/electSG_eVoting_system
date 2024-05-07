@@ -4,10 +4,17 @@ services:
   web:
     build: .
     #command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-    volumes:
-      - .:/app
+    #volumes:
+    #  - .:/app
     ports:
       - "8000:8000"
+    develop:
+      #https://docs.docker.com/compose/file-watch/
+      watch:
+        - action: sync
+          # only watch the django changes
+          path: ./evoting
+          target: /app/evoting
 
   ring-ct:
     build:
