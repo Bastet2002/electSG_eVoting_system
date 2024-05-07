@@ -3,21 +3,45 @@ version: '3'
 services:
   web:
     build: .
-    #command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-    #volumes:
-    #  - .:/app
+    volumes:
+      - .:/app
+      # - .:/wait-for-mongodb.sh:/wait-for-mongodb.sh
+    entrypoint: [ "/app/wait-for-mongodb.sh" ]
+    command: [ "db", "python manage.py runserver 0.0.0.0:8000" ]
     ports:
       - "8000:8000"
-    develop:
-      #https://docs.docker.com/compose/file-watch/
-      watch:
-        - action: sync
-          # only watch the django changes
-          path: ./evoting
-          target: /app/evoting
+    depends_on:
+      - db
+    # develop:
+    #   #https://docs.docker.com/compose/file-watch/
+    #   watch:
+    #     - action: sync
+    #       # only watch the django changes
+    #       path: ./evoting
+    #       target: /app/evoting
+    environment:
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_PORT=27017
+      - DJANGO_DB_NAME=mydb
+      - DJANGO_DB_USER=admin
+      - DJANGO_DB_PASSWORD=password
+
+  db:
+    image: mongo:7
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
 
   ring-ct:
     build:
       context: ./ringct
-      # can expose port when we need
+      # can expose port when we need and run command 
 
+volumes:
+  # store mongo_data from db section in a persistent storage
+  mongo_data:
+    driver: local

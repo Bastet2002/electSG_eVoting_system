@@ -73,10 +73,18 @@ WSGI_APPLICATION = 'evoting.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
+import os
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'djongo',
+        'NAME': 'mydb',
+        'CLIENT': {
+            'host': 'db', 
+            'port': 27017,
+            'username': 'admin',
+            'password': 'password',
+            'authSource': 'admin'
+        },
     }
 }
 
