@@ -9,3 +9,8 @@ services:
     ports:
       - "8000:8000"
 
+  ring-ct:
+    build:
+      context: ./ringct
+      # can expose port when we need
+
