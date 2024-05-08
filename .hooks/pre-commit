@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Allowed branch name pattern
+BRANCH_PATTERN='^(feat|bugfix|chore)\/([0-9]{1,9})-[a-z0-9_-]+$'
+
+# Current branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+# Check if the branch name matches the pattern
+if ! echo "$BRANCH_NAME" | grep -qE "$BRANCH_PATTERN"; then
+  echo "Error: Branch name should follow this pattern <story_type>/<story_id>-<short_desc>"
+  echo "Example: feat/1-user-login-feature"
+  echo "Actual Regex: $BRANCH_PATTERN"
+  echo "Please rename your branch and try again."
+  exit 1
+fi

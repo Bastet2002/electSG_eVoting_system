@@ -1,0 +1,23 @@
+#!/bin/sh
+
+# Check if the GIT_SEQUENCE_EDITOR is set (indicating a rebase is in progress)
+if [ -n "$GIT_SEQUENCE_EDITOR" ]; then
+    exit 0 # Exit without doing anything during rebase
+fi
+
+# Allowed branch name pattern
+BRANCH_PATTERN='^(feat|bugfix|chore)\/([0-9]{1,9})-[a-z0-9_-]+$'
+
+# Current branch name
+BRANCH_NAME=$(git symbolic-ref --short HEAD)
+
+# If the branch name does not match the allowed pattern, do nothing to the commit message
+if ! echo "$BRANCH_NAME" | grep -qE "$BRANCH_PATTERN"; then
+  exit 0;
+fi
+
+# Extract the story id portion of the branch name
+STORY_ID=$(echo "$BRANCH_NAME" | sed -E "s/$BRANCH_PATTERN/\2/")
+
+# Prepend the number to the commit message
+sed -i.bak "1s/^/[$STORY_ID] /" "$1"

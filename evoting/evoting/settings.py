@@ -83,7 +83,7 @@ DATABASES = {
             'port': int(os.environ.get('DJANGO_DB_PORT')),
             'username': os.environ.get('DJANGO_DB_USER'),
             'password': os.environ.get('DJANGO_DB_PASSWORD'),
-            'authSource': 'admin'
+            'authSource': 'admin',
         },
     }
 }
