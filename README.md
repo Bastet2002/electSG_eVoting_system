@@ -32,6 +32,24 @@ https://about.gitlab.com/images/press/git-cheat-sheet.pdf
 Git tutorial for common workflow
 https://youtu.be/HVsySz-h9r4?si=puKT0BpfEKzx7keS
 
+Recommended workflow
+```bash
+git checkout main
+
+git pull
+
+git checkout -b <your branch name>
+
+git add -A
+
+git commit -m '<you comment>'
+
+git push # it would not push, you copy the command given to save time
+
+# it looks something like this 
+git push --set-upstream .....
+```
+
 ### To run server
 From root folder
 ```bash
