@@ -3,22 +3,49 @@
 
 
 ## Getting started
+### Setup SSH key
+https://docs.gitlab.com/ee/user/ssh.html
 
-To make it easy for you to get started with GitLab, here's a list of recommended next steps.
+### Install docker
+https://docs.docker.com/compose/install/
 
-Already a pro? Just edit this README.md and make it your own. Want to make it easy? [Use the template at the bottom](#editing-this-readme)!
-
-## Add your files
-
-- [ ] [Create](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#create-a-file) or [upload](https://docs.gitlab.com/ee/user/project/repository/web_editor.html#upload-a-file) files
-- [ ] [Add files using the command line](https://docs.gitlab.com/ee/gitlab-basics/add-file.html#add-a-file-using-the-command-line) or push an existing Git repository with the following command:
-
+### Clone the repo with SSH
+```bash
+git clone git@gitlab.com:cookAndDrum/fyp-24-s2-19.git
+cd fyp-24-s2-19
 ```
-cd existing_repo
-git remote add origin https://gitlab.com/cookAndDrum/fyp-24-s2-19.git
-git branch -M main
-git push -uf origin main
+
+### Enable git hooks for branch name formatting
+`git config core.hooksPath .hooks`
+
+### Create new branch for each task
+1. git checkout -b feat/story-id-branch-name
+    e.g. `git checkout -b feat/1-voter-login`
+
+2. git switch -c feat/story-id-branch-name
+    e.g. `git switch -c feat/1-voter-login`
+
+### Git know how
+Git cheat sheet
+https://about.gitlab.com/images/press/git-cheat-sheet.pdf
+
+Git tutorial for common workflow
+https://youtu.be/HVsySz-h9r4?si=puKT0BpfEKzx7keS
+
+### To run server
+From root folder
+```bash
+cd evoting
+docker-compose up --build
 ```
+
+### To stop server
+```bash
+docker-compose down
+```
+
+### Issue might occur
+- Mongodb on startup doesn't contain any account (ie admin). So django might present could not connect to Mongodb however, both container instances are alive (django and mongo). I would add a script to insert the account later.
 
 ## Integrate with your tools
 
