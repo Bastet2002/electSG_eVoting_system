@@ -77,12 +77,12 @@ import os
 DATABASES = {
     'default': {
         'ENGINE': 'djongo',
-        'NAME': 'mydb',
+        'NAME': os.environ.get('DJANGO_DB_NAME'),
         'CLIENT': {
-            'host': 'db', 
-            'port': 27017,
-            'username': 'admin',
-            'password': 'password',
+            'host': os.environ.get('DJANGO_DB_HOST'), 
+            'port': int(os.environ.get('DJANGO_DB_PORT')),
+            'username': os.environ.get('DJANGO_DB_USER'),
+            'password': os.environ.get('DJANGO_DB_PASSWORD'),
             'authSource': 'admin'
         },
     }

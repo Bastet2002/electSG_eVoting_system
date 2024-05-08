@@ -5,7 +5,6 @@ services:
     build: .
     volumes:
       - .:/app
-      # - .:/wait-for-mongodb.sh:/wait-for-mongodb.sh
     entrypoint: [ "/app/wait-for-mongodb.sh" ]
     command: [ "db", "python manage.py runserver 0.0.0.0:8000" ]
     ports:
