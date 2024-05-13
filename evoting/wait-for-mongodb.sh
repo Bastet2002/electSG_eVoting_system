@@ -14,4 +14,6 @@ until mongosh --host "$host" --username "$DJANGO_DB_USER" --password "$DJANGO_DB
 done
 
 >&2 echo "MongoDB is up - executing command"
+python manage.py makemigrations
+python manage.py migrate
 exec $cmd
