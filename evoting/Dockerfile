@@ -9,7 +9,7 @@ ENV DJANGO_SETTINGS_MODULE evoting.settings
 WORKDIR /app
 
 # Install MongoDB Shell (mongosh)
-RUN apt-get update && apt-get install -y wget gnupg postgresql-client
+RUN apt-get update && apt-get install -y postgresql-client libpq-dev
 
 # Install dependencies
 COPY requirements.txt /app/
