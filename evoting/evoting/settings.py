@@ -76,15 +76,12 @@ WSGI_APPLICATION = 'evoting.wsgi.application'
 import os
 DATABASES = {
     'default': {
-        'ENGINE': 'djongo',
+        'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get('DJANGO_DB_NAME'),
-        'CLIENT': {
-            'host': os.environ.get('DJANGO_DB_HOST'), 
-            'port': int(os.environ.get('DJANGO_DB_PORT')),
-            'username': os.environ.get('DJANGO_DB_USER'),
-            'password': os.environ.get('DJANGO_DB_PASSWORD'),
-            'authSource': 'admin',
-        },
+        'host': os.environ.get('DJANGO_DB_HOST'), 
+        'port': int(os.environ.get('DJANGO_DB_PORT')),
+        'username': os.environ.get('DJANGO_DB_USER'),
+        'password': os.environ.get('DJANGO_DB_PASSWORD'),
     }
 }
 

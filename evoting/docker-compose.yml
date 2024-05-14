@@ -5,7 +5,7 @@ services:
     build: .
     volumes:
       - .:/app
-    entrypoint: [ "/app/wait-for-mongodb.sh" ]
+    entrypoint: [ "/app/wait-for-postgres.sh" ]
     command: [ "db", "python manage.py runserver 0.0.0.0:8000" ]
     ports:
       - "8000:8000"
@@ -20,27 +20,25 @@ services:
     #       target: /app/evoting
     environment:
       - DJANGO_DB_HOST=db
-      - DJANGO_DB_PORT=27017
+      - DJANGO_DB_PORT=5432
       - DJANGO_DB_NAME=mydb
       - DJANGO_DB_USER=admin
       - DJANGO_DB_PASSWORD=password
+    links:
+      - db
 
   db:
-    image: mongo:7
+    image: postgres:15
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: password
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: mydb
     ports:
-      - "27017:27017"
+      - "5432:5432"
     volumes:
-      - mongo_data:/data/db
+      - pgdata:/var/lib/postgresql/data
 
   ring-ct:
     build:
       context: ./ringct
       # can expose port when we need and run command 
-
-volumes:
-  # store mongo_data from db section in a persistent storage
-  mongo_data:
-    driver: local
