@@ -1,0 +1,20 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+from django import forms
+
+{% block title %}Create New User{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'userAccount/createUserAcc.css' %}">
+
+    <h1 style="float: right; margin-right: 47%;">Create New User Account</h1>
+    <form method="submit" action="/create/" class="create-new-user-form" >
+        <div style ="float: right; margin-right: 65%;">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit", name="create_new">Create New Account</button>
+        </div>
+    </form>"
+{% endblock %}
+

@@ -1,0 +1,32 @@
+<!-- templates/viewUserAcc.html -->
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}View User Accounts{% endblock %}
+
+{% block content %}
+    <h1 style="text-align: center;">User Accounts</h1>
+    <link rel="stylesheet" href="{% static 'userAccount/viewUserAcc.css' %}">
+    <table>
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Date of Birth</th>
+                <th>ID</th>
+                <th>District</th>
+                <th>Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.date_of_birth }}</td>
+                <td>{{ user.user_id }}</td>
+                <td>{{ user.district }}</td>
+                <td>{{ user.role }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endblock %}
