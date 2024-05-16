@@ -229,7 +229,7 @@ bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &
     return false;
 }
 
-void public_network_stealth_address_communication(vector<StealthAddress> address_list, const vector<User> &users)
+void public_network_stealth_address_communication(vector<StealthAddress> &address_list, const vector<User> &users)
 {
     for (int i = 0; i < users.size(); i++)
     {
@@ -274,7 +274,7 @@ int secret_index_gen(size_t n)
 // in implementation, only the signerap has the secret key
 // the rest of the members only have the public key for the Stealthaddress
 // m is random, default to 32 BYTE
-void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy)
+void blsag_simple_gen(blsagSig &blsagSig, const BYTE *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy)
 {
     cout << "======================" << endl;
     cout << "BLSAG simple gen" << endl;
@@ -288,7 +288,7 @@ void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t s
     cout << "All members: " << all_members.size() << endl;
 
     // 1. compute key image
-    // unsigned char key_image[crypto_core_ed25519_BYTES];
+    // BYTE key_image[crypto_core_ed25519_BYTES];
     BYTE Hp_stealth_address[crypto_core_ed25519_BYTES];
     hash_to_point(Hp_stealth_address, signerSA.pk, crypto_core_ed25519_BYTES);
     crypto_scalarmult_ed25519_noclamp(blsagSig.key_image, signerSA.sk, Hp_stealth_address);
@@ -352,7 +352,7 @@ void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t s
     int n = all_members.size();
     int challenge_index = secret_index + 1 == n ? 0 : secret_index + 1;
     int current_index = secret_index;
-    vector<array<unsigned char, crypto_core_ed25519_SCALARBYTES>>
+    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>>
         c(n);
 
     if (secret_index >= n)
@@ -379,9 +379,9 @@ void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t s
             cerr << "Error: current index exceed n" << endl;
 
         // compute subsequent challenge
-        unsigned char ri_G_ci_Ki[crypto_core_ed25519_BYTES];
-        unsigned char Hp_Ki[crypto_core_ed25519_BYTES];
-        unsigned char ri_Hp_Ki_ci_Keyimage[crypto_core_ed25519_BYTES];
+        BYTE ri_G_ci_Ki[crypto_core_ed25519_BYTES];
+        BYTE Hp_Ki[crypto_core_ed25519_BYTES];
+        BYTE ri_Hp_Ki_ci_Keyimage[crypto_core_ed25519_BYTES];
 
         // 1. compute ri_G + ci_Ki
         add_key(ri_G_ci_Ki, r[current_index].data(), c[current_index].data(), all_members[current_index].pk);
@@ -392,7 +392,7 @@ void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t s
 
         // 3. concatenate and hash to scalar
         size_t total_length = 2 * crypto_core_ed25519_BYTES + crypto_core_ed25519_BYTES; // TODO: last one is the rand m length
-        vector<unsigned char> to_hash(total_length);
+        vector<BYTE> to_hash(total_length);
         copy(m, m + crypto_core_ed25519_BYTES, to_hash.begin());
         copy(ri_G_ci_Ki, ri_G_ci_Ki + crypto_core_ed25519_BYTES, to_hash.begin() + crypto_core_ed25519_BYTES);
         copy(ri_Hp_Ki_ci_Keyimage, ri_Hp_Ki_ci_Keyimage + crypto_core_ed25519_BYTES, to_hash.begin() + 2 * crypto_core_ed25519_BYTES);
@@ -413,7 +413,7 @@ void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t s
     cout << endl;
 
     // 5. define real response r_secret_index = alpha - c_secret_index * sk_secret_index mod l
-    unsigned char c_stealth_address_secretkey[crypto_core_ed25519_SCALARBYTES];
+    BYTE c_stealth_address_secretkey[crypto_core_ed25519_SCALARBYTES];
     crypto_core_ed25519_scalar_mul(c_stealth_address_secretkey, c[secret_index].data(), all_members[secret_index].sk);
     crypto_core_ed25519_scalar_sub(r[secret_index].data(), alpha, c_stealth_address_secretkey);
 
@@ -447,7 +447,7 @@ void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t s
     }
 }
 
-bool blsag_simple_verify(const blsagSig &blsagSig, const unsigned char *m)
+bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m)
 {
     cout << "BLSAG simple verify" << endl;
 
@@ -473,9 +473,9 @@ bool blsag_simple_verify(const blsagSig &blsagSig, const unsigned char *m)
         challenge_index = challenge_index == n ? 0 : challenge_index;
 
         // compute every challenge
-        unsigned char ri_G_ci_Ki[crypto_core_ed25519_BYTES];
-        unsigned char Hp_Ki[crypto_core_ed25519_BYTES];
-        unsigned char ri_Hp_Ki_ci_Keyimage[crypto_core_ed25519_BYTES];
+        BYTE ri_G_ci_Ki[crypto_core_ed25519_BYTES];
+        BYTE Hp_Ki[crypto_core_ed25519_BYTES];
+        BYTE ri_Hp_Ki_ci_Keyimage[crypto_core_ed25519_BYTES];
 
         // 1. compute ri_G + ci_Ki
         add_key(ri_G_ci_Ki, blsagSig.r[current_index].data(), c[current_index].data(), blsagSig.members[current_index].pk);
@@ -486,7 +486,7 @@ bool blsag_simple_verify(const blsagSig &blsagSig, const unsigned char *m)
 
         // 3. concatenate and hash to scalar
         size_t total_length = 2 * crypto_core_ed25519_BYTES + crypto_core_ed25519_BYTES; // TODO: last one is the rand m length
-        vector<unsigned char> to_hash(total_length);
+        vector<BYTE> to_hash(total_length);
         copy(m, m + crypto_core_ed25519_BYTES, to_hash.begin());
         copy(ri_G_ci_Ki, ri_G_ci_Ki + crypto_core_ed25519_BYTES, to_hash.begin() + crypto_core_ed25519_BYTES);
         copy(ri_Hp_Ki_ci_Keyimage, ri_Hp_Ki_ci_Keyimage + crypto_core_ed25519_BYTES, to_hash.begin() + 2 * crypto_core_ed25519_BYTES);
@@ -494,7 +494,7 @@ bool blsag_simple_verify(const blsagSig &blsagSig, const unsigned char *m)
         // on the last step compare if provided c_1 is equal to computed c_1
         if (loop_counter == 1)
         {
-            unsigned char computed_c1[crypto_core_ed25519_SCALARBYTES];
+            BYTE computed_c1[crypto_core_ed25519_SCALARBYTES];
             hash_to_scalar(computed_c1, to_hash.data(), total_length);
             cout << "Computed c_1: " << endl;
             print_hex(computed_c1, crypto_core_ed25519_SCALARBYTES);
@@ -529,37 +529,6 @@ int main()
         cout << "Sodium Init failed" << endl;
         return 1;
     }
-
-    // User user1;
-
-    // BYTE scalar_skS[crypto_core_ed25519_SCALARBYTES];
-    // BYTE seed_skS[crypto_core_ed25519_BYTES];
-    // // need to input the seed from the user instead of using the skS(seed + pk)
-    // // will result in buffer overflow
-    // memcpy(seed_skS, user1.skS, crypto_core_ed25519_BYTES);
-    // extract_scalar_from_sk(scalar_skS, seed_skS);
-    // BYTE computed_pkS[crypto_core_ed25519_BYTES];
-    // crypto_scalarmult_ed25519_base(computed_pkS, scalar_skS);
-    // cout << "User1 pkS: " << endl;
-    // print_hex(user1.pkS, crypto_core_ed25519_BYTES);
-    // cout << "User1 computed pkS: " << endl;
-    // print_hex(computed_pkS, crypto_core_ed25519_BYTES);
-    // compare_BYTE(user1.pkS, computed_pkS, crypto_core_ed25519_BYTES);
-
-    // // test compute_stealth_address
-    // User CA, bob, charlie;
-    // StealthAddress bob_stealth_address, charlie_stealth_address;
-    // compute_stealth_address(bob_stealth_address, bob);
-
-    // cout << "bob test stealth address" << endl;
-    // receiver_test_stealth_address(bob_stealth_address, bob);
-
-    // // test with many user
-    // vector<User> users(11);
-    // vector<StealthAddress> address_list;
-
-    // CA_generate_address(address_list, users);
-    // public_network_stealth_address_communication(address_list, users);
 
     // test with blsag
     for (int i = 0; i < 1000; i++)

@@ -111,7 +111,7 @@ void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b, const BYTE
 void compute_stealth_address(StealthAddress &stealth_address, const User &receiver);
 void CA_generate_address(vector<StealthAddress> &address_list, const vector<User> &users);
 bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &receiver);
-void public_network_stealth_address_communication(vector<StealthAddress> address_list, const vector<User> &users);
+void public_network_stealth_address_communication(vector<StealthAddress> &address_list, const vector<User> &users);
 void mix_address(vector<StealthAddress> &vec);
 int secret_index_gen(size_t n);
 void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy);
