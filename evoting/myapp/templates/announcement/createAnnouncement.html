@@ -1,0 +1,18 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+from django import forms
+
+{% block title %}Create Announcement{% endblock %}
+
+{% block content %}
+    <h1 style="float: right; margin-right: 57%;">Create Announcement</h1>
+    <link rel="stylesheet" href="{% static 'announcement/createAnnouncement.css' %}">
+    <form method="submit" action="/create_announcement/" class = "create-announcement-form">
+        <div style ="float: right; margin-right: 55%;">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit", name="add-district">Publish</button>
+        <button type="submit", name="cancel">Cancel</button>
+        </div>
+    </form>"
+{% endblock %}

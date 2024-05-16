@@ -1,0 +1,71 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Home Page{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'adminDashboard/style.css' %}">  
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+    </div>
+    <nav>
+        <ul class="navigation">
+            <li><a href="{% url 'base' %}">Home</a></li>
+            <li><a href="#">About us</a></li>
+            <li><a href="{% url 'login' %}">Log out</a></li>
+        </ul>
+    </nav>
+    </div>
+    <div class="sidenav">
+        {% block sidebar %}
+        <button class="dropdown-btn">User Account
+          <i class="fa fa-caret-down"></i>
+        </button>
+        <div class="dropdown-container">
+          <a href="/create">Create User Account</a>
+          <a href="#">View User Account</a>
+        </div>
+        <button class="dropdown-btn">User Profile
+            <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="dropdown-container">
+            <a href="/create_profile">Create User Profile</a>
+            <a href="#">View User Profile</a>
+          </div>
+          <button class="dropdown-btn">District
+            <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="dropdown-container">
+            <a href="/add_district">Create District</a>
+            <a href="#">View District</a>
+          </div>
+          <button class="dropdown-btn">Election Status
+            <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="dropdown-container">
+            <a href="#">Change Status</a>
+          </div>
+          <button class="dropdown-btn">Announcement
+            <i class="fa fa-caret-down"></i>
+          </button>
+          <div class="dropdown-container">
+            <a href="/create_announcement">Create Announcement</a>
+            <a href="#">View Announcement</a>
+          </div>
+          {% endblock %}
+      </div>
+      <script src="{% static 'adminDashboard/script.js' %}"></script>
+
+      {% block content %}
+      <div class="content">
+        <h1 style="float: right; margin-right: 67%;">Welcome Admin</h1>
+        <p style="float: right; margin-right: 70%;">This is gonna be default page.</p>
+      </div>
+      {% endblock %}
+</body>
+</html>
+
+
+

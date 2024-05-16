@@ -1,0 +1,18 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+from django import forms
+
+{% block title %}Add District{% endblock %}
+
+{% block content %}
+    <h1 style="float: right; margin-right: 57%;">Add District</h1>
+
+    <link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
+    <form method="submit" action="/add-district/" class ="add-district-form">
+        <div style ="float: right; margin-right: 55%;">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit", name="add-district">Add District</button>
+        </div>
+    </form>"
+{% endblock %}
