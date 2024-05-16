@@ -14,6 +14,6 @@ WORKDIR /app
 COPY . /app
 
 # change to makefile or cmake later
-RUN g++ -o myapp commitment.cpp -lsodium 
+RUN g++ -o myapp lsag.cpp -lsodium 
 
 CMD ["./myapp"]
