@@ -13,4 +13,7 @@ until PGPASSWORD=$DJANGO_DB_PASSWORD psql -h "$host" -U "$DJANGO_DB_USER" -d "$D
 done
 
 >&2 echo "Postgres is up - executing command"
+python manage.py makemigrations
+python manage.py migrate
+
 exec $cmd

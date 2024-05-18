@@ -1,0 +1,13 @@
+{% extends 'adminDashboard/base.html' %}
+{% block content %}
+<style>
+    form {
+        text-align: center;
+    }
+</style>
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save changes</button>
+</form>
+{% endblock %}

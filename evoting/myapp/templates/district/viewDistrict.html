@@ -1,0 +1,56 @@
+{% extends 'adminDashboard/base.html' %}
+
+{% block title %}View Districts{% endblock %}
+
+{% block content %}
+<style>
+    body, html {
+        height: 100%;
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+    }
+    .container {
+        position: relative;
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100%;
+    }
+    table {
+        width: 50%; /* Adjust table width as needed */
+        margin-top: 20px;
+        border-collapse: collapse;
+    }
+    th, td {
+        border: 1px solid #dddddd;
+        text-align: left;
+        padding: 8px;
+    }
+    th {
+        background-color: #f2f2f2;
+    }
+</style>
+<div class="container">
+    <h1>Districts</h1>
+    <table>
+        <tr>
+            <th>Name</th>
+            <th>Actions</th>
+        </tr>
+        {% for district in district %}
+        <tr>
+            <td>{{ district.name }}</td>
+            <td>
+                <a href="{% url 'edit_district' district.id %}">Edit</a> |
+                <a href="{% url 'delete_district' district.id %}">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="2">No districts found.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}
