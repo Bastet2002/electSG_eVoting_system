@@ -9,7 +9,7 @@ from django import forms
     <link rel="stylesheet" href="{% static 'userAccount/createUserAcc.css' %}">
 
     <h1 style="float: right; margin-right: 47%;">Create New User Account</h1>
-    <form method="submit" action="/create/" class="create-new-user-form" >
+    <form method="post" action="/create/" class="create-new-user-form" >
         <div style ="float: right; margin-right: 65%;">
         {% csrf_token %}
         {{form.as_p}}

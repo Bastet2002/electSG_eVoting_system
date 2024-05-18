@@ -15,6 +15,7 @@
                 <th>ID</th>
                 <th>District</th>
                 <th>Role</th>
+                <th>Actions</th>
             </tr>
         </thead>
         <tbody>
@@ -25,6 +26,10 @@
                 <td>{{ user.user_id }}</td>
                 <td>{{ user.district }}</td>
                 <td>{{ user.role }}</td>
+                <td>
+                    <a href="{% url 'edit_user' user.id %}" class="btn btn-primary">Edit</a>
+                    <a href="{% url 'delete_user' user.id %}" class="btn btn-danger">Delete</a>
+                </td>
             </tr>
             {% endfor %}
         </tbody>
