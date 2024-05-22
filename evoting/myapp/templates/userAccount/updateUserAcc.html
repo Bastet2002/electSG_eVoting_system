@@ -1,0 +1,17 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}Create New User{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'userAccount/updateUserAcc.css' %}">
+
+    <div class="main">
+        <h1 style="text-align: center;">Update User Account</h1>
+        <form method="post" class="create-new-user-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" name="create_new">Save Changes</button>
+        </form>
+    </div>
+{% endblock %}

@@ -1,18 +1,34 @@
 {% extends 'adminDashboard/base.html' %}
 {% load static %}
-from django import forms
 
 {% block title %}Add District{% endblock %}
 
 {% block content %}
-    <h1 style="float: right; margin-right: 57%;">Add District</h1>
-
     <link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
-    <form method="post" action="{% url 'add_district' %}" class ="add-district-form">
-        <div style ="float: right; margin-right: 55%;">
-        {% csrf_token %}
-        {{form.as_p}}
-        <button type="submit", name="add-district">Add District</button>
+    
+    <div class="main">
+        <h1 style="text-align: center;">Add District</h1>
+        <form method="post" action="{% url 'add_district' %}" class="add-district-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <p>Enter multiple district names separated by semicolons (;)</p>
+            <button type="submit" name="add-district">Add District</button>
+        </form>
+    </div>
+
+    {% if success %}
+        <div id="popupAlert" class="popup-alert show">
+            District(s) successfully added!
         </div>
-    </form>"
+        <script>
+            // Show the alert
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.classList.add('show');
+            
+            // Hide the alert after 5 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 3000);
+        </script>
+    {% endif %}
 {% endblock %}

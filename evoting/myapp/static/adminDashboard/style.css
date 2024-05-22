@@ -11,6 +11,10 @@ body {
   padding: 1rem 2rem;
   background-color: white;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 2;
 }
 
 .logo-container img {
@@ -25,7 +29,7 @@ body {
 }
 
 .navigation li {
-  margin-right: 1rem;
+  margin-right: 3rem;
 }
 
 .navigation a {
@@ -52,12 +56,12 @@ body {
   width: 220px;
   position: fixed;
   z-index: 1;
-  top: 0;
   left: 0;
   background-color: #d35959;
   overflow-x: hidden;
   padding-top: 20px;
   z-index: 1;
+  top: 0;
 }
 
 .sidenav h1 {
@@ -97,23 +101,8 @@ body {
 }
 
 /* Main content styles */
-.main {
-  margin-left: 240px; /* Adjusted to accommodate wider sidebar */
+.content {
+  margin-left: 240px; /* Adjusted to accommodate the sidebar */
   padding: 20px;
-}
-
-/* Content container */
-.content-container {
-  background-color: #f9f9f9;
-  padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-/* Content heading */
-.content-heading {
-  font-size: 24px;
-  font-weight: bold;
-  margin-bottom: 20px;
-}
-
+  padding-top: 80px; /* Ensure there's space for the fixed header */
+  }
