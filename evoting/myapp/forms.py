@@ -34,7 +34,7 @@ class createProfile(forms.Form):
 class addDistrict(forms.Form):
     district_names = forms.CharField(
         widget=forms.Textarea(attrs={'placeholder': 'Enter district names separated by semicolons (;)'}),
-        help_text="Enter multiple district names separated by semicolons (;)"
+        #help_text="Enter multiple district names separated by semicolons (;)"
     )
 
 class editDistrict(forms.ModelForm):

@@ -1,0 +1,37 @@
+/* static/css/electionPhases.css */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.main {
+    margin-left: 240px; /* Adjusted to accommodate the sidebar */
+    padding: 20px;
+    padding-top: 80px; /* Ensure there's space for the fixed header */
+}
+.container {
+    position: relative;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+h1 {
+    margin-bottom: 20px;
+}
+table {
+    width: 50%; /* Adjust table width as needed */
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+th {
+    background-color: #f2f2f2;
+}
+.center-table {
+    margin: 0 auto; /* Center the table horizontally */
+}

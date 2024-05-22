@@ -1,18 +1,17 @@
 {% extends 'adminDashboard/base.html' %}
 {% load static %}
-from django import forms
 
 {% block title %}Create User Profile{% endblock %}
 
 {% block content %}
     <link rel="stylesheet" href="{% static 'userProfile/createUserProfile.css' %}">
     
-    <h1 style="float: right; margin-right: 57%;">Create User Profile</h1>
-    <form method="submit" action="/create_profile/" class = "create-profile-form">
-        <div style ="float: right; margin-right: 50%;">
-        {% csrf_token %}
-        {{form.as_p}}
-        <button type="submit", name="create_profile">Create</button>
-        </div>
-    </form>"
+    <div class="main">
+        <h1 style="text-align: center;">Create User Profile</h1>
+        <form method="post" action="/create_profile/" class="create-profile-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" name="create_profile">Create</button>
+        </form>
+    </div>
 {% endblock %}

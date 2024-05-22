@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
 from .forms import createNewUser
 from .forms import addDistrict
 from .forms import editDistrict
@@ -39,12 +40,15 @@ def create(request):
         if form.is_valid():
             new_user = form.save(commit=False)
             new_user.save()
-            return redirect('view_user_accounts')
+            return render(request, "userAccount/createUserAcc.html", {"form": createNewUser(), "success": True})
+            #return redirect('create')
         else:
             print(form.errors)  #using this to debug
+            return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
     else:
         form = createNewUser()
-    return render(request, "userAccount/createUserAcc.html", {"form": form})
+    #return render(request, "userAccount/createUserAcc.html", {"form": form})
+    return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
 
 def view_user_accounts(request):
     users = UserAccount.objects.all()
@@ -59,14 +63,14 @@ def edit_user(request, user_id):
             return redirect('view_user_accounts')
     else:
         form = createNewUser(instance=user)
-    return render(request, 'userAccount/editUserAcc.html',{'form': form})
+    return render(request, 'userAccount/updateUserAcc.html',{'form': form})
 
 def delete_user(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
     if request.method == 'POST':
         user.delete()
         return redirect('view_user_accounts')
-    return render(request, 'userAccount/deleteUserAcc.html',{'user': user})
+    return HttpResponse(status=405)
 
 #----------------------------------------------------------------------------------------------------------
 #---------------------------------------Election phase views------------------------------------------------
@@ -84,6 +88,7 @@ def list_election_phases(request):
 #----------------------------------------------------------------------------------------------------------
 #---------------------------------------District views------------------------------------------------
 def add_district(request):
+    success = False
     if request.method == 'POST':
         form = addDistrict(request.POST)
         if form.is_valid():
@@ -93,11 +98,12 @@ def add_district(request):
             for name in district_list:
                 District.objects.get_or_create(name=name)
 
-            return redirect('view_district')
+            success = True
+            return render(request, 'district/addDistrict.html', {'form': addDistrict(), "success": True})
     else:
         form = addDistrict()
     
-    return render(request, 'district/addDistrict.html', {'form': form})
+    return render(request, 'district/addDistrict.html', {'form': form, "success" : False})
 
 def view_district(request):
     district = District.objects.all()

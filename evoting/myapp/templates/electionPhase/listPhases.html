@@ -1,54 +1,29 @@
 {% extends 'adminDashboard/base.html' %}
-
+{% load static %}
 {% block content %}
-<style>
-    body, html {
-        height: 100%;
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-    }
-    .container {
-        position: relative;
-        text-align: center;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100%;
-    }
-    table {
-        width: 50%; /* Adjust table width as needed */
-        margin-top: 20px;
-        border-collapse: collapse;
-         padding-left: 50px;
-    }
-    th, td {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }
-    th {
-        background-color: #f2f2f2;
-    }
-</style>
-<h1>Election Phases</h1>
-<div class="container">
-    <table class="center-table" >
-        <tr>
-            <th>Phase</th>
-            <th>Status</th>
-            <th>Action</th>
-        </tr>
-        {% for phase in phases %}
-        <tr>
-            <td>{{ phase.name }}</td>
-            <td>{{ phase.is_active|yesno:"Active,Inactive" }}</td>
-            <td>
-                {% if not phase.is_active %}
-                <a href="{% url 'activate_election_phase' phase.id %}">Activate</a>
-                {% endif %}
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+<link rel="stylesheet" href="{% static 'electionPhase/listPhases.css' %}">
+
+<div class="main">
+    <h1 style="text-align: center;">Election Phases</h1>
+    <div class="container">
+        <table class="center-table">
+            <tr>
+                <th>Phase</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            {% for phase in phases %}
+            <tr>
+                <td>{{ phase.name }}</td>
+                <td>{{ phase.is_active|yesno:"Active,Inactive" }}</td>
+                <td>
+                    {% if not phase.is_active %}
+                    <a href="{% url 'activate_election_phase' phase.id %}">Activate</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
 </div>
 {% endblock %}
