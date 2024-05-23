@@ -9,6 +9,8 @@
 #include <iostream>
 #include <iomanip>
 #include <array>
+#include <sstream>
+#include <bitset>
 
 using namespace std;
 typedef unsigned char BYTE;
@@ -108,7 +110,7 @@ void hash_to_scalar(BYTE *scalar, const BYTE *key, const size_t key_size);
 void hash_to_point(BYTE *point, const BYTE *BYTE, const size_t key_size);
 void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b, const BYTE *H);
 void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b, const BYTE *H);
-void compute_stealth_address(StealthAddress &stealth_address, const User &receiver);
+void compute_stealth_address(StealthAddress &stealth_address, const User &receiver, BYTE *r);
 void CA_generate_address(vector<StealthAddress> &address_list, const vector<User> &users);
 bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &receiver);
 void public_network_stealth_address_communication(vector<StealthAddress> &address_list, const vector<User> &users);
@@ -116,5 +118,28 @@ void mix_address(vector<StealthAddress> &vec);
 int secret_index_gen(size_t n);
 void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy);
 bool blsag_simple_verify(const blsagSig &blsagSig, const unsigned char *m);
+
+
+void valueToScalar(int value, BYTE *scalar);
+void computeMask(BYTE* yt, const BYTE *r, const BYTE *pkv, size_t index);
+void generatePseudoBfs(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
+bool compareBlindingFactors(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>>& pseudoOutBfs, const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>>& outputCommitmentBfs);
+void generateC1C2(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>>& blindingFactors,
+                  const bitset<8> &bits,
+                  vector<array<BYTE, crypto_core_ed25519_BYTES>>& C1,
+                  vector<array<BYTE, crypto_core_ed25519_BYTES>>& C2);
+void generateBlindingFactors(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &blindingFactors, BYTE *outputCommitmentBf);
+void generate_Borromean(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &x,
+                        const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
+                        const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C2,
+                        const bitset<8> &indices,
+                        BYTE *bbee,
+                        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs0,
+                        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs1);
+bool checkBorromean(const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
+                    const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C2,
+                    const BYTE *bbee,
+                    const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs0,
+                    const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs1); 
 
 #endif
