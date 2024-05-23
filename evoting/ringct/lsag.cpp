@@ -77,7 +77,7 @@ void extract_scalar_from_sk(BYTE *scalar, const BYTE *seed)
     scalar[31] |= 64;
 }
 
-// aGbH, where a and b are scalar, and G is the base point and B is the point
+// aGbH, where a and b are scalar, and G is the base point and H is the point
 void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b,
              const BYTE *H)
 {
@@ -96,7 +96,7 @@ void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b,
         cout << "point addition aG + bH fail due to invalid points" << endl;
 }
 
-// aKbH, where a and b are scalar, and K and B are the points
+// aKbH, where a and b are scalar, and K and H are the points
 void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b,
              const BYTE *H)
 {
@@ -119,11 +119,11 @@ void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b,
 // TODO do i need another one for normal voter
 // input: user with public key (the private key is present here but is no harm as long CA is not compromised)
 // output: stealth_address (one time public key)  and rG (transaction public key)
-void compute_stealth_address(StealthAddress &stealth_address, const User &receiver)
+void compute_stealth_address(StealthAddress &stealth_address, const User &receiver, BYTE *r)
 {
     cout << "======================" << endl;
     cout << "Inside compute_stealth_address" << endl;
-    BYTE r[32];
+    // BYTE r[32];
     crypto_core_ed25519_scalar_random(r);
     cout << "r " << endl;
     print_hex(r, crypto_core_ed25519_SCALARBYTES);
@@ -170,10 +170,19 @@ void compute_stealth_address(StealthAddress &stealth_address, const User &receiv
 // as people could conclude the address belongs to the same person
 void CA_generate_address(vector<StealthAddress> &address_list, const vector<User> &users)
 {
-    for (const User &user : users)
+    // for (const User &user : users)
+    // {
+    //     StealthAddress address;
+    //     compute_stealth_address(address, user);
+    //     address_list.push_back(address);
+    // }
+
+    // Modify to pass r
+    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> r(users.size());
+    for (int i = 0; i < users.size(); i++)
     {
         StealthAddress address;
-        compute_stealth_address(address, user);
+        compute_stealth_address(address, users[i], r[i].data());
         address_list.push_back(address);
     }
 }
@@ -291,7 +300,9 @@ void blsag_simple_gen(blsagSig &blsagSig, const BYTE *m, const size_t secret_ind
     // BYTE key_image[crypto_core_ed25519_BYTES];
     BYTE Hp_stealth_address[crypto_core_ed25519_BYTES];
     hash_to_point(Hp_stealth_address, signerSA.pk, crypto_core_ed25519_BYTES);
-    crypto_scalarmult_ed25519_noclamp(blsagSig.key_image, signerSA.sk, Hp_stealth_address);
+    if (crypto_scalarmult_ed25519_noclamp(blsagSig.key_image, signerSA.sk, Hp_stealth_address) != 0) {
+        throw std::runtime_error("Failed to compute key image");    
+    }
 
     cout << "Compute Key image: " << endl;
     print_hex(blsagSig.key_image, crypto_core_ed25519_BYTES);
@@ -335,7 +346,9 @@ void blsag_simple_gen(blsagSig &blsagSig, const BYTE *m, const size_t secret_ind
     crypto_scalarmult_ed25519_base_noclamp(alpha_G, alpha);
     // use the secret index stealth address
     hash_to_point(Hp_stealth_address, all_members[secret_index].pk, crypto_core_ed25519_BYTES);
-    crypto_scalarmult_ed25519_noclamp(alpha_Hp_stealth_address, alpha, Hp_stealth_address);
+    if (crypto_scalarmult_ed25519_noclamp(alpha_Hp_stealth_address, alpha, Hp_stealth_address) != 0) {
+        throw std::runtime_error("Failed to compute alpha_Hp_stealth_address");
+    }
 
     size_t total_length = 2 * crypto_core_ed25519_BYTES + crypto_core_ed25519_BYTES; // TODO: last one is the rand m length
     vector<BYTE> to_hash(total_length);
@@ -531,7 +544,7 @@ int main()
     }
 
     // test with blsag
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 1; i++)
     {
         vector<User> users_blsag(10);
         vector<StealthAddress> blsagSA; // decoy
@@ -540,7 +553,8 @@ int main()
 
         User signer;
         StealthAddress signerSA;
-        compute_stealth_address(signerSA, signer);
+        BYTE r[crypto_core_ed25519_SCALARBYTES];
+        compute_stealth_address(signerSA, signer, r);
         receiver_test_stealth_address(signerSA, signer);
 
         blsagSig blsagSig;
@@ -554,7 +568,145 @@ int main()
             cout << "Verification fail" << endl;
             exit(1);
         }
-        cout << "Verification success on " << i + 1 << endl;
+        cout << "Verification success on " << i + 1 << endl; 
+    }
+
+    //test
+    // Define the number of pseudo outputs and output commitments
+    size_t numPseudoOuts = 3; // Example
+    size_t numOutputCommitments = 2; // Example
+
+    // Vectors to store blinding factors
+    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> pseudoOutBfs(numPseudoOuts);
+    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> outputCommitmentBfs(numOutputCommitments);
+    // vector<BYTE[crypto_core_ed25519_SCALARBYTES]> outputCommitmentBfs(numOutputCommitments);
+
+    User receiver;
+    StealthAddress receiverSA;
+    BYTE r[crypto_core_ed25519_SCALARBYTES];
+    compute_stealth_address(receiverSA, receiver, r);
+
+    for (size_t i = 0; i < numOutputCommitments; ++i) {
+        computeMask(outputCommitmentBfs[i].data(), r, receiver.pkV, i);
+    }
+    // Generate blinding factors ensuring the sum condition
+    generatePseudoBfs(pseudoOutBfs, outputCommitmentBfs);
+
+    // Compare the sums of blinding factors
+    if (compareBlindingFactors(pseudoOutBfs, outputCommitmentBfs)) {
+        cout << "The sum of blinding factors for pseudo outputs is equal to the sum of blinding factors for output commitments.\n";
+    } else {
+        cout << "The sum of blinding factors for pseudo outputs is not equal to the sum of blinding factors for output commitments.\n";
+    }
+
+    // Define values for commitments (example values)
+    vector<int> pseudoOutValues = {25, 50, 75};
+    vector<int> outputCommitmentValues = {50, 100};
+
+    // Vectors to store commitments
+    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> pseudoOuts(numPseudoOuts);
+    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> outputCommitments(numOutputCommitments);
+
+    BYTE H[crypto_core_ed25519_BYTES];
+    generate_H(H);
+
+    // Calculate and display pseudo output commitments
+    cout << "Pseudo Output Commitments:\n";
+    for (size_t i = 0; i < numPseudoOuts; ++i) {
+
+        BYTE scalarValue[crypto_core_ed25519_SCALARBYTES];
+        valueToScalar(pseudoOutValues[i], scalarValue);
+
+        add_key(pseudoOuts[i].data(), pseudoOutBfs[i].data(), scalarValue, H);
+
+        cout << "PseudoOut[" << i << "]: ";
+        for (int j = 0; j < crypto_core_ed25519_BYTES; ++j) {
+            cout << hex << (int)pseudoOuts[i][j];
+        }
+        cout << endl;
+    }
+
+    // Calculate and display output commitments
+    cout << "Output Commitments:\n";
+    for (size_t i = 0; i < numOutputCommitments; ++i) {
+
+        BYTE scalarValue[crypto_core_ed25519_SCALARBYTES];
+        valueToScalar(outputCommitmentValues[i], scalarValue);
+
+        add_key(outputCommitments[i].data(), outputCommitmentBfs[i].data(), scalarValue, H);
+
+        cout << "OutputCommitment[" << i << "]: ";
+        for (int j = 0; j < crypto_core_ed25519_BYTES; ++j) {
+            cout << hex << (int)outputCommitments[i][j];
+        }
+        cout << endl;
+    }
+
+    // range proof for each output commitment
+    for (int i = 0; i < outputCommitments.size(); i++) {
+        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> blindingFactors(8);
+        generateBlindingFactors(blindingFactors, outputCommitmentBfs[i].data());
+
+        // uint8_t value = 9; // Example value
+        bitset<8> bits(outputCommitmentValues[i]);
+        vector<array<BYTE, crypto_core_ed25519_BYTES>> C1(8); 
+        vector<array<BYTE, crypto_core_ed25519_BYTES>> C2(8);
+        
+        // Generate C1 and C2 arrays
+        generateC1C2(blindingFactors, bits, C1, C2);
+
+        // Display C1 and C2 arrays
+        cout << "C1:" << endl;
+        for (const auto& C : C1) {
+            for (BYTE c : C) {
+                cout << hex << static_cast<int>(c) << " ";
+            }
+            cout << endl;
+        }
+
+        cout << "C2:" << endl;
+        for (const auto& CiMinus2iH : C2) {
+            for (BYTE c : CiMinus2iH) {
+                cout << hex << static_cast<int>(c) << " ";
+            }
+            cout << endl;
+        }
+
+        // Generate Borromean
+        BYTE bbee[crypto_core_ed25519_SCALARBYTES];
+        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> bbs0(8);
+        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> bbs1(8);
+
+        // vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> alpha(8);//test
+        generate_Borromean(blindingFactors, C1, C2, bits, bbee, bbs0, bbs1);
+
+        // Display bbee, bbs0 and bbs1
+        cout << "bbee: ";
+        for (int i = 0; i < crypto_core_ed25519_SCALARBYTES; ++i) {
+            cout << hex << static_cast<int>(bbee[i]);
+        }
+        cout << dec << endl;
+
+        cout << "bbs0:" << endl;
+        for (const auto& b : bbs0) {
+            for (BYTE c : b) {
+                cout << hex << static_cast<int>(c) << " ";
+            }
+            cout << endl;
+        }
+
+        cout << "bbs1:" << endl;
+        for (const auto& b : bbs1) {
+            for (BYTE c : b) {
+                cout << hex << static_cast<int>(c) << " ";
+            }
+            cout << endl;
+        }
+        cout << "hello" << endl;
+
+        bool res = checkBorromean(C1, C2, bbee, bbs0, bbs1);
+
+        cout << res << endl;
     }
 
     return 0;
