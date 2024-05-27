@@ -29,7 +29,8 @@
                 <button type="button">Login with Singpass</button>
             </div>
             <p class="or-text">Or</p>
-            <form action="#">
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
                 <label for="username">Username:</label>
                 <input type="text" id="username" name="username" required>
                 <label for="password">Password:</label>

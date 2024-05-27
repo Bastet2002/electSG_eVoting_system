@@ -1,0 +1,15 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}View Announcement Details{% endblock %}
+
+
+{% block content %}
+<div class="content">
+    <h1>{{ announcement.header }}</h1>
+    <p>{{ announcement.content }}</p>
+    <a href="{% url 'view_announcement' %}">Back to Announcements</a>
+    <a href="{% url 'edit_announcement' announcement.id %}">Update</a>
+    <a href="{% url 'delete_announcement' announcement.id %}">Delete</a>
+</div>
+{% endblock %}

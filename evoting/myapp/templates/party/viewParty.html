@@ -1,0 +1,54 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    /* Add custom CSS here to style the content area */
+    .content {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        margin-top: 20px;
+    }
+
+    table {
+        width: 80%; /* Adjust width as needed */
+        margin: 20px 0;
+        border-collapse: collapse; /* Optional: for better border appearance */
+    }
+
+    th, td {
+        border: 1px solid #ddd; /* Light gray border */
+        text-align: left;
+        padding: 8px;
+    }
+
+    th {
+        background-color: #f4f4f4; /* Light gray background for header */
+    }
+
+    a {
+        margin-right: 10px; /* Space out links in the Actions column */
+    }
+</style>
+
+<div class="content">
+    <h1>Parties</h1>
+    <table>
+        <tr>
+            <th>Party</th>
+            <th>Actions</th>
+        </tr>
+        {% for party in parties %}
+        <tr>
+            <td>{{ party.party }}</td>
+            <td>
+                <a href="{% url 'edit_party' party.id %}">Edit</a>
+                <a href="{% url 'delete_party' party.id %}">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

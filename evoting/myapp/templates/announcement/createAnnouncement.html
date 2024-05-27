@@ -8,7 +8,7 @@
     
     <div class="main">
         <h1 style="text-align: center;">Create Announcement</h1>
-        <form method="post" action="/create_announcement/" class="create-announcement-form">
+        <form method="post" action="{% url 'create_announcement' %}" class="create-announcement-form">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" name="publish">Publish</button>
