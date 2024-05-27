@@ -12,16 +12,12 @@ class District(models.Model):
 
 
 class UserAccount(models.Model):
+    username = models.CharField(max_length=200, unique=True)
     name = models.CharField(max_length=200)
     date_of_birth = models.DateField()
-    user_id = models.IntegerField(unique=True)
     password = models.CharField(max_length=200)
-    # district = models.CharField(max_length=100, choices=[
-    #     ('yio chu kang', 'Yio Chu Kang'),
-    #     ('ang mo kio', 'Ang Mo Kio'),
-    #     ('bishan', 'Bishan'),
-    # ])
-    district = models.ForeignKey('District', on_delete=models.CASCADE)
+    party = models.ForeignKey('Party', on_delete=models.SET_NULL, null=True, blank=True)
+    district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
     role = models.CharField(max_length=50, choices=[
         ('user', 'User'),
         ('candidate', 'Candidate'),
@@ -29,7 +25,7 @@ class UserAccount(models.Model):
     ])
 
     def __str__(self):
-        return self.name
+        return self.username
 
 
 class ElectionPhase(models.Model):
@@ -38,3 +34,18 @@ class ElectionPhase(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Announcement(models.Model):
+    header = models.CharField(max_length=200)
+    content = models.TextField()
+
+    def __str__(self):
+        return self.header
+
+class Party(models.Model):
+    party = models.CharField(max_length=200)
+    information = models.TextField()
+
+    def __str__(self):
+        return self.party

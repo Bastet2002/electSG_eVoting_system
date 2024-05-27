@@ -8,11 +8,11 @@
     
     <div class="main">
         <h1 style="text-align: center;">Add District</h1>
-        <form method="post" action="{% url 'add_district' %}" class="add-district-form">
+        <form method="post" action="{% url 'create_district' %}" class="create-district-form">
             {% csrf_token %}
             {{ form.as_p }}
             <p>Enter multiple district names separated by semicolons (;)</p>
-            <button type="submit" name="add-district">Add District</button>
+            <button type="submit" name="create-district">Add District</button>
         </form>
     </div>
 
