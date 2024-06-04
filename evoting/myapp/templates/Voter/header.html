@@ -15,7 +15,7 @@
             <li>
                 {% if user.is_authenticated %}
                     {% if user.role.profile_name == 'Candidate' %}
-                        <a href="{% url 'candiate_home' %}">Home</a>
+                        <a href="{% url 'candidate_home' %}">Home</a>
                     {% elif user.role.profile_name == 'Voter' %}
                         <a href="{% url 'voter_home' %}">Home</a>
                     {% endif %}
