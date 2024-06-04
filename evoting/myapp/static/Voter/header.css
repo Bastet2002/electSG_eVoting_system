@@ -1,0 +1,44 @@
+ /* Header styles */
+ .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 2rem;
+    background-color: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    width: 100%;
+    top: 0;
+    z-index: 2;
+    font-family: "Lato", sans-serif;
+  }
+  
+  .logo-container img {
+    height: 60px;
+  }
+  
+  .navigation {
+    display: flex;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .navigation li {
+    margin-right: 3rem;
+  }
+  
+  .navigation a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+    transition: color 0.3s ease;
+    padding: 8px 12px; /* Padding around links */
+    border-radius: 4px; /* Rounded corners */
+    transition: background-color 0.3s, color 0.3s; /* Transition for hover effects */
+  }
+  
+  .navigation a:hover {
+    background-color: #e87676; /* Darker background on hover */
+    color: #f1f1f1; /* Lighter text on hover */
+  }

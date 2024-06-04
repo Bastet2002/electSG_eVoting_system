@@ -8,7 +8,7 @@
 
     <div class="main">
         <h1 style="text-align: center;">Create New User Account</h1>
-        <form method="post" action="/create/" class="create-new-user-form">
+        <form method="post" action="{% url 'create' %}" class="create-new-user-form">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" name="create_new" >Create New Account</button>

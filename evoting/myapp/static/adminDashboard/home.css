@@ -1,0 +1,39 @@
+/* static/adminDashboard/css/phaseDetails.css */
+
+.container {
+    margin: 20px auto 0; /* Updated to remove top margin */
+    background-color: #fff;
+    margin-left: 240px; /* Adjusted to accommodate the sidebar */
+    padding: 20px;
+    padding-top: 80px; /* Ensure there's space for the fixed header */
+}
+
+.phase-details {
+    margin-top: 20px;
+    text-align: center;
+}
+
+.phase-details p {
+    margin: 10px 0;
+    font-size: 16px;
+}
+
+.announcement-container {
+    margin-top: 40px;
+}
+
+.announcement-box {
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.announcement-box h3 {
+    margin-top: 0;
+}
+
+.announcement-box p {
+    margin-bottom: 10px;
+}

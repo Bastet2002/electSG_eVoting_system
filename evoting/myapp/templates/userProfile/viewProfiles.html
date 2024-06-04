@@ -1,30 +1,29 @@
 {% extends 'adminDashboard/base.html' %}
 {% load static %}
 
-{% block title %}View Announcement{% endblock %}
+{% block title %}View User Profiles{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'announcement/viewAnnouncement.css' %}">
+<link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">Announcements</h1>
+    <h1 style="text-align: center;">User Profiles</h1>
     <div class="table-container">
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>Header</th>
+                        <th>Profile Name</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for announcement in announcements %}
+                    {% for profile in profiles %}
                     <tr>
-                        <td>{{ announcement.header }}</td>
+                        <td>{{ profile.profile_name }}</td>
                         <td>
-                            <a href="{% url 'view_announcement_detail' announcement.id %}" class="btn btn-primary">View</a>
-                            <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-primary">Update</a>
-                            <form method="post" action="{% url 'delete_announcement' announcement.id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                            <a href="{% url 'edit_profile' profile.id %}" class="btn btn-primary">Update</a>
+                            <form method="post" action="{% url 'delete_profile' profile.id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger">Delete</button>
                             </form>
@@ -32,7 +31,7 @@
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="2">No announcements found.</td>
+                        <td colspan="3">No profiles found.</td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -43,7 +42,7 @@
 
 <script>
     function confirmDelete() {
-        return confirm('Are you sure you want to delete this announcement?');
+        return confirm('Are you sure you want to delete this profile?');
     }
 </script>
 

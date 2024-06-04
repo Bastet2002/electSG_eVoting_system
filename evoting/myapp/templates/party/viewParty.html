@@ -1,54 +1,48 @@
 {% extends 'adminDashboard/base.html' %}
 {% load static %}
 
+{% block title %}View Parties{% endblock %}
+
 {% block content %}
-<style>
-    /* Add custom CSS here to style the content area */
-    .content {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        flex-direction: column;
-        margin-top: 20px;
-    }
+<link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
 
-    table {
-        width: 80%; /* Adjust width as needed */
-        margin: 20px 0;
-        border-collapse: collapse; /* Optional: for better border appearance */
-    }
-
-    th, td {
-        border: 1px solid #ddd; /* Light gray border */
-        text-align: left;
-        padding: 8px;
-    }
-
-    th {
-        background-color: #f4f4f4; /* Light gray background for header */
-    }
-
-    a {
-        margin-right: 10px; /* Space out links in the Actions column */
-    }
-</style>
-
-<div class="content">
-    <h1>Parties</h1>
-    <table>
-        <tr>
-            <th>Party</th>
-            <th>Actions</th>
-        </tr>
-        {% for party in parties %}
-        <tr>
-            <td>{{ party.party }}</td>
-            <td>
-                <a href="{% url 'edit_party' party.id %}">Edit</a>
-                <a href="{% url 'delete_party' party.id %}">Delete</a>
-            </td>
-        </tr>
-        {% endfor %}
-    </table>
+<div class="main">
+    <h1 style="text-align: center;">Parties</h1>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Party</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for party in parties %}
+                    <tr>
+                        <td>{{ party.party }}</td>
+                        <td>
+                            <a href="{% url 'edit_party' party.id %}" class="btn btn-primary">Update</a>
+                            <form method="post" action="{% url 'delete_party' party.id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2">No parties found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+    function confirmDelete() {
+        return confirm('Are you sure you want to delete this party?');
+    }
+</script>
 {% endblock %}

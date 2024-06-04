@@ -1,0 +1,30 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Display the active election phase -->
+    {% if active_phase %}
+    <link rel="stylesheet" href="{% static 'adminDashboard/home.css' %}">
+    <h1>Election Status : {{ active_phase.name }}</h1>
+    {% else %}
+    <p style="text-align: center;">No active election phase found.</p>
+    {% endif %}
+
+    <!-- Display announcements -->
+    {% if announcements %}
+    <h2>Announcements</h2>
+    {% for announcement in announcements %}
+    <div class="announcement-box">
+        <h3>{{ announcement.header }}</h3>
+        <p>{{ announcement.content }}</p>
+        <p><strong>Date:</strong> {{ announcement.date }}</p> 
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="text-align: center;">No announcements found.</p>
+    {% endif %}
+</div>
+{% endblock %}

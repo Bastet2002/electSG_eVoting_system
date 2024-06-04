@@ -1,48 +1,20 @@
-/* Main content styles */
 .main {
     margin-left: 240px; /* Adjusted to accommodate the sidebar */
     padding: 20px;
     padding-top: 80px; /* Ensure there's space for the fixed header */
 }
 
-/* Table container styles */
 .table-container {
-    width: 50%;
+    width: 80%; /* Adjusted width for announcements */
     margin: 20px auto;
     overflow-x: auto; /* Add horizontal scrollbar */
 }
 
-/* Search bar styles */
-.search-bar {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-#search {
-    width: 50%; /* Adjusted width */
-    padding: 10px 20px;
-    box-sizing: border-box;
-}
-
-#search-btn {
-    padding: 10px 20px;
-    margin-left: 10px;
-    cursor: pointer;
-    background-color: #e0624f;
-    color: #fff;
-    border: none;
-    border-radius: 4px;
-}
-
-/* Table wrapper styles */
 .table-wrapper {
     overflow-y: auto; /* Add vertical scrollbar */
     max-height: 400px; /* Adjust max-height as needed */
 }
 
-/* Table styles */
 table {
     width: 100%;
     border-collapse: collapse;
@@ -55,10 +27,9 @@ th, td {
 }
 
 th {
-    background-color: #f2f2f2;
+    background-color: #f4f4f4;
 }
 
-/* Button styles */
 .btn,
 .btn.btn-primary {
     display: inline-block;
@@ -79,7 +50,6 @@ th {
     text-decoration: none; /* Ensure consistency with anchor tag */
 }
 
-/* Adjust button height to match anchor tag */
 .btn.btn-danger {
     height: auto;
 }
