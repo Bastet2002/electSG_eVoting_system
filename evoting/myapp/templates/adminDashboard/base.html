@@ -12,7 +12,7 @@
     </div>
     <nav>
         <ul class="navigation">
-            <li><a href="{% url 'base' %}">Home</a></li>
+            <li><a href="{% url 'admin_home' %}">Home</a></li>
             <li><a href="#">About us</a></li>
             <li><a href="{% url 'login' %}">Log out</a></li>
         </ul>
@@ -32,7 +32,7 @@
           </button>
           <div class="dropdown-container">
             <a href="/create_profile">Create User Profile</a>
-            <a href="#">View User Profile</a>
+            <a href="/view_profiles">View User Profile</a>
           </div>
           <button class="dropdown-btn">District
             <i class="fa fa-caret-down"></i>
@@ -66,10 +66,7 @@
       <script src="{% static 'adminDashboard/script.js' %}"></script>
 
       {% block content %}
-      <div class="content">
-        <h1 style="text-align: center;">Welcome Admin</h1>
-        <p style="text-align: center;">This is gonna be default page.</p>
-      </div>
+      
       {% endblock %}
 </body>
 </html>

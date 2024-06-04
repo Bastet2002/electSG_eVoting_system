@@ -4,15 +4,30 @@
 {% block title %}Create Party{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="{% static 'announcement/createAnnouncement.css' %}">
+    <link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
     
     <div class="main">
         <h1 style="text-align: center;">Create Party</h1>
-        <form method="post" action="{% url 'create_party' %}" class="create-party-form">
+        <form method="post" action="{% url 'create_party' %}" class="add-district-form">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" name="publish">Create</button>
-            <button type="submit" name="cancel">Cancel</button>
         </form>
     </div>
+
+    {% if success %}
+        <div id="popupAlert" class="popup-alert show">
+            Party successfully added!
+        </div>
+        <script>
+            // Show the alert
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.classList.add('show');
+            
+            // Hide the alert after 5 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 3000);
+        </script>
+    {% endif %}
 {% endblock %}

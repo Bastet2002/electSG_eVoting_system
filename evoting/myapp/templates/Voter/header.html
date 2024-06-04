@@ -1,0 +1,34 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Home Page{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'Voter/header.css' %}">
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+    </div>
+    <nav>
+        <ul class="navigation">
+            <li>
+                {% if user.is_authenticated %}
+                    {% if user.role.profile_name == 'Candidate' %}
+                        <a href="{% url 'candiate_home' %}">Home</a>
+                    {% elif user.role.profile_name == 'Voter' %}
+                        <a href="{% url 'voter_home' %}">Home</a>
+                    {% endif %}
+                {% else %}
+                    <a href="{% url 'login' %}">Home</a>
+                {% endif %}
+            </li>
+            <li><a href="#">About us</a></li>
+            <li><a href="{% url 'login' %}">Log out</a></li>
+        </ul>
+    </nav>
+  </div>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>

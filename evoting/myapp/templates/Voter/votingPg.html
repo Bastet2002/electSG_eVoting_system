@@ -1,0 +1,40 @@
+{% extends "Voter/header.html" %}
+{% load static %}
+
+{% block title %}Digital Ballot{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'Voter/votingPg.css' %}"> 
+<div class="main">
+    <h2>Digital Ballot Paper</h2>
+    <div class="ballot-paper">
+        <!-- Candidate 1 -->
+        <div class="candidate-row">
+            <div class="candidate">
+                <label>
+                    <img src="{% static 'images/candidate1.jpg' %}" alt="Candidate 1">
+                </label>
+                <span class="party-name">XYZ Party</span>
+                <input type="checkbox" name="candidate" value="candidate1">
+            </div>
+            <div class="candidate">
+                <label>
+                    <img src="{% static 'images/candidate1.jpg' %}" alt="Candidate 1">
+                </label>
+                <span class="party-name">XYZ Party</span>
+                <input type="checkbox" name="candidate" value="candidate1">
+            </div>
+            <div class="candidate">
+                <label>
+                    <img src="{% static 'images/candidate1.jpg' %}" alt="Candidate 1">
+                </label>
+                <span class="party-name">XYZ Party</span>
+                <input type="checkbox" name="candidate" value="candidate1">
+            </div>
+        </div>
+    </div>
+    <div class="vote-button-container">
+        <button type="submit">Submit</button>
+    </div>
+</div>
+{% endblock %}
