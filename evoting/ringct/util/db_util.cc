@@ -8,3 +8,11 @@ User get_user(int32_t user_id)
     // random for now
     return User();
 }
+
+User get_candidate(int32_t candidate_id)
+{
+    // TODO interact with db and return the user
+
+    // random for now
+    return User();
+}

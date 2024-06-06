@@ -5,7 +5,41 @@ option objc_class_prefix = "RCT";
 package ringct;
 
 service RingCT_Service {
+    rpc Generate_Voter_and_Voting_Currency(Gen_VoterCurr_Request) returns (Gen_VoterCurr_Response) {}
+    rpc Generate_CandidateKeys (Gen_Candidate_Request) returns (Gen_Candidate_Response) {}
     rpc Compute_Vote(Vote_Request) returns (Vote_Response) {}
+    rpc Calculate_Total_Vote(Calculate_Total_Vote_Request) returns (Calculate_Total_Vote_Response) {}
+}
+
+message Gen_VoterCurr_Request{
+    int32 district_id = 1;
+    int32 voter_num = 2;
+}
+
+message Calculate_Total_Vote_Request{
+    repeated int32 district_ids = 1;
+}
+
+message Calculate_Total_Vote_Response{
+    repeated int32 district_ids = 1;
+    string test_output = 2; // TODO temporary for printing
+}
+
+message Gen_VoterCurr_Response{
+    int32 district_id = 1;
+    int32 voter_num = 2;
+    string test_output = 3; // TODO temporary for printing
+}
+
+message Gen_Candidate_Request{
+    int32 district_id = 1;
+    int32 candidate_id = 2;
+}
+
+message Gen_Candidate_Response{
+    int32 district_id = 1;
+    int32 candidate_id = 2;
+    string test_output = 3; // TODO temporary for printing
 }
 
 message Vote_Request{
@@ -19,5 +53,6 @@ message Vote_Response{
     int32 district_id = 1;
     int32 candidate_id = 2;
     int32 voter_id = 3;
-    int32 key_image = 4;
+    string key_image = 4;
+    string test_output = 5; // TODO temporary for printing
 }

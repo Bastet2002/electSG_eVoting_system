@@ -37,4 +37,6 @@ RUN mkdir -p build && cd build \
     && cmake -DCMAKE_PREFIX_PATH=$MY_INSTALL_DIR .. \
     && make
 
+EXPOSE 50051
+
 CMD ["./build/rct_server"]

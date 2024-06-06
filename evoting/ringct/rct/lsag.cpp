@@ -1,11 +1,21 @@
 #include "rctType.h"
 
-void to_string(string *output, const BYTE *key, const size_t n)
+void to_string(string &output, const BYTE *key, const size_t n)
 {
     ostringstream oss;
     for (size_t i = 0; i < n; i++)
     {
         oss << hex << setw(2) << setfill('0') << int(key[i]);
+    }
+    output = oss.str();
+}
+
+void hex_to_bytearray(BYTE *output, const string &input){
+    if (input.size() % 2 != 0)
+        throw invalid_argument("Input size must be even");
+
+    for (size_t i = 0, j = 0; i < input.size(); i+=2, j++){
+        output[j] = static_cast<BYTE>(stoul(input.substr(i, 2), nullptr, 16));
     }
 }
 
@@ -14,6 +24,18 @@ void print_hex(const BYTE *key, const size_t n)
     for (size_t i = 0; i < n; i++)
     {
         cout << hex << setw(2) << setfill('0') << int(key[i]);
+    }
+    cout << dec << endl;
+}
+
+// for copying the H to as constant in header file
+void print_bytearray(const BYTE *key, const size_t n)
+{
+    for (size_t i = 0; i < n; i++)
+    {
+        cout << "0x" << hex << setw(2) << setfill('0') << static_cast<int>(key[i]);
+        if (i != n - 1)
+            cout << ", ";
     }
     cout << dec << endl;
 }
@@ -123,15 +145,15 @@ void compute_stealth_address(StealthAddress &stealth_address, const User &receiv
 {
     cout << "======================" << endl;
     cout << "Inside compute_stealth_address" << endl;
-    BYTE r[32];
-    crypto_core_ed25519_scalar_random(r);
+    // BYTE r[32];
+    crypto_core_ed25519_scalar_random(stealth_address.r);
     cout << "r " << endl;
-    print_hex(r, crypto_core_ed25519_SCALARBYTES);
+    print_hex(stealth_address.r, crypto_core_ed25519_SCALARBYTES);
     cout << "pkV " << endl;
     print_hex(receiver.pkV, crypto_core_ed25519_BYTES);
 
     BYTE r_pkV_b[32];
-    int is_success = crypto_scalarmult_ed25519_noclamp(r_pkV_b, r, receiver.pkV);
+    int is_success = crypto_scalarmult_ed25519_noclamp(r_pkV_b, stealth_address.r, receiver.pkV);
     cout << "r_pkV_b: " << endl;
     print_hex(r_pkV_b, crypto_core_ed25519_BYTES);
 
@@ -158,7 +180,7 @@ void compute_stealth_address(StealthAddress &stealth_address, const User &receiv
         cout << "Point addition for stealth address fail due to invalid point" << endl;
 
     // compute rG
-    crypto_scalarmult_ed25519_base_noclamp(stealth_address.rG, r);
+    crypto_scalarmult_ed25519_base_noclamp(stealth_address.rG, stealth_address.r);
 
     cout << "rG " << endl;
     print_hex(stealth_address.rG, crypto_core_ed25519_BYTES);
@@ -170,10 +192,19 @@ void compute_stealth_address(StealthAddress &stealth_address, const User &receiv
 // as people could conclude the address belongs to the same person
 void CA_generate_address(vector<StealthAddress> &address_list, const vector<User> &users)
 {
-    for (const User &user : users)
+    // for (const User &user : users)
+    // {
+    //     StealthAddress address;
+    //     compute_stealth_address(address, user);
+    //     address_list.push_back(address);
+    // }
+
+    // Modify to pass r
+    // vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> r(users.size());
+    for (int i = 0; i < users.size(); i++)
     {
         StealthAddress address;
-        compute_stealth_address(address, user);
+        compute_stealth_address(address, users[i]);
         address_list.push_back(address);
     }
 }
@@ -268,6 +299,16 @@ int secret_index_gen(size_t n)
     return randombytes_uniform(n);
 }
 
+void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA)
+{
+    BYTE Hp_stealth_address[crypto_core_ed25519_BYTES];
+    hash_to_point(Hp_stealth_address, signerSA.pk, crypto_core_ed25519_BYTES);
+    if (crypto_scalarmult_ed25519_noclamp(blsagSig.key_image, signerSA.sk, Hp_stealth_address) != 0)
+    {
+        throw logic_error("Failed to compute key image");
+    }
+}
+
 // ignore ring creation and m(commitment), mixing
 // thus the index this sample construction serve no concealing purpose
 // the purpose of this is to prove the calculation is correct and could be verified
@@ -290,8 +331,16 @@ void blsag_simple_gen(blsagSig &blsagSig, const BYTE *m, const size_t secret_ind
     // 1. compute key image
     // BYTE key_image[crypto_core_ed25519_BYTES];
     BYTE Hp_stealth_address[crypto_core_ed25519_BYTES];
+    BYTE test_key_image[crypto_core_ed25519_BYTES];
     hash_to_point(Hp_stealth_address, signerSA.pk, crypto_core_ed25519_BYTES);
-    crypto_scalarmult_ed25519_noclamp(blsagSig.key_image, signerSA.sk, Hp_stealth_address);
+    if (crypto_scalarmult_ed25519_noclamp(test_key_image, signerSA.sk, Hp_stealth_address) != 0)
+    {
+        throw std::runtime_error("Failed to compute key image");
+    }
+    if (sodium_memcmp(test_key_image, blsagSig.key_image, crypto_core_ed25519_BYTES) != 0)
+    {
+        throw logic_error("Key image mismatch");
+    }
 
     cout << "Compute Key image: " << endl;
     print_hex(blsagSig.key_image, crypto_core_ed25519_BYTES);
@@ -335,7 +384,10 @@ void blsag_simple_gen(blsagSig &blsagSig, const BYTE *m, const size_t secret_ind
     crypto_scalarmult_ed25519_base_noclamp(alpha_G, alpha);
     // use the secret index stealth address
     hash_to_point(Hp_stealth_address, all_members[secret_index].pk, crypto_core_ed25519_BYTES);
-    crypto_scalarmult_ed25519_noclamp(alpha_Hp_stealth_address, alpha, Hp_stealth_address);
+    if (crypto_scalarmult_ed25519_noclamp(alpha_Hp_stealth_address, alpha, Hp_stealth_address) != 0)
+    {
+        throw std::runtime_error("Failed to compute alpha_Hp_stealth_address");
+    }
 
     size_t total_length = 2 * crypto_core_ed25519_BYTES + crypto_core_ed25519_BYTES; // TODO: last one is the rand m length
     vector<BYTE> to_hash(total_length);

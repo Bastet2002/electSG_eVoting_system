@@ -1,4 +1,4 @@
-#include "vote.h"
+#include "evoting.h"
 #include "ringct.grpc.pb.h"
 
 using ringct::RingCT_Service;
