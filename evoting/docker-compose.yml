@@ -11,6 +11,7 @@ services:
       - "8000:8000"
     depends_on:
       - db
+      - ring-ct
     # develop:
     #   #https://docs.docker.com/compose/file-watch/
     #   watch:
@@ -41,7 +42,8 @@ services:
   ring-ct:
     build:
       context: ./ringct
-      # can expose port when we need and run command 
+    ports:
+      - "50051:50051"
 
       # volumes:
       #   pgdata:
