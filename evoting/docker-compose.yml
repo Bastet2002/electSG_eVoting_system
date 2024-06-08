@@ -36,6 +36,8 @@ services:
       POSTGRES_DB: mydb
     ports:
       - "5432:5432"
+    volumes:
+      - ./dbinit:/dbinit
     # volumes:
     #   - pgdata:/var/lib/postgresql/data
 
