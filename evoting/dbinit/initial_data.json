@@ -1,0 +1,93 @@
+[
+    {
+        "model": "myapp.district",
+        "pk": 1,
+        "fields": {
+            "name": "Clementi"
+        }
+    },
+    {
+        "model": "myapp.district",
+        "pk": 2,
+        "fields": {
+            "name": "Jurong East"
+        }
+    },
+    {
+        "model": "myapp.profile",
+        "pk": 1,
+        "fields": {
+            "profile_name": "Candidate",
+            "description": "Candidate for general election"
+        }
+    },
+    {
+        "model": "myapp.profile",
+        "pk": 2,
+        "fields": {
+            "profile_name": "Admin",
+            "description": "Admin for the election system"
+        }
+    },
+    {
+        "model": "myapp.party",
+        "pk": 1,
+        "fields": {
+            "party": "PAP",
+            "information": "PAP is a political party in Singapore."
+        }
+    },
+    {
+        "model": "myapp.party",
+        "pk": 2,
+        "fields": {
+            "party": "DAP",
+            "information": "DAP is a political party in Singapore."
+        }
+    },
+    {
+        "model": "myapp.useraccount",
+        "pk": 1,
+        "fields": {
+            "username": "user1",
+            "name": "John Doe",
+            "date_of_birth": "1980-01-01",
+            "password": "pbkdf2_sha256$150000$KdTR1syrrtvl$7GZcly4GEXjOdv5uwX6h6hTZEnY1OavdB3zQm5GwbM=",  
+            "party": 1,
+            "district": 1,
+            "role": 1
+        }
+    },
+    {
+        "model": "myapp.useraccount",
+        "pk": 2,
+        "fields": {
+            "username": "candidate1",
+            "name": "Jane Smith",
+            "date_of_birth": "1985-05-15",
+            "password": "pbkdf2_sha256$150000$KdTR1syrrtvl$7GZcly4GEXjOdv5uwX6h6hTZEnY1OavdB3zQm5GwbM=",  
+            "party": 2,
+            "district": 2,
+            "role": 2
+        }
+    },
+    {
+        "model": "myapp.candidateprofile",
+        "pk": 1,
+        "fields": {
+            "user_account": 2,
+            "election_poster": "",
+            "profile_picture": "",
+            "candidate_statement": "I promise to serve you well."
+        }
+    },
+    {
+        "model": "myapp.announcement",
+        "pk": 1,
+        "fields": {
+            "header": "Election Starts",
+            "content": "The election has officially started.",
+            "date": "2024-01-01T00:00:00Z"
+        }
+    }
+]

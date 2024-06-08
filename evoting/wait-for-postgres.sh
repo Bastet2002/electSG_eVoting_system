@@ -15,5 +15,8 @@ done
 >&2 echo "Postgres is up - executing command"
 python manage.py makemigrations
 python manage.py migrate
+python manage.py loaddata ./dbinit/initial_data.json
+
+PGPASSWORD=$DJANGO_DB_PASSWORD psql -h "$host" -U "$DJANGO_DB_USER" -d "$DJANGO_DB_NAME" -f ./dbinit/db_init.sql
 
 exec $cmd
