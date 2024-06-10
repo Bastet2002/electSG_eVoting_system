@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General User Home</title>
+
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <div class="announcements">
+                <h2>Announcements</h2>
+                {% for announcement in announcements %}
+                <div class="announcement-box">
+                    <h3>{{ announcement.header }}</h3>
+                    <p>{{ announcement.content }}</p>
+                </div>
+                {% endfor %}
+                <div class="view-all">
+                    <a href="{% url 'view_all_announcements' %}">View all</a>
+                </div>
+            </div>
+            <div class="districts">
+                <h2>Districts</h2>
+                <div class="district-list">
+                    <ul>
+                        {% for district in districts %}
+                        <li>{{ district.name }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

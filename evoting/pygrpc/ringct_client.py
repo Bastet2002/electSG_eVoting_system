@@ -1,6 +1,7 @@
 import grpc
-import ringct_pb2_grpc
-import ringct_pb2
+# import ringct_pb2_grpc
+# import ringct_pb2
+from pygrpc import ringct_pb2_grpc, ringct_pb2
 
 import logging
 

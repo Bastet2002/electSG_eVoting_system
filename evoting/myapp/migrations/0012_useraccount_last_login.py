@@ -2,11 +2,15 @@
 
 from django.db import migrations, models
 
+def add_permanent_profiles(apps, schema_editor):
+    Profile = apps.get_model('myapp', 'Profile')
+    Profile.objects.get_or_create(profile_name='Candidate', defaults={'description': 'Candidate Profile'})
+    Profile.objects.get_or_create(profile_name='Admin', defaults={'description': 'Admin Profile'})
 
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('myapp', '0011_candidateprofile'),
+        ('myapp', '0011_candidateprofile'),  # Update this with the actual previous migration file
     ]
 
     operations = [
@@ -15,4 +19,5 @@ class Migration(migrations.Migration):
             name='last_login',
             field=models.DateTimeField(blank=True, null=True, verbose_name='last login'),
         ),
+        migrations.RunPython(add_permanent_profiles),
     ]

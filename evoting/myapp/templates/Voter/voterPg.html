@@ -8,58 +8,26 @@
 <div class="main">
     <div class="status-container">
         <div class="status">
-            Voting Status: <span>Haven't voted</span>
+            Voting Status: <span>{{ voting_status }}</span>
         </div>
         <div class="district">
-            District: <span>District Name</span>
+            District: <span>{{ user_district }}</span>
         </div>
     </div>
     <div class="candidates-container">
-        <div class="candidate">
-            <img src="{% static 'images/candidate1.jpg' %}" alt="Candidate 1">
-            <h3>Alison Swift</h3>
-            <p>Party: XYZ Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate2.jpg' %}" alt="Candidate 2">
-            <h3>John Doe</h3>
-            <p>Party: ABC Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate3.jpg' %}" alt="Candidate 3">
-            <h3>Katherine Perry</h3>
-            <p>Party: PQR Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate2.jpg' %}" alt="Candidate 4">
-            <h3>Michael Johnson</h3>
-            <p>Party: LMN Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate3.jpg' %}" alt="Candidate 5">
-            <h3>Linda Brown</h3>
-            <p>Party: STU Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate1.jpg' %}" alt="Candidate 6">
-            <h3>Chris Evans</h3>
-            <p>Party: OPQ Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate1.jpg' %}" alt="Candidate 1">
-            <h3>Alison Swift</h3>
-            <p>Party: XYZ Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate2.jpg' %}" alt="Candidate 2">
-            <h3>John Doe</h3>
-            <p>Party: ABC Party</p>
-        </div>
-        <div class="candidate">
-            <img src="{% static 'images/candidate3.jpg' %}" alt="Candidate 3">
-            <h3>Katherine Perry</h3>
-            <p>Party: PQR Party</p>
-        </div>
+        {% for candidate in candidates %}
+        <a href="{% url 'view_candidate' candidate.id %}" class="candidate-link">
+            <div class="candidate">
+                {% if candidate.profile_picture %}
+                <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.user_account.name }}">
+                {% else %}
+                <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.user_account.name }}">
+                {% endif %}
+                <h3>{{ candidate.user_account.name }}</h3>
+                <p>Party: {{ candidate.user_account.party.party }}</p>
+            </div>
+        </a>
+        {% endfor %}
     </div>
     <div class="vote-button-container">
         <a href="{% url 'ballot_paper' %}" class="button-link">

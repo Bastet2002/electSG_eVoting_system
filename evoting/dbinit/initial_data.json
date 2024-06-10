@@ -77,7 +77,7 @@
         "fields": {
             "user_account": 2,
             "election_poster": "",
-            "profile_picture": "",
+            "profile_picture": "images/candidate1.jpg",
             "candidate_statement": "I promise to serve you well."
         }
     },
@@ -87,6 +87,24 @@
         "fields": {
             "header": "Election Starts",
             "content": "The election has officially started.",
+            "date": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "myapp.announcement",
+        "pk": 2,
+        "fields": {
+            "header": "Cooling Day",
+            "content": "Cooling Day has officially started.",
+            "date": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "myapp.announcement",
+        "pk": 3,
+        "fields": {
+            "header": "Polling Starts",
+            "content": "The polling has officially started.",
             "date": "2024-01-01T00:00:00Z"
         }
     }

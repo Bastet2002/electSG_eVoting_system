@@ -6,6 +6,16 @@ from django.contrib import messages
 from django.db.models import Q
 from .forms import createNewUser, editUser, createDistrict, editDistrict, createAnnouncement, createParty, CreateProfileForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile
+# from evoting.pygrpc.ringct_client import grpc_generate_user_and_votingcurr_run, grpc_compute_vote_run, grpc_generate_candidate_keys_run, grpc_calculate_total_vote_run 
+
+from pygrpc.ringct_client import (
+    grpc_generate_user_and_votingcurr_run,
+    grpc_construct_vote_request,
+    grpc_construct_gen_candidate_request,
+    grpc_construct_calculate_total_vote_request,
+    grpc_generate_candidate_keys_run,
+    grpc_compute_vote_run
+)
 
 
 def user_login(request):
@@ -43,7 +53,7 @@ def admin_home(request):
 
 
 # ---------------------------------------UserAccount views------------------------------------------------
-def create(request):
+def create_account(request):
     if request.method == 'POST':
         form = createNewUser(request.POST)
         if form.is_valid():
@@ -57,6 +67,12 @@ def create(request):
             if new_user.role.profile_name == 'Candidate':
                 # Create a CandidateProfile instance for the candidate user
                 CandidateProfile.objects.create(user_account=new_user)
+                # Generate user and voting currency via gRPC
+                try:
+                    grpc_generate_candidate_keys_run(district_id=new_user.district.id, candidate_id=new_user.id)
+                except Exception as e:
+                    # Handle the exception
+                    print(f"Error in gRPC call: {e}")
 
             return render(request, "userAccount/createUserAcc.html", {"form": createNewUser(), "success": True})
         else:
@@ -86,6 +102,7 @@ def view_user_accounts(request):
 
 def edit_user(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
     if request.method == 'POST':
         form = editUser(request.POST, instance=user)
         if form.is_valid():
@@ -93,7 +110,7 @@ def edit_user(request, user_id):
             return redirect('view_user_accounts')
     else:
         form = editUser(instance=user)
-    return render(request, 'userAccount/updateUserAcc.html', {'form': form})
+    return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase})
 
 
 def delete_user(request, user_id):
@@ -128,7 +145,12 @@ def create_district(request):
             district_list = [name.strip() for name in district_names.split(';') if name.strip()]
 
             for name in district_list:
-                District.objects.get_or_create(name=name)
+                district, created = District.objects.get_or_create(name=name)
+                if created:
+                    try:
+                        grpc_generate_user_and_votingcurr_run(district_id=district.id, voter_num=10)
+                    except Exception as e:
+                        print(f"Error in gRPC call: {e}")
 
             
             return render(request, 'district/createDistrict.html', {'form': createDistrict(), "success": True})
@@ -284,28 +306,80 @@ def delete_party(request, id):
 
 # ---------------------------------------Voter views------------------------------------------------
 
-def voter_home(response):
-    return render(response, "Voter/voterPg.html", {})
+def voter_home(request):
+    candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
+    user = request.user
+    # user_district = user.district.name if user.district else "No District"
+    # voting_status = "Haven't voted" 
+    return render(request, 'Voter/voterPg.html', {
+        'candidates': candidates,
+        # 'user_district': user_district,
+        # 'voting_status': voting_status,
+    })
 
-def ballot_paper(response):
-    return render(response, "Voter/votingPg.html", {})
+def ballot_paper(request):
+    candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
+    return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
-# ---------------------------------------Candidate views------------------------------------------------
-
-from .forms import ElectionPosterForm, ProfilePictureForm, CandidateStatementForm
-def candidate_home(request):
-    candidate_profile = get_object_or_404(CandidateProfile, user_account=request.user)
+def view_candidate(request, candidate_id):
+    candidate_profile = get_object_or_404(CandidateProfile, id=candidate_id)
+    is_owner = request.user == candidate_profile.user_account
     
     profile_picture_form = ProfilePictureForm()
     election_poster_form = ElectionPosterForm()
     candidate_statement_form = CandidateStatementForm()
     candidate_statement_form.fields['candidate_statement'].initial = candidate_profile.candidate_statement
-    
+
     return render(request, 'Candidate/candidatePg.html', {
         'profile_picture_form': profile_picture_form,
         'election_poster_form': election_poster_form,
         'candidate_statement_form': candidate_statement_form,
-        'candidate_profile': candidate_profile
+        'candidate_profile': candidate_profile,
+    })
+
+# def cast_vote(request):
+#     if request.method == 'POST':
+#         selected_candidates = request.POST.getlist('candidate')
+#         voter = request.user
+#         district_id = voter.district.id if voter.district else None
+
+#         if not district_id:
+#             messages.error(request, 'Error: Voter does not belong to a district.')
+#             return redirect('ballot_paper')
+
+#         for candidate_id in selected_candidates:
+#             try:
+#                 grpc_compute_vote_run(district_id=district_id, candidate_id=int(candidate_id), voter_id=voter.id)
+#             except Exception as e:
+#                 # Handle the exceptions
+#                 print(f"Error in gRPC call: {e}")
+#                 messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
+
+#         messages.success(request, 'Your vote has been submitted.')
+#         return redirect('voter_home')
+#     else:
+#         return redirect('ballot_paper')
+
+
+# ---------------------------------------Candidate views------------------------------------------------
+
+from .forms import ElectionPosterForm, ProfilePictureForm, CandidateStatementForm
+
+def candidate_home(request):
+    candidate_profile = get_object_or_404(CandidateProfile, user_account=request.user)
+    is_owner = request.user == candidate_profile.user_account
+    
+    profile_picture_form = ProfilePictureForm()
+    election_poster_form = ElectionPosterForm()
+    candidate_statement_form = CandidateStatementForm()
+    candidate_statement_form.fields['candidate_statement'].initial = candidate_profile.candidate_statement
+
+    return render(request, 'Candidate/candidatePg.html', {
+        'profile_picture_form': profile_picture_form,
+        'election_poster_form': election_poster_form,
+        'candidate_statement_form': candidate_statement_form,
+        'candidate_profile': candidate_profile,
+        'is_owner': is_owner
     })
 
 def upload_election_poster(request):
@@ -343,3 +417,19 @@ def upload_candidate_statement(request):
     # else:
     #     form = CandidateStatementForm()
     # return render(request, 'upload_candidate_statement.html', {'form': form})
+
+
+# ---------------------------------------Genereal user views------------------------------------------------
+def general_user_home(request):
+    announcements = Announcement.objects.all()[:2] # only get latest 2 annoucements
+    districts = District.objects.all()
+    return render(request, 'generalUser/generalUserPg.html', {
+        'announcements': announcements,
+        'districts': districts,
+    })
+
+def view_all_announcements(request):
+    announcements = Announcement.objects.all()
+    return render(request, 'generalUser/viewAllAnnouncements.html', {'announcements': announcements})
+
+# ---------------------------------------TEMPORARY views------------------------------------------------

@@ -20,11 +20,6 @@ class UserAccount(AbstractBaseUser):
     password = models.CharField(max_length=200)
     party = models.ForeignKey('Party', on_delete=models.SET_NULL, null=True, blank=True)
     district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
-    # role = models.CharField(max_length=50, choices=[
-    #     ('user', 'User'),
-    #     ('candidate', 'Candidate'),
-    #     ('admin', 'Admin'),
-    # ])
     role = models.ForeignKey('Profile', on_delete=models.SET_NULL, null=True, blank=True)
     USERNAME_FIELD = 'username'  # Use username as the unique identifier
     REQUIRED_FIELDS = ['name', 'date_of_birth', 'password']

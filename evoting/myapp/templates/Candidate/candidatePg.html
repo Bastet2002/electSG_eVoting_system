@@ -17,13 +17,15 @@
                     <img id="profilePictureDisplay" src="{% static 'images/profile.png' %}" alt="Profile Picture" class="profile-preview">
                     {% endif %}
                     
+                    {% if is_owner %}
                     <button class="edit-icon" onclick="openProfilePopup()"> 
                         <i class="fas fa-pencil-alt"></i> <!-- Font Awesome edit icon -->
                     </button>
+                    {% endif %}
                 </div>
                 <div class="profile-info">
-                    <h3>Name: John Doe</h3>
-                    <h3>Party: XYZ Party</h3>
+                    <h3>Name: {{ candidate_profile.user_account.name }}</h3>
+                    <h3>Party: {{ candidate_profile.user_account.party.party }}</h3>
                 </div>
             </div>
         </div>
@@ -36,9 +38,11 @@
                 {% else %}
                 <img id="posterPictureDisplay" src="{% static 'images/poster.png' %}" alt="Poster Picture" class="poster-preview">
                 {% endif %}
+                {% if is_owner %}
                 <button class="edit-icon" onclick="openPosterPopup()">
                     <i class="fas fa-pencil-alt"></i> <!-- Font Awesome edit icon -->
                 </button>
+                {% endif %}
             </div>
         </div>
 
@@ -51,9 +55,11 @@
                 <p id="informationDisplay">Type your statement here...</p>
                 {% endif %}
                 
+                {% if is_owner %}
                 <button class="edit-icon" onclick="openEditPopup()">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
+                {% endif %}
             </div>
         </div>
     </section>
@@ -62,14 +68,12 @@
 <div id="editPopup" class="popup">
     <div class="popup-content">
         <h2>Edit Information</h2>
-        {% comment %} <textarea id="editInformation"></textarea>
-        <button onclick="updateInformation()">Update</button> {% endcomment %}
         <form id="editInformation" method="post" action="{% url 'upload_candidate_statement' %}">
             {% csrf_token %}
             {{ candidate_statement_form.as_p }}
-            <button type="submit">Update</button>
+            <button type="submit" {% if not is_owner %}disabled{% endif %}>Update</button>
         </form>
-        <button onclick="deleteInformation()">Delete</button>
+        <button onclick="deleteInformation()" {% if not is_owner %}disabled{% endif %}>Delete</button>
         <button onclick="closeEditPopup()">Close</button>
     </div>
 </div>
@@ -78,13 +82,12 @@
     <div class="popup-content">
         <h2>Edit Profile Picture</h2>
         <img id="profilePopupPicture" src="{% static 'images/profile.png' %}" alt="Profile Picture Preview" class="preview">
-        {% comment %} <input type="file" id="profilePictureInput" accept="image/*" onchange="previewImage(event, 'profilePopupPicture')"> {% endcomment %}
         <form id="profilePicForm" method="post" enctype="multipart/form-data" action="{% url 'upload_profile_picture' %}">
             {% csrf_token %}
             {{ profile_picture_form.as_p }}
-            <button type="submit">Upload</button>
+            <button type="submit" {% if not is_owner %}disabled{% endif %}>Upload</button>
         </form>
-        <button onclick="deleteProfilePicture()">Delete</button>
+        <button onclick="deleteProfilePicture()" {% if not is_owner %}disabled{% endif %}>Delete</button>
         <button onclick="closeProfilePopup()">Close</button>
     </div>
 </div>
@@ -93,13 +96,12 @@
     <div class="popup-content">
         <h2>Edit Poster Picture</h2>
         <img id="posterPopupPicture" src="{% static 'images/poster.png' %}" alt="Poster Picture Preview" class="preview">
-        {% comment %} <input type="file" id="posterPictureInput" accept="image/*" onchange="previewImage(event, 'posterPopupPicture')"> {% endcomment %}
         <form id="electionPosterForm" method="post" enctype="multipart/form-data" action="{% url 'upload_election_poster' %}">
             {% csrf_token %}
             {{ election_poster_form.as_p }}
-            <button type="submit">Upload</button>
+            <button type="submit" {% if not is_owner %}disabled{% endif %}>Upload</button>
         </form>
-        <button onclick="deletePosterPicture()">Delete</button>
+        <button onclick="deletePosterPicture()" {% if not is_owner %}disabled{% endif %}>Delete</button>
         <button onclick="closePosterPopup()">Close</button>
     </div>
 </div>

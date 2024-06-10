@@ -3,7 +3,8 @@
 import grpc
 import warnings
 
-import ringct_pb2 as ringct__pb2
+import pygrpc.ringct_pb2 as ringct__pb2
+# import ringct_pb2 as ringct__pb2
 
 GRPC_GENERATED_VERSION = '1.64.1'
 GRPC_VERSION = grpc.__version__
