@@ -14,8 +14,10 @@ RUN apt-get update && apt-get install -y \
     autoconf \
     libtool \
     pkg-config \
+    libpq-dev \
+    libpqxx-dev \
     git \
-    && rm -rf /var/lib/apt/lists/*
+    postgresql-client
 
 # note that this is different from the official grpc which is $HOME/.local
 ENV MY_INSTALL_DIR=/usr/local
@@ -29,6 +31,11 @@ RUN mkdir -p cmake/build && cd cmake/build \
     && make -j 4 \
     && make install
 
+WORKDIR /
+RUN git clone https://github.com/jtv/libpqxx.git 
+WORKDIR /libpqxx
+RUN git checkout 7.7
+
 WORKDIR /app
 COPY . /app
 
@@ -37,6 +44,8 @@ RUN mkdir -p build && cd build \
     && cmake -DCMAKE_PREFIX_PATH=$MY_INSTALL_DIR .. \
     && make
 
+RUN chmod +x ./wait-for-it.sh
+
 EXPOSE 50051
 
-CMD ["./build/rct_server"]
+CMD ["./wait-for-it.sh", "db", "--", "./build/rct_server"]

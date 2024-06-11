@@ -19,34 +19,34 @@ CREATE TABLE Singpass_User (
 CREATE TABLE Voter (
     voter_id SERIAL PRIMARY KEY,
     district_id BIGINT NOT NULL,
-    hashfrominfo VARCHAR(64) UNIQUE, -- A 512bit hash, with H(disctrict_id, id, name, phone, DOB)
-    pkV VARCHAR(32) NOT NULL,
+    hashfrominfo VARCHAR(128) UNIQUE, -- A 512bit hash, with H(disctrict_id, id, name, phone, DOB)
+    pkV VARCHAR(64) NOT NULL,
     FOREIGN KEY (district_id) REFERENCES myapp_district(id) -- no delete cascade
 );
 
 CREATE TABLE Voter_SecretKey (
-    pkV VARCHAR(32) PRIMARY KEY,
-    skV VARCHAR(32) NOT NULL UNIQUE,
-    pkS VARCHAR(32) NOT NULL UNIQUE,
-    skS VARCHAR(32) NOT NULL UNIQUE
+    pkV VARCHAR(64) PRIMARY KEY,
+    skV VARCHAR(64) NOT NULL UNIQUE,
+    pkS VARCHAR(64) NOT NULL UNIQUE,
+    skS VARCHAR(64) NOT NULL UNIQUE
 );
 
 CREATE TABLE Candidate_PublicKey (
     candidate_id BIGINT PRIMARY KEY,
-    pkV VARCHAR(32) NOT NULL UNIQUE,
-    pkS VARCHAR(32) NOT NULL UNIQUE,
+    pkV VARCHAR(64) NOT NULL UNIQUE,
+    pkS VARCHAR(64) NOT NULL UNIQUE,
     FOREIGN KEY (candidate_id) REFERENCES myapp_useraccount(id) ON DELETE CASCADE
 );
 
 CREATE TABLE Candidate_SecretKey (
-    pkV VARCHAR(32) PRIMARY KEY,
-    skV VARCHAR(32) NOT NULL UNIQUE,
-    pkS VARCHAR(32) NOT NULL UNIQUE,
-    skS VARCHAR(32) NOT NULL UNIQUE
+    pkV VARCHAR(64) PRIMARY KEY,
+    skV VARCHAR(64) NOT NULL UNIQUE,
+    pkS VARCHAR(64) NOT NULL UNIQUE,
+    skS VARCHAR(64) NOT NULL UNIQUE
 );
 
 CREATE TABLE Vote_Records (
-    key_image VARCHAR(32) PRIMARY KEY,
+    key_image VARCHAR(64) PRIMARY KEY,
     district_id BIGINT NOT NULL,
     transaction_record JSONB NOT NULL, 
     FOREIGN KEY (district_id) REFERENCES myapp_district(id) -- no delete cascade
