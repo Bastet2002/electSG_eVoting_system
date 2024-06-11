@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.10)
 
 project(RingCTServer C CXX)
 
 include(./common.cmake)
+
+# libpqxx 7 requires at least C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) # ensure code adheres to the C++17 standard without non-standard extensions
 
 # for libsodium
 find_library(sodium_library NAMES sodium)
@@ -16,6 +21,10 @@ else()
 endif()
 
 include_directories(${sodium_include_dir})
+
+# for git repo download on the /libpqxx
+add_subdirectory(/libpqxx build-pqxx)
+target_link_libraries(pqxx)
 
 # proto file
 get_filename_component(rct_proto "./proto/ringct.proto" ABSOLUTE)
@@ -65,4 +74,5 @@ target_link_libraries(rct_server
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
     ${_PROTOBUF_LIBPROTOBUF}
-    sodium)
+    sodium
+    pqxx)

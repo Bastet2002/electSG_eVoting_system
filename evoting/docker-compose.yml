@@ -12,13 +12,6 @@ services:
     depends_on:
       - db
       - ring-ct
-    # develop:
-    #   #https://docs.docker.com/compose/file-watch/
-    #   watch:
-    #     - action: sync
-    #       # only watch the django changes
-    #       path: ./evoting
-    #       target: /app/evoting
     environment:
       - DJANGO_DB_HOST=db
       - DJANGO_DB_PORT=5432
@@ -44,9 +37,16 @@ services:
   ring-ct:
     build:
       context: ./ringct
+    depends_on:
+      - db
     ports:
       - "50051:50051"
-
+    environment:
+      - DJANGO_DB_HOST=db
+      - DJANGO_DB_PORT=5432
+      - DJANGO_DB_NAME=mydb
+      - DJANGO_DB_USER=admin
+      - DJANGO_DB_PASSWORD=password
       # volumes:
       #   pgdata:
       #     driver: local

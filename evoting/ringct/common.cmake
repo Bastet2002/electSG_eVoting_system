@@ -1,5 +1,6 @@
 # From GRPC official repo, for locally installed gRPC
-cmake_minimum_required(VERSION 3.8)
+# change to 3.10 instead of 3.8
+cmake_minimum_required(VERSION 3.10)
 
 find_package(Threads REQUIRED)
 
