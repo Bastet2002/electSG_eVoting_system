@@ -1,5 +1,41 @@
 #include "rctType.h"
 
+void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& sa, const User& receiver) {
+    const int c = 30;
+
+    // input commitment
+    BYTE x[32];
+    BYTE a[32];
+    array<BYTE, 32> input_commitment;
+    int_to_scalar_BYTE(a, c);
+    crypto_core_ed25519_scalar_random(x);
+    add_key(input_commitment.data(), x, a, H_point);
+    commitment.inputs_commitments.push_back(input_commitment);
+
+    // output commitment
+    array<BYTE, 32> yt;
+    BYTE b[32];
+    array<BYTE, 32> output_commitment;
+    int_to_scalar_BYTE(b, c);
+    compute_commitment_mask(yt.data(), sa.r, receiver.pkV, 0);
+    commitment.outputs_blindingfactor_masks.push_back(yt);
+    add_key(output_commitment.data(), yt.data(), b, H_point);
+    commitment.outputs_commitments.push_back(output_commitment);
+
+    // pseudo output commitment
+    array<BYTE, 32> pseudoout_commitment;
+    commitment.pseudoouts_blindingfactor_masks.resize(1);
+    generatePseudoBfs(commitment.pseudoouts_blindingfactor_masks, commitment.outputs_blindingfactor_masks);
+    add_key(pseudoout_commitment.data(), commitment.pseudoouts_blindingfactor_masks[0].data(), b, H_point);
+    commitment.pseudoouts_commitments.push_back(pseudoout_commitment);
+
+    verify_commitment_balancing(commitment.outputs_commitments, commitment.pseudoouts_commitments);
+
+    // amount mask
+    BYTE amount_mask[32];
+    // TODO create amont mask function
+}
+
 // one to one
 void compute_commitment_simple(){
 
@@ -40,7 +76,7 @@ void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t in
     BYTE rpkv[crypto_core_ed25519_BYTES];
     if (crypto_scalarmult_ed25519_noclamp(rpkv, r, pkv) != 0)
     {
-        throw runtime_error("Failed to compute rpkv");
+        throw runtime_error("Failed to compute rpkv in compute_commitment_mask.");
     }
 
     BYTE t[crypto_core_ed25519_SCALARBYTES];

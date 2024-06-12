@@ -8,8 +8,19 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
     for (int i = 0; i < gen_user_curr.voter_num; i++)
     {
         User user;
-        // store one for the django, and one for the ringct
-        // store_user(gen_user_curr, user);
+
+        try
+        {
+            write_voter(gen_user_curr.district_id, user);
+        }
+        catch (const pqxx::sql_error &e)
+        {
+            throw runtime_error("SQL error: " + string(e.what()));
+        }
+        catch (const exception &e)
+        {
+            throw runtime_error(e.what());
+        }
 
         // What to be stored in db?
         // stealth address -> pk, rG
@@ -18,10 +29,21 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
         compute_stealth_address(userSA, user);
 
         // Commitment commitment;
-        // compute_commitment();
+        Commitment commitment;
+        CA_generate_voting_currency(commitment, userSA, user);
 
         // store in db
-        // store_ca_voter_keys_currency(gen_user_curr.district_id, userSA, commitment);
+        try {
+            write_votercurrency(gen_user_curr.district_id, userSA, commitment);
+        }
+        catch (const pqxx::sql_error &e)
+        {
+            throw runtime_error("SQL error: " + string(e.what()));
+        }
+        catch (const exception &e)
+        {
+            throw runtime_error(e.what());
+        }
     }
     // TODO: remove test output
     gen_user_curr.test_output = "I have looped for " + to_string(gen_user_curr.voter_num) + " times";
@@ -30,16 +52,27 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
 }
 
 // Candidate is generated one by one, as what django does
-// The createCandidate in django would make request to generate the candidate keys 
+// The createCandidate in django would make request to generate the candidate keys
 void CA_generate_candidate_keys(Gen_Candidate &gen_candidate)
 {
     User candidate;
     // need to store in 2 different table, one for django and one for the ringct
-    // store_candidate(gen_candidate, candidate);
+
+    try
+    {
+        write_candidate(gen_candidate.candidate_id, candidate);
+    }
+    catch (const pqxx::sql_error &e)
+    {
+        throw runtime_error("SQL error: " + string(e.what()));
+    }
+    catch (const exception &e)
+    {
+        throw runtime_error(e.what());
+    }
 
     // TODO remove test output
     gen_candidate.test_output = "I have generated candidate with id " + to_string(gen_candidate.candidate_id);
-    gen_candidate.test_output += " in district " + to_string(gen_candidate.district_id);
     string pkV;
     to_string(pkV, candidate.pkV, 32);
     gen_candidate.test_output += " with pkV " + pkV;
@@ -57,7 +90,7 @@ void voter_cast_vote(Vote &vote)
     blsagSig blsagSig;
 
     // TODO change to real db
-    User signer = get_user(vote.voter_id);
+    User signer = get_voter(vote.voter_id);
 
     // TODO grab candidate public key from db
     User candidate = get_candidate(vote.candidate_id);
@@ -122,12 +155,12 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     // }
 
     // for (const int &district_id :district_ids){
-        // vector<int> candidate_ids = get_candidate_ids(district_id);
+    // vector<int> candidate_ids = get_candidate_ids(district_id);
 
     //     if (candidate_ids.size() == 0){
     //         throw logic_error("No candidate in district " + to_string(district_id));
     //     }
-        
+
     //     // automatically win
     //     if (candidate_ids.size() == 1){
     //         continue;
@@ -139,10 +172,10 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     //         // store_candidate_total_vote(district_id, candidate_id, total_vote);
     //         compute_candidate_total_vote(district_id, candidate_id);
     //     }
-        // verify the total vote match with the number of vote record
-        // if (!verify_total_vote(district_id)){
-        //     throw logic_error("Total vote does not match with the number of vote record in district " + to_string(district_id));
-        // }
+    // verify the total vote match with the number of vote record
+    // if (!verify_total_vote(district_id)){
+    //     throw logic_error("Total vote does not match with the number of vote record in district " + to_string(district_id));
+    // }
     // }
 
     // TODO remove test output
