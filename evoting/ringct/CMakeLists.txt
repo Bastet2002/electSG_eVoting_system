@@ -26,6 +26,15 @@ include_directories(${sodium_include_dir})
 add_subdirectory(/libpqxx build-pqxx)
 target_link_libraries(pqxx)
 
+# fmt using fetch to avoid long rebuilding time in docker
+include(FetchContent)
+FetchContent_Declare(
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 10.2.1 
+)
+FetchContent_MakeAvailable(fmt)
+
 # proto file
 get_filename_component(rct_proto "./proto/ringct.proto" ABSOLUTE)
 get_filename_component(rct_proto_path "${rct_proto}" PATH)
@@ -67,7 +76,8 @@ add_executable(rct_server
     "src/vote.cc"
     "util/db_util.cc"
     "src/core.cc"
-    "rct/lsag.cpp")
+    "rct/lsag.cpp"
+    "rct/commitment.cpp")
 
 target_link_libraries(rct_server
     rct_grpc_proto
@@ -75,4 +85,5 @@ target_link_libraries(rct_server
     ${_GRPC_GRPCPP}
     ${_PROTOBUF_LIBPROTOBUF}
     sodium
+    fmt::fmt
     pqxx)

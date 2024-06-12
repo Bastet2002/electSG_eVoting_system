@@ -128,17 +128,6 @@ struct Commitment{
     }
 };
 
-// things to store in db
-// struct VoteRecord{
-//     blsagSig blsagSig;
-//     Commitment commitment;
-//     BYTE m[32];
-//     VoteRecord(){
-//         sodium_memzero(m, 32);
-//     }
-// };
-
-
 // util functions
 void to_string(string &output, const BYTE *BYTE, const size_t n);
 void hex_to_bytearray(BYTE *output, const string &input);
@@ -163,6 +152,8 @@ void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA);
 void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy);
 bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m);
 
+
+void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& sa, const User& receiver);
 void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
 
 void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index);

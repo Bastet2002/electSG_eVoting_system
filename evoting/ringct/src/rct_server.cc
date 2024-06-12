@@ -27,14 +27,12 @@ using namespace std;
 // convert vote_request to vote struct
 void vote_request_to_vote(Vote &vote, const Vote_Request &request)
 {
-    vote.district_id = request.district_id();
     vote.candidate_id = request.candidate_id();
     vote.voter_id = request.voter_id();
 }
 
 void vote_to_vote_response(Vote_Response &response, const Vote &vote)
 {
-    response.set_district_id(vote.district_id);
     response.set_candidate_id(vote.candidate_id);
     response.set_voter_id(vote.voter_id);
     response.set_key_image(vote.key_image);
@@ -56,13 +54,11 @@ void gen_votercurr_request_to_gen_votercurr(Gen_VoterCurr &gen_user_curr, const 
 
 void gen_candidate_request_to_gen_candidate(Gen_Candidate &gen_candidate, const Gen_Candidate_Request &request)
 {
-    gen_candidate.district_id = request.district_id();
     gen_candidate.candidate_id = request.candidate_id();
 }
 
 void gen_candidate_to_gen_candidate_response(Gen_Candidate_Response &response, const Gen_Candidate &gen_candidate)
 {
-    response.set_district_id(gen_candidate.district_id);
     response.set_candidate_id(gen_candidate.candidate_id);
     response.set_test_output(gen_candidate.test_output);
 }
@@ -86,9 +82,9 @@ public:
     Status Compute_Vote(ServerContext *context, const Vote_Request *request, Vote_Response *response) override
     {
         // use the django defined one
-        if (request->candidate_id() <= 0 || request->voter_id() <= 0 || request->district_id() <= 0)
+        if (request->candidate_id() <= 0 || request->voter_id() <= 0)
         {
-            return Status(grpc::INVALID_ARGUMENT, "Invalid field value for candidate_id, voter_id, or district_id");
+            return Status(grpc::INVALID_ARGUMENT, "Invalid field value for candidate_id, voter_id");
         }
 
         Vote vote;
@@ -127,12 +123,13 @@ public:
         }
 
         gen_votercurr_to_gen_votercurr_response(*response, gen_user_curr);
+
         return Status::OK;
     }
 
     Status Generate_CandidateKeys(ServerContext *context, const Gen_Candidate_Request *request, Gen_Candidate_Response *response) override
     {
-        if (request->district_id() <= 0 || request->candidate_id() <= 0)
+        if (request->candidate_id() <= 0)
         {
             return Status(grpc::INVALID_ARGUMENT, "Invalid field value for district_id or candidate_id");
         }
@@ -200,6 +197,7 @@ int main(int argc, char **argv)
         cout << "sodium_init failed" << endl;
         return 1;
     }
+
     RunServer();
 
     return 0;

@@ -2,6 +2,7 @@
 drop table if exists SingPass_User;
 drop table if exists Voter;
 drop table if exists Voter_secretkey;
+drop table if exists Voting_currency;
 drop table if exists Candidate_publickey;
 drop table if exists Candidate_secretkey;
 drop table if exists Vote_records;
