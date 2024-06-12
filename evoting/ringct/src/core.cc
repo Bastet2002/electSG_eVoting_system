@@ -44,10 +44,11 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
         {
             throw runtime_error(e.what());
         }
+
+        cout << "I have generated voter "<< i << " for district " << gen_user_curr.district_id << " stealthAddress and commitment and stored in db" << endl;
     }
     // TODO: remove test output
     gen_user_curr.test_output = "I have looped for " + to_string(gen_user_curr.voter_num) + " times";
-
     // TODO mix the order of the voters/stealth address in the db
 }
 
@@ -56,7 +57,6 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
 void CA_generate_candidate_keys(Gen_Candidate &gen_candidate)
 {
     User candidate;
-    // need to store in 2 different table, one for django and one for the ringct
 
     try
     {

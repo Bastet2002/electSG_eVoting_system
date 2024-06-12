@@ -38,6 +38,7 @@ void insertAtIndex(vector<T> &v, int index, const T &t)
 // it is the same as the result from the generate_H 
 const BYTE H_point[] = {0x9f, 0xac, 0xd9, 0x67, 0x6d, 0x4d, 0xd5, 0x68, 0x90, 0xf9, 0x2c, 0xf4, 0xca, 0x6d, 0x38, 0x9d, 0x24, 0xa1, 0x1f, 0xd2, 0x05, 0x79, 0xfc, 0xab, 0x6b, 0x28, 0xe5, 0x28, 0x30, 0x52, 0x28, 0x20};
 
+void hex_to_bytearray(BYTE *output, const string &input);
 
 // TODO : create one more user type with public key only??
 // when do we need sk?
@@ -58,6 +59,30 @@ struct User
         crypto_sign_keypair(pkV, skV);
         crypto_sign_keypair(pkS, skS);
     }
+
+    // for voter from db
+    User(string r_pkV, string r_skV, string r_pkS, string r_skS)
+    {
+        sodium_memzero(skV, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkV, crypto_sign_PUBLICKEYBYTES);
+        sodium_memzero(skS, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkS, crypto_sign_PUBLICKEYBYTES);
+        hex_to_bytearray(this->pkV, r_pkV);
+        hex_to_bytearray(this->skV, r_skV);
+        hex_to_bytearray(this->pkS, r_pkS);
+        hex_to_bytearray(this->skS, r_skS);
+    }
+
+    // for candidate from db
+    User(string r_pkV, string r_pkS)
+    {
+        sodium_memzero(skV, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkV, crypto_sign_PUBLICKEYBYTES);
+        sodium_memzero(skS, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkS, crypto_sign_PUBLICKEYBYTES);
+        hex_to_bytearray(this->pkV, r_pkV);
+        hex_to_bytearray(this->pkS, r_pkS);
+    }
 };
 
 struct StealthAddress
@@ -75,6 +100,17 @@ struct StealthAddress
         sodium_memzero(sk, crypto_core_ed25519_SCALARBYTES);
         sodium_memzero(r, crypto_core_ed25519_SCALARBYTES);
     }
+
+    StealthAddress(const string &r_pk, const string &r_rG)
+    {
+        sodium_memzero(pk, crypto_core_ed25519_BYTES);
+        sodium_memzero(rG, crypto_core_ed25519_BYTES);
+        sodium_memzero(sk, crypto_core_ed25519_SCALARBYTES);
+        sodium_memzero(r, crypto_core_ed25519_SCALARBYTES);
+        hex_to_bytearray(this->pk, r_pk);
+        hex_to_bytearray(this->rG, r_rG);
+    }
+
     void set_stealth_address(const BYTE *scanned_stealth_address)
     {
         memcpy(sk, scanned_stealth_address, crypto_core_ed25519_BYTES);
@@ -130,7 +166,6 @@ struct Commitment{
 
 // util functions
 void to_string(string &output, const BYTE *BYTE, const size_t n);
-void hex_to_bytearray(BYTE *output, const string &input);
 void compare_BYTE(const BYTE *a, const BYTE *b, const size_t n);
 void int_to_scalar_BYTE(BYTE *out, const long long input);
 void print_bytearray(const BYTE *key, const size_t n);
