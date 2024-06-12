@@ -20,6 +20,7 @@ CREATE TABLE Voter (
     voter_id SERIAL PRIMARY KEY,
     district_id BIGINT NOT NULL,
     hashfrominfo VARCHAR(128) UNIQUE, -- A 512bit hash, with H(disctrict_id, id, name, phone, DOB)
+    -- need to use salt for this, if not it is not secure
     pkV VARCHAR(64) NOT NULL,
     FOREIGN KEY (district_id) REFERENCES myapp_district(id) -- no delete cascade
 );
@@ -29,6 +30,14 @@ CREATE TABLE Voter_SecretKey (
     skV VARCHAR(64) NOT NULL UNIQUE,
     pkS VARCHAR(64) NOT NULL UNIQUE,
     skS VARCHAR(64) NOT NULL UNIQUE
+);
+
+CREATE TABLE Voting_Currency (
+    id SERIAL PRIMARY KEY,
+    district_id BIGINT NOT NULL,
+    stealth_address VARCHAR(64) NOT NULL UNIQUE,
+    commitment_record JSONB NOT NULL, 
+    FOREIGN KEY (district_id) REFERENCES myapp_district(id) -- no delete cascade
 );
 
 CREATE TABLE Candidate_PublicKey (
