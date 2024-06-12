@@ -35,6 +35,10 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(fmt)
 
+# include nlohmann/json for json parsing
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
 # proto file
 get_filename_component(rct_proto "./proto/ringct.proto" ABSOLUTE)
 get_filename_component(rct_proto_path "${rct_proto}" PATH)
@@ -86,4 +90,5 @@ target_link_libraries(rct_server
     ${_PROTOBUF_LIBPROTOBUF}
     sodium
     fmt::fmt
+    nlohmann_json::nlohmann_json
     pqxx)
