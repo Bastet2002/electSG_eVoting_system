@@ -77,3 +77,19 @@ def delete_candidateprofile_images(sender, instance, **kwargs):
         instance.election_poster.delete(save=False)
     if instance.profile_picture:
         instance.profile_picture.delete(save=False)
+
+
+#-------------------------Temp voter-----------------------------
+from django.db import models
+from django.utils import timezone
+
+class TemporaryVoter(models.Model):
+    username = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200)
+    date_of_birth = models.DateField()
+    password = models.CharField(max_length=200)
+    district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
+    last_login = models.DateTimeField(null=True, blank=True)  # Add this field
+
+    def __str__(self):
+        return self.username

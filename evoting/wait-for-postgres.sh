@@ -16,6 +16,7 @@ done
 python manage.py makemigrations
 python manage.py migrate
 python manage.py loaddata ./dbinit/initial_data.json
+python manage.py create_temp_voter
 
 PGPASSWORD=$DJANGO_DB_PASSWORD psql -h "$host" -U "$DJANGO_DB_USER" -d "$DJANGO_DB_NAME" -f ./dbinit/db_init.sql
 

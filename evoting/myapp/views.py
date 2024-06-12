@@ -5,8 +5,9 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
 from .forms import createNewUser, editUser, createDistrict, editDistrict, createAnnouncement, createParty, CreateProfileForm
-from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile
+from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, TemporaryVoter
 # from evoting.pygrpc.ringct_client import grpc_generate_user_and_votingcurr_run, grpc_compute_vote_run, grpc_generate_candidate_keys_run, grpc_calculate_total_vote_run 
+from django.contrib.auth.hashers import check_password # for temp voter
 
 from pygrpc.ringct_client import (
     grpc_generate_user_and_votingcurr_run,
@@ -23,17 +24,19 @@ def user_login(request):
         username = request.POST['username']
         password = request.POST['password']
         user = authenticate(request, username=username, password=password)
+
         if user is not None:
             login(request, user)
-            if user.role.profile_name == 'Admin':
-                return redirect('admin_home')
-            elif user.role.profile_name == 'Candidate':
-                return redirect('candidate_home')
-            elif user.role.profile_name == 'Voter':
-                return redirect('voter_home')
-            return redirect('base')  # Redirect to home page after successful login
+            try:
+                if user.role.profile_name == 'Admin':
+                    return redirect('admin_home')
+                elif user.role.profile_name == 'Candidate':
+                    return redirect('candidate_home')
+                elif user.role.profile_name == 'Voter':
+                    return redirect('voter_home')
+            except AttributeError:
+                return redirect('voter_home')  # TemporaryVoter does not have 'role', so redirect to voter_home
         else:
-            print("here")
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
     else:
         return render(request, 'login.html')
@@ -309,11 +312,11 @@ def delete_party(request, id):
 def voter_home(request):
     candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
     user = request.user
-    # user_district = user.district.name if user.district else "No District"
+    user_district = user.district.name if user.district else "No District"
     # voting_status = "Haven't voted" 
     return render(request, 'Voter/voterPg.html', {
         'candidates': candidates,
-        # 'user_district': user_district,
+        'user_district': user_district,
         # 'voting_status': voting_status,
     })
 
@@ -337,28 +340,35 @@ def view_candidate(request, candidate_id):
         'candidate_profile': candidate_profile,
     })
 
-# def cast_vote(request):
-#     if request.method == 'POST':
-#         selected_candidates = request.POST.getlist('candidate')
-#         voter = request.user
-#         district_id = voter.district.id if voter.district else None
+def cast_vote(request):
+    if request.method == 'POST':
+        selected_candidates = request.POST.getlist('candidate')
+        
+        if isinstance(request.user, TemporaryVoter):
+            voter = request.user
+        else:
+            messages.error(request, 'Error: Only voters can cast votes.')
+            return redirect('ballot_paper')
+        
+        district_id = voter.district.id if voter.district else None
 
-#         if not district_id:
-#             messages.error(request, 'Error: Voter does not belong to a district.')
-#             return redirect('ballot_paper')
+        if not district_id:
+            messages.error(request, 'Error: Voter does not belong to a district.')
+            return redirect('ballot_paper')
 
-#         for candidate_id in selected_candidates:
-#             try:
-#                 grpc_compute_vote_run(district_id=district_id, candidate_id=int(candidate_id), voter_id=voter.id)
-#             except Exception as e:
-#                 # Handle the exceptions
-#                 print(f"Error in gRPC call: {e}")
-#                 messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
+        for candidate_id in selected_candidates:
+            try:
+                grpc_compute_vote_run(district_id=district_id, candidate_id=int(candidate_id), voter_id=voter.id)
+            except Exception as e:
+                # Handle the exceptions
+                print(f"Error in gRPC call: {e}")
+                messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
 
-#         messages.success(request, 'Your vote has been submitted.')
-#         return redirect('voter_home')
-#     else:
-#         return redirect('ballot_paper')
+        messages.success(request, 'Your vote has been submitted.')
+        return redirect('voter_home')
+    else:
+        candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
+        return render(request, 'voting/ballot_paper.html', {'candidates': candidates})
 
 
 # ---------------------------------------Candidate views------------------------------------------------

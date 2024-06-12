@@ -47,6 +47,7 @@ AUTH_USER_MODEL = 'myapp.UserAccount'
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default authentication backend
+    'myapp.tempVoter.TemporaryVoterBackend', # custom backend for voter
 ]
 
 MIDDLEWARE = [

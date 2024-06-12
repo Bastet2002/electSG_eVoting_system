@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'Voter/votingPg.css' %}"> 
 <div class="main">
     <h2>Digital Ballot Paper</h2>
-    <form method="post" action="{% url 'submit_ballot' %}">
+    <form method="post" action="{% url 'cast_vote' %}">
         {% csrf_token %}
         <div class="ballot-paper">
             {% for candidate in candidates %}
