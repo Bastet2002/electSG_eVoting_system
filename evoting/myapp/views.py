@@ -171,7 +171,10 @@ def view_district(request):
     else:
         district = District.objects.all()
 
-    return render(request, 'district/viewDistrict.html', {'district': district})
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    disable_deletion = current_phase and current_phase.name in ['Cooling Off Day', 'Polling Day']
+
+    return render(request, 'district/viewDistrict.html', {'district': district, 'disable_deletion': disable_deletion})
 
 
 def edit_district(request, district_id):
@@ -208,7 +211,10 @@ def create_profile(request):
 
 def view_profiles(request):
     profiles = Profile.objects.all()
-    return render(request, 'userProfile/viewProfiles.html', {'profiles': profiles})
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    disable_deletion = current_phase and current_phase.name in ['Cooling Off Day', 'Polling Day']
+
+    return render(request, 'userProfile/viewProfiles.html', {'profiles': profiles, 'disable_deletion': disable_deletion})
 
 def edit_profile(request, id):
     profile = get_object_or_404(Profile, id=id)
@@ -310,19 +316,43 @@ def delete_party(request, id):
 # ---------------------------------------Voter views------------------------------------------------
 
 def voter_home(request):
-    candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
-    user = request.user
-    user_district = user.district.name if user.district else "No District"
-    # voting_status = "Haven't voted" 
+    if isinstance(request.user, TemporaryVoter):
+        voter = request.user
+    else:
+        messages.error(request, 'Error: Only voters can access this page.')
+        return redirect('login')
+
+    district_id = voter.district.id if voter.district else None
+
+    if not district_id:
+        messages.error(request, 'Error: Voter does not belong to a district.')
+        return redirect('login')
+
+    candidates = CandidateProfile.objects.filter(user_account__district_id=district_id).select_related('user_account', 'user_account__party')
+    user_district = voter.district.name if voter.district else "No District"
+
     return render(request, 'Voter/voterPg.html', {
         'candidates': candidates,
         'user_district': user_district,
-        # 'voting_status': voting_status,
+        #'voting_status':...
     })
 
 def ballot_paper(request):
-    candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
+    if isinstance(request.user, TemporaryVoter):
+        voter = request.user
+    else:
+        messages.error(request, 'Error: Only voters can view the ballot paper.')
+        return redirect('login')
+
+    district_id = voter.district.id if voter.district else None
+
+    if not district_id:
+        messages.error(request, 'Error: Voter does not belong to a district.')
+        return redirect('login')
+
+    candidates = CandidateProfile.objects.filter(user_account__district_id=district_id).select_related('user_account', 'user_account__party')
     return render(request, 'Voter/votingPg.html', {'candidates': candidates})
+    
 
 def view_candidate(request, candidate_id):
     candidate_profile = get_object_or_404(CandidateProfile, id=candidate_id)
@@ -348,13 +378,13 @@ def cast_vote(request):
             voter = request.user
         else:
             messages.error(request, 'Error: Only voters can cast votes.')
-            return redirect('ballot_paper')
+            return redirect('voter_home')
         
         district_id = voter.district.id if voter.district else None
 
         if not district_id:
             messages.error(request, 'Error: Voter does not belong to a district.')
-            return redirect('ballot_paper')
+            return redirect('voter_home')
 
         for candidate_id in selected_candidates:
             try:

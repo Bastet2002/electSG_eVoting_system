@@ -53,8 +53,6 @@
             "name": "John Doe",
             "date_of_birth": "1980-01-01",
             "password": "pbkdf2_sha256$150000$KdTR1syrrtvl$7GZcly4GEXjOdv5uwX6h6hTZEnY1OavdB3zQm5GwbM=",  
-            "party": 1,
-            "district": 1,
             "role": 1
         }
     },

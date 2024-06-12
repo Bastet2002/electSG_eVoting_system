@@ -15,7 +15,7 @@ election_status = [
 class createNewUser(forms.ModelForm):  # Class names typically start with a capital letter
     class Meta:
         model = UserAccount
-        fields = ['username', 'name', 'date_of_birth', 'password', 'party', 'district', 'role']
+        fields = ['username', 'name', 'date_of_birth', 'password', 'role','party', 'district']
         widgets = {
             'password': forms.PasswordInput(),
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
@@ -24,7 +24,7 @@ class createNewUser(forms.ModelForm):  # Class names typically start with a capi
 class editUser(forms.ModelForm):
     class Meta:
         model = UserAccount
-        exclude = ['password', 'role']
+        exclude = ['password', 'role', 'last_login']
         widgets = {
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
 

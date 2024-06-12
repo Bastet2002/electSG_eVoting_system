@@ -31,7 +31,7 @@
                             <a href="{% url 'edit_district' district.id %}" class="btn btn-primary">Update</a>
                             <form method="post" action="{% url 'delete_district' district.id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-danger {% if disable_deletion %}btn-disabled{% endif %}" {% if disable_deletion %}disabled{% endif %}>Delete</button>
                             </form>
                         </td>
                     </tr>

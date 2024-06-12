@@ -6,6 +6,8 @@ def add_election_phases(apps, schema_editor):
     ElectionPhase.objects.create(name='Campaigning Day', is_active=False)
     ElectionPhase.objects.create(name='Cooling Off Day', is_active=False)
     ElectionPhase.objects.create(name='Polling Day', is_active=False)
+    ElectionPhase.objects.create(name='End Election', is_active=False)
+
 
 class Migration(migrations.Migration):
 

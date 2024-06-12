@@ -26,7 +26,7 @@
                             <a href="{% url 'edit_profile' profile.id %}" class="btn btn-primary">Update</a>
                             <form method="post" action="{% url 'delete_profile' profile.id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-danger" {% if disable_deletion %}disabled{% endif %}>Delete</button>
                             </form>
                             {% else %}
                                 <span>Permanent Profile</span>

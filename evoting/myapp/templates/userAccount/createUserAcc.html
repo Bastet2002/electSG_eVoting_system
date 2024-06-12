@@ -4,30 +4,59 @@
 {% block title %}Create New User{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="{% static 'userAccount/createUserAcc.css' %}">
+<link rel="stylesheet" href="{% static 'userAccount/createUserAcc.css' %}">
 
-    <div class="main">
-        <h1 style="text-align: center;">Create New User Account</h1>
-        <form method="post" action="{% url 'create_account' %}" class="create-new-user-form">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" name="create_new" >Create New Account</button>
-        </form>
+<div class="main">
+    <h1 style="text-align: center;">Create New User Account</h1>
+    <form method="post" action="{% url 'create_account' %}" class="create-new-user-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="create_new">Create New Account</button>
+    </form>
+</div>
+{% if success %}
+    <div id="popupAlert" class="popup-alert show">
+        Account successfully created!
     </div>
-    {% if success %}
-        <div id="popupAlert" class="popup-alert show">
-            Account successfully created!
-        </div>
-        <script>
-            // Show the alert
-            const alertBox = document.getElementById('popupAlert');
-            alertBox.classList.add('show');
-            
-            // Hide the alert after 3 seconds
-            setTimeout(() => {
-                alertBox.classList.remove('show');
-            }, 3000);
-        </script>
-    {% endif %}
-   
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+        
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000);
+    </script>
+{% endif %}
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const roleField = document.getElementById('id_role');
+        const partyField = document.getElementById('id_party');
+        const districtField = document.getElementById('id_district');
+
+        function disableFields() {
+            const roleValue = roleField.value;
+            console.log('Role Value:', roleValue); // Debugging
+            if (roleValue === '2') { // Check if role is 'admin'
+                console.log('Disabling fields'); // Debugging
+                partyField.disabled = true;
+                districtField.disabled = true;
+            } else {
+                console.log('Enabling fields'); // Debugging
+                partyField.disabled = false;
+                districtField.disabled = false;
+            }
+        }
+
+        disableFields();
+
+        // Add event listeners to the role field
+        roleField.addEventListener('change', function() {
+            console.log('Role field changed');
+            disableFields();
+        });
+    });
+</script>
 {% endblock %}
