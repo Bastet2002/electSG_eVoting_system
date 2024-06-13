@@ -86,24 +86,26 @@ void CA_generate_candidate_keys(Gen_Candidate &gen_candidate)
 // store the data at the end of the function
 void voter_cast_vote(Vote &vote)
 {
-    StealthAddress signerSA;
+    StealthAddress receivedSA;
+    StealthAddress candidateSA;
     blsagSig blsagSig;
+    int32_t district_id;
 
     // TODO change to real db
     User signer = get_voter(vote.voter_id);
 
     // TODO grab candidate public key from db
-    User candidate = get_candidate(vote.candidate_id);
+    User candidate = get_candidate(district_id, vote.candidate_id);
 
-    // TODO scan for stealth address with db
     // the r is set in compute_stealth_address,
-    compute_stealth_address(signerSA, signer);
-    receiver_test_stealth_address(signerSA, signer);
+    scan_for_stealthaddress(receivedSA, district_id, signer);
+    compute_stealth_address(candidateSA, candidate);
+    receiver_test_stealth_address(candidateSA, candidate);
 
-    // TODO after grab the stealth address from db
     // check the keyimage against the voted table in db
-    compute_key_image(blsagSig, signerSA);
-    // verify_double_voting(blsagSig.key_image);
+    compute_key_image(blsagSig, receivedSA);
+    // TODO need to throw the double voting error the the grpc server
+    verify_double_voting(district_id, blsagSig.key_image);
 
     // TODO after having stealth address, decode amount_t from the output
 
@@ -123,7 +125,7 @@ void voter_cast_vote(Vote &vote)
 
     // TODO need to move the key image out from blsag simple gen.
     // The reason is to compare double voting, and move it to earlier step for efficiency
-    blsag_simple_gen(blsagSig, m, secret_index, signerSA, blsagSA);
+    blsag_simple_gen(blsagSig, m, secret_index, receivedSA, blsagSA);
     bool is_verified = blsag_simple_verify(blsagSig, m);
     if (!is_verified)
     {
@@ -131,8 +133,8 @@ void voter_cast_vote(Vote &vote)
     }
 
     // need to wipe r, sk in stealth address before store in db
-    sodium_memzero(signerSA.r, 32);
-    sodium_memzero(signerSA.sk, 32);
+    sodium_memzero(candidateSA.r, 32);
+    sodium_memzero(candidateSA.sk, 32);
 
     // TODO store in db, the vote record
     // blsag -> c, r, keyimage, membersSA.pk/index in db

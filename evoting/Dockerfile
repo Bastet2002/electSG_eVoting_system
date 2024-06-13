@@ -14,6 +14,9 @@ RUN git clone -b v1.64.0 --depth 1 --shallow-submodules https://github.com/grpc/
 # Set the working directory in the container
 WORKDIR /app
 
+# it looks like the path is messed up
+ENV PYTHONPATH=/app
+
 RUN apt-get update && apt-get install -y postgresql-client libpq-dev
 
 # Install dependencies
