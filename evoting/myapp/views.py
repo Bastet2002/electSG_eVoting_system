@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Q
-from .forms import createNewUser, editUser, createDistrict, editDistrict, createAnnouncement, createParty, CreateProfileForm
+from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, TemporaryVoter
 # from evoting.pygrpc.ringct_client import grpc_generate_user_and_votingcurr_run, grpc_compute_vote_run, grpc_generate_candidate_keys_run, grpc_calculate_total_vote_run 
 from django.contrib.auth.hashers import check_password # for temp voter
@@ -58,7 +58,7 @@ def admin_home(request):
 # ---------------------------------------UserAccount views------------------------------------------------
 def create_account(request):
     if request.method == 'POST':
-        form = createNewUser(request.POST)
+        form = CreateNewUser(request.POST)
         if form.is_valid():
             new_user = form.save(commit=False)
             # Hash the password before saving
@@ -77,12 +77,12 @@ def create_account(request):
                     # Handle the exception
                     print(f"Error in gRPC call: {e}")
 
-            return render(request, "userAccount/createUserAcc.html", {"form": createNewUser(), "success": True})
+            return render(request, "userAccount/createUserAcc.html", {"form": CreateNewUser(), "success": True})
         else:
             print(form.errors)  # using this to debug
             return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
     else:
-        form = createNewUser()
+        form = CreateNewUser()
     return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
 
 
@@ -107,12 +107,12 @@ def edit_user(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
     if request.method == 'POST':
-        form = editUser(request.POST, instance=user)
+        form = EditUser(request.POST, instance=user)
         if form.is_valid():
             form.save()
             return redirect('view_user_accounts')
     else:
-        form = editUser(instance=user)
+        form = EditUser(instance=user)
     return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase})
 
 
@@ -142,7 +142,7 @@ def list_election_phases(request):
 def create_district(request):
    
     if request.method == 'POST':
-        form = createDistrict(request.POST)
+        form = CreateDistrict(request.POST)
         if form.is_valid():
             district_names = form.cleaned_data['district_names']
             district_list = [name.strip() for name in district_names.split(';') if name.strip()]
@@ -156,9 +156,9 @@ def create_district(request):
                         print(f"Error in gRPC call: {e}")
 
             
-            return render(request, 'district/createDistrict.html', {'form': createDistrict(), "success": True})
+            return render(request, 'district/createDistrict.html', {'form': CreateDistrict(), "success": True})
     else:
-        form = createDistrict()
+        form = CreateDistrict()
 
     return render(request, 'district/createDistrict.html', {'form': form, "success": False})
 
@@ -180,12 +180,12 @@ def view_district(request):
 def edit_district(request, district_id):
     district = get_object_or_404(District, id=district_id)
     if request.method == 'POST':
-        form = editDistrict(request.POST, instance=district)
+        form = EditDistrict(request.POST, instance=district)
         if form.is_valid():
             form.save()
             return redirect('view_district')
     else:
-        form = editDistrict(instance=district)
+        form = EditDistrict(instance=district)
 
     return render(request, 'district/editDistrict.html', {'form': form, 'district': district})
 
@@ -238,12 +238,12 @@ def delete_profile(request, id):
 # ---------------------------------------Announcement views------------------------------------------------
 def create_announcement(request):
     if request.method == 'POST':
-        form = createAnnouncement(request.POST)
+        form = CreateAnnouncement(request.POST)
         if form.is_valid():
             form.save()
             return redirect('create_announcement')
     else:
-        form = createAnnouncement()
+        form = CreateAnnouncement()
     return render(request, 'announcement/createAnnouncement.html', {'form': form})
 
 
@@ -260,12 +260,12 @@ def view_announcement_detail(request, id):
 def edit_announcement(request, id):
     announcement = get_object_or_404(Announcement, id=id)
     if request.method == 'POST':
-        form = createAnnouncement(request.POST, instance=announcement)
+        form = CreateAnnouncement(request.POST, instance=announcement)
         if form.is_valid():
             form.save()
             return redirect('view_announcement')
     else:
-        form = createAnnouncement(instance=announcement)
+        form = CreateAnnouncement(instance=announcement)
     return render(request, 'announcement/editAnnouncement.html', {'form': form})
 
 
@@ -280,12 +280,12 @@ def delete_announcement(request, id):
 # ---------------------------------------Party views------------------------------------------------
 def create_party(request):
     if request.method == 'POST':
-        form = createParty(request.POST)
+        form = CreateParty(request.POST)
         if form.is_valid():
             form.save()
-            return render(request, 'party/createParty.html', {'form': createParty(), "success": True})
+            return render(request, 'party/createParty.html', {'form': CreateParty(), "success": True})
     else:
-        form = createParty()
+        form = CreateParty()
     return render(request, 'party/createParty.html', {'form': form, "success": False})
 
 
@@ -297,12 +297,12 @@ def view_party(request):
 def edit_party(request, id):
     party = get_object_or_404(Party, id=id)
     if request.method == 'POST':
-        form = createParty(request.POST, instance=party)
+        form = CreateParty(request.POST, instance=party)
         if form.is_valid():
             form.save()
             return redirect('view_party')
     else:
-        form = createParty(instance=party)
+        form = CreateParty(instance=party)
     return render(request, 'party/editParty.html', {'form': form})
 
 

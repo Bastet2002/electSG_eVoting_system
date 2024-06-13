@@ -12,7 +12,7 @@ election_status = [
     ('cool off day'), ('Cool Off Day'),
 ]
 
-class createNewUser(forms.ModelForm):  # Class names typically start with a capital letter
+class CreateNewUser(forms.ModelForm):  # Class names typically start with a capital letter
     class Meta:
         model = UserAccount
         fields = ['username', 'name', 'date_of_birth', 'password', 'role','party', 'district']
@@ -21,7 +21,7 @@ class createNewUser(forms.ModelForm):  # Class names typically start with a capi
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
         }
 
-class editUser(forms.ModelForm):
+class EditUser(forms.ModelForm):
     class Meta:
         model = UserAccount
         exclude = ['password', 'role', 'last_login']
@@ -55,24 +55,24 @@ class CreateProfileForm(forms.ModelForm):
             raise forms.ValidationError("This profile name is not allowed or already exists.")
         return profile_name
 
-class createDistrict(forms.Form):
+class CreateDistrict(forms.Form):
     district_names = forms.CharField(
         widget=forms.Textarea(attrs={'placeholder': 'Enter district names separated by semicolons (;)'}),
     )
 
-class editDistrict(forms.ModelForm):
+class EditDistrict(forms.ModelForm):
     class Meta:
         model = District
         fields = ['name']
 
 
-class createAnnouncement(forms.ModelForm):
+class CreateAnnouncement(forms.ModelForm):
     class Meta:
         model = Announcement
         fields = ['header', 'content']
 
 
-class createParty(forms.ModelForm):
+class CreateParty(forms.ModelForm):
     class Meta:
         model = Party
         fields = ['party']
