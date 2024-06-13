@@ -18,6 +18,7 @@ DB ERROR CODES
 // can also get user by pk for function overloading
 User get_voter(int32_t voter_id)
 {
+    cout << "get voter id: " << voter_id << endl;
     pqxx::connection c_django{cnt_django};
     if (!c_django.is_open())
     {
@@ -31,7 +32,7 @@ User get_voter(int32_t voter_id)
 
     // 2. get all the keys with pkV in the rinct db
     pqxx::connection c_rct{cnt_rct};
-    if(!c_rct.is_open())
+    if (!c_rct.is_open())
     {
         throw runtime_error("Failed to open connection to " + string(c_rct.dbname()));
     }
@@ -41,8 +42,9 @@ User get_voter(int32_t voter_id)
     return User(r["pkV"].as<string>(), r["skV"].as<string>(), r["pkS"].as<string>(), r["skS"].as<string>());
 }
 
-User get_candidate(int32_t candidate_id)
+User get_candidate(int32_t &district_id, const int32_t candidate_id)
 {
+    cout << "get candidate id: " << candidate_id << endl;
     pqxx::connection c_django{cnt_django};
     if (!c_django.is_open())
     {
@@ -52,12 +54,22 @@ User get_candidate(int32_t candidate_id)
     // 1. get the pkV from the voter table in django db
     pqxx::nontransaction txn_d{c_django};
     pqxx::row r = txn_d.exec1("select pkV, pkS from candidate_publickey where candidate_id = " + to_string(candidate_id) + ";");
+    string pkV = r["pkV"].as<string>();
+    string pkS = r["pkS"].as<string>();
 
-    return User(r["pkV"].as<string>(), r["pkS"].as<string>());
+    cout << "candidate id " << candidate_id << endl;
+    cout << "pkV: " << pkV << endl;
+
+    // 2. get the district id from useraccount table
+    r = txn_d.exec1("select district_id from myapp_useraccount where id = '" + to_string(candidate_id) + "';");
+    district_id = r["district_id"].as<int>();
+
+    return User(pkV, pkS);
 }
 
 void write_voter(const int32_t district_id, const User &voter)
 {
+    cout << "write voter in " << district_id << endl;
     // convert to hexstring
     string pkV, skV, pkS, skS;
     to_string(pkV, voter.pkV, 32);
@@ -93,6 +105,7 @@ void write_voter(const int32_t district_id, const User &voter)
 
 void write_votercurrency(const int32_t district_id, const StealthAddress &sa, const Commitment &commitment)
 {
+    cout << "write vote currency in " << district_id << endl;
     /**
      * json format
      * {
@@ -115,11 +128,11 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
     to_string(pseudo_output_commitment, commitment.pseudoouts_commitments[0].data(), 32);
     // TODO amount mask not implemented
     // to_string(amount_mask, commitment.amount_masks[0].data(), 32);
-    amount_mask = "0";
+    amount_mask = "10";
 
     string json = fmt::format(R"({{"rg": "{}", "commitment": {{"input_commitment": "{}", "output_commitment": "{}", "pseudo_output_commitment": "{}", "amount_mask": "{}"}}}})",
                               rG, input_commitment, output_commitment, pseudo_output_commitment, amount_mask);
-    
+
     pqxx::connection C(cnt_django);
 
     if (!C.is_open())
@@ -127,13 +140,14 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
         throw runtime_error("Failed to open connection to " + string(C.dbname()));
     }
     C.prepare("insert vote_currency", "insert into voting_currency (district_id, stealth_address, commitment_record) values ($1, $2, $3);");
-    pqxx::work W(C); 
+    pqxx::work W(C);
     W.exec_prepared("insert vote_currency", district_id, stealth_address, json);
     W.commit();
 }
 
 void write_candidate(const int32_t candidate_id, const User &candidate)
 {
+    cout << "write candidate id:" << candidate_id << endl;
     // convert to hexstring
     string pkV, skV, pkS, skS;
     to_string(pkV, candidate.pkV, 32);
@@ -171,7 +185,9 @@ void write_candidate(const int32_t candidate_id, const User &candidate)
     cout << "Candidate id:" << candidate_id << " written to candidate_publickey" << endl;
 }
 
-void scan_for_stealthaddress(StealthAddress& sa, const int32_t district_id, const User & signer){
+void scan_for_stealthaddress(StealthAddress &sa, const int32_t district_id, const User &signer)
+{
+    cout << "scan for stealth address in district " << district_id << endl;
 
     pqxx::connection C(cnt_django);
     if (!C.is_open())
@@ -180,27 +196,29 @@ void scan_for_stealthaddress(StealthAddress& sa, const int32_t district_id, cons
     }
     pqxx::work W(C);
 
-    pqxx::result r = W.exec("select stealth_address, commitment_record from voting_currency where district_id = " + to_string(district_id) + ";");
+    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rg' as rG from voting_currency where district_id = " + to_string(district_id) + ";");
+    cout << "the size of the r is " << size(r) << endl;
 
-    // TODO : what if the record is too much 
-    for (pqxx::result::const_iterator c = r.begin(); c != r.end(); ++c)
+    // TODO : what if the record is too much
+    for (const auto &row : r)
     {
-        string stealth_address = c["stealth_address"].as<string>();
-        json commitment_record = json::parse(c["commitment_record"].as<string>());
-        string rG = commitment_record["rG"];
-
+        string stealth_address = row["stealth_address"].as<string>();
+        cout << "stealth address: " << stealth_address << endl;
+        string rG = row[1].as<string>();
+        cout << "rG: " << rG << endl;
         StealthAddress sa_temp(stealth_address, rG);
         if (receiver_test_stealth_address(sa_temp, signer))
         {
+            cout << "stealth address found" << endl;
             sa = sa_temp;
-            return;
+            return; // Stealth address found and valid
         }
     }
 
     throw runtime_error("Stealth address not found in scan_for_stealthaddress");
 }
 
-bool verify_double_voting(const int32_t district_id, const BYTE* key_image)
+bool verify_double_voting(const int32_t district_id, const BYTE *key_image)
 {
     pqxx::connection C(cnt_django);
     if (!C.is_open())
@@ -209,13 +227,19 @@ bool verify_double_voting(const int32_t district_id, const BYTE* key_image)
     }
     pqxx::work W(C);
     string key_image_str;
-
     to_string(key_image_str, key_image, 32);
-    pqxx::row r = W.exec1("select sum(*) from vote_records where district_id=" + string(district_id) + " and key_image='" + key_image_str + "';");
-    return !(r[0].as<int>() > 0);
+
+    cout << "verify double voting in " << district_id << " with key image " << key_image_str << endl;
+
+    pqxx::result r = W.exec("select * from vote_records where district_id=" + to_string(district_id) + " and key_image='" + key_image_str + "';");
+    if (r.empty())
+    {
+        return true;
+    }
+    return false;
 }
 
-void write_voterecord (const int32_t district_id, const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment)
+void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment)
 {
     /*
     keyimage
@@ -236,14 +260,12 @@ void write_voterecord (const int32_t district_id, const blsagSig &blsagSig, cons
     }
     }
     */
-
-
 }
 
-void grab_decoys(){
-
+void grab_decoys()
+{
 }
 
-void verify_vote_record(){
-
+void verify_vote_record()
+{
 }
