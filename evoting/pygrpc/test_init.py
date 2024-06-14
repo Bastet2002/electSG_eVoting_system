@@ -3,6 +3,7 @@ from ringct_client import (
     grpc_generate_user_and_votingcurr_run,
     grpc_generate_candidate_keys_run,
     grpc_compute_vote_run,
+    GrpcError, 
 )
 
 if __name__ == "__main__":
@@ -11,4 +12,8 @@ if __name__ == "__main__":
 
     grpc_generate_candidate_keys_run(2)
 
-    grpc_compute_vote_run(2, 1)
+    try: 
+        grpc_compute_vote_run(2, 1)
+        grpc_compute_vote_run(2, 1)
+    except GrpcError as e:   
+        print(e)

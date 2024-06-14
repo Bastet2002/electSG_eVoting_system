@@ -14,7 +14,8 @@ from pygrpc.ringct_client import (
     grpc_construct_gen_candidate_request,
     grpc_construct_calculate_total_vote_request,
     grpc_generate_candidate_keys_run,
-    grpc_compute_vote_run
+    grpc_compute_vote_run,
+    GrpcError,
 )
 
 
@@ -148,7 +149,7 @@ def create_district(request):
                 district, created = District.objects.get_or_create(name=name)
                 if created:
                     try:
-                        grpc_generate_user_and_votingcurr_run(district_id=district.id, voter_num=10)
+                        grpc_generate_user_and_votingcurr_run(district_id=district.id, voter_num=1)
                     except Exception as e:
                         print(f"Error in gRPC call: {e}")
 
@@ -337,28 +338,32 @@ def view_candidate(request, candidate_id):
         'candidate_profile': candidate_profile,
     })
 
-# def cast_vote(request):
-#     if request.method == 'POST':
-#         selected_candidates = request.POST.getlist('candidate')
-#         voter = request.user
-#         district_id = voter.district.id if voter.district else None
+def cast_vote(request):
+    if request.method == 'POST':
+        selected_candidates = request.POST.getlist('candidate')
+        voter = request.user
+        district_id = voter.district.id if voter.district else None
 
-#         if not district_id:
-#             messages.error(request, 'Error: Voter does not belong to a district.')
-#             return redirect('ballot_paper')
+        if not district_id:
+            messages.error(request, 'Error: Voter does not belong to a district.')
+            return redirect('ballot_paper')
 
-#         for candidate_id in selected_candidates:
-#             try:
-#                 grpc_compute_vote_run(district_id=district_id, candidate_id=int(candidate_id), voter_id=voter.id)
-#             except Exception as e:
-#                 # Handle the exceptions
-#                 print(f"Error in gRPC call: {e}")
-#                 messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
+        for candidate_id in selected_candidates:
+            try:
+                grpc_compute_vote_run(candidate_id=int(candidate_id), voter_id=voter.id)
+            except GrpcError as e:
+                # Handle the exceptions
+                print(f"Error in gRPC call: {e}")
+                messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
+            except Exception as e:
+                # Handle the exceptions
+                print(f"Error in gRPC call: {e}")
+                messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
 
-#         messages.success(request, 'Your vote has been submitted.')
-#         return redirect('voter_home')
-#     else:
-#         return redirect('ballot_paper')
+        messages.success(request, 'Your vote has been submitted.')
+        return redirect('voter_home')
+    else:
+        return redirect('ballot_paper')
 
 
 # ---------------------------------------Candidate views------------------------------------------------

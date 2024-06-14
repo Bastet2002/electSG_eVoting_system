@@ -2,6 +2,7 @@
 #include <grpcpp/grpcpp.h>
 #include "evoting.h"
 #include "core.h"
+#include "../util/custom_exception.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -94,7 +95,12 @@ public:
         {
             voter_cast_vote(vote);
         }
-        catch (const std::exception &e)
+        catch (const CustomException<int>& e) {
+            if (e.getErrorCode() == 101)
+                return Status(grpc::ALREADY_EXISTS, e.what());
+            return Status(grpc::ABORTED, e.what());
+        }
+        catch (const exception &e)
         {
             return Status(grpc::INTERNAL, e.what());
         }
