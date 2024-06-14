@@ -1,4 +1,12 @@
 #include "core.h"
+#include "../util/custom_exception.h"
+#include "fmt/format.h"
+
+// All error related to core logic should be handled by CustomException
+// The error core prefix is "1"
+/*
+101 CORE_DOUBLE_VOTING
+*/
 
 // TODO CA generate all the voters keys, currency and store in db without signature and decoys
 // Would need to separate with district
@@ -102,8 +110,12 @@ void voter_cast_vote(Vote &vote)
 
     // check the keyimage against the voted table in db
     compute_key_image(blsagSig, receivedSA);
-    // TODO need to throw the double voting error the the grpc server
-    verify_double_voting(district_id, blsagSig.key_image);
+
+    if (!verify_double_voting(district_id, blsagSig.key_image)){
+        string msg = fmt::format("Double voting detected for district {} and voter id {}", district_id, vote.voter_id);
+        cerr << msg << endl;
+        throw CustomException(msg, 101);
+    }
 
     // TODO after having stealth address, decode amount_t from the output
 
