@@ -130,7 +130,7 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
     // to_string(amount_mask, commitment.amount_masks[0].data(), 32);
     amount_mask = "10";
 
-    string json = fmt::format(R"({{"rg": "{}", "commitment": {{"input_commitment": "{}", "output_commitment": "{}", "pseudo_output_commitment": "{}", "amount_mask": "{}"}}}})",
+    string json = fmt::format(R"({{"rG": "{}", "commitment": {{"input_commitment": "{}", "output_commitment": "{}", "pseudoout_commitment": "{}", "amount_mask": "{}"}}}})",
                               rG, input_commitment, output_commitment, pseudo_output_commitment, amount_mask);
 
     pqxx::connection C(cnt_django);
@@ -196,20 +196,17 @@ void scan_for_stealthaddress(StealthAddress &sa, const int32_t district_id, cons
     }
     pqxx::work W(C);
 
-    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rg' as rG from voting_currency where district_id = " + to_string(district_id) + ";");
-    cout << "the size of the r is " << size(r) << endl;
+    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG from voting_currency where district_id = " + to_string(district_id) + ";");
 
     // TODO : what if the record is too much
     for (const auto &row : r)
     {
         string stealth_address = row["stealth_address"].as<string>();
-        cout << "stealth address: " << stealth_address << endl;
         string rG = row[1].as<string>();
-        cout << "rG: " << rG << endl;
         StealthAddress sa_temp(stealth_address, rG);
         if (receiver_test_stealth_address(sa_temp, signer))
         {
-            cout << "stealth address found" << endl;
+            cout << "Stealth address found" << endl;
             sa = sa_temp;
             return; // Stealth address found and valid
         }
@@ -232,24 +229,22 @@ bool verify_double_voting(const int32_t district_id, const BYTE *key_image)
     cout << "verify double voting in " << district_id << " with key image " << key_image_str << endl;
 
     pqxx::result r = W.exec("select * from vote_records where district_id=" + to_string(district_id) + " and key_image='" + key_image_str + "';");
-    if (r.empty())
-    {
-        return true;
-    }
-    return false;
+
+    return r.empty();
 }
 
 void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment)
 {
+    // TODO right one for one, for the simplicity
     /*
     keyimage
     {
-    "rg": "hex",
+    "rG": "hex",
     "stealth_address": "hex",
     "commitment": {
         "input_commitment": "hex",
         "output_commitment": "hex",
-        "pseudo_output_commitment": "hex",
+        "pseudoout_commitment": "hex",
         "amount_mask": "hex"
     },
     "blsagSig": {
@@ -260,6 +255,70 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     }
     }
     */
+    pqxx::connection C(cnt_django);
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::work W(C);
+
+    string key_image;
+    string rg, stealth_address, input_commitment, output_commitment, pseudout_commitment, amount_mask;
+    string c, m;
+    vector<string> r;
+    vector<string> members;
+
+    to_string(key_image, blsagSig.key_image, 32);
+    to_string(rg, sa.rG, 32);
+    to_string(stealth_address, sa.pk, 32);
+    // to_string(input_commitment, commitment.inputs_commitments[0].data(), 32);
+    // to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
+    // to_string(pseudoout_commitment, commitment.pseudoouts_commitments[0].data(), 32);
+
+    // to_string(amount_mask, commitment.amount_masks[0].data(), 32);
+
+    // TODO amount mask not implemented
+    input_commitment = "10";
+    output_commitment = "10";
+    pseudout_commitment = "10";
+    amount_mask = "10";
+
+    to_string(c, blsagSig.c, 32);
+    to_string(m, blsagSig.m, 32);
+    for (int i = 0; i < blsagSig.r.size(); i++)
+    {
+        string temp;
+        to_string(temp, blsagSig.r[i].data(), 32);
+        r.push_back(temp);
+    }
+    for (int i = 0; i < blsagSig.members.size(); i++)
+    {
+        string temp;
+        to_string(temp, blsagSig.members[i].pk, 32);
+        members.push_back(temp);
+    }
+
+    json commit_json = {
+        {"input_commitment", input_commitment},
+        {"output_commitment", output_commitment},
+        {"pseudoout_commitment", pseudout_commitment},
+        {"amount_mask", amount_mask}};
+    json blsag_json = {
+        {"c", c},
+        {"m", m},
+        {"r", r},
+        {"members", members}};
+    json record_json = {
+        {"rG", rg},
+        {"stealth_address", stealth_address},
+        {"commitment", commit_json},
+        {"blsagSig", blsag_json}};
+
+    string record_str = record_json.dump();
+
+    C.prepare("insert vote_record", "insert into vote_records (district_id, key_image, transaction_record) values ($1, $2, $3);");
+    W.exec_prepared("insert vote_record", district_id, key_image, record_str);
+    W.commit();
 }
 
 void grab_decoys()

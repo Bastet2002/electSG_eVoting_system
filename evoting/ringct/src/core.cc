@@ -91,10 +91,8 @@ void voter_cast_vote(Vote &vote)
     blsagSig blsagSig;
     int32_t district_id;
 
-    // TODO change to real db
+    // get from db
     User signer = get_voter(vote.voter_id);
-
-    // TODO grab candidate public key from db
     User candidate = get_candidate(district_id, vote.candidate_id);
 
     // the r is set in compute_stealth_address,
@@ -136,10 +134,11 @@ void voter_cast_vote(Vote &vote)
     sodium_memzero(candidateSA.r, 32);
     sodium_memzero(candidateSA.sk, 32);
 
-    // TODO store in db, the vote record
     // blsag -> c, r, keyimage, membersSA.pk/index in db
     // stealth address -> pk, rG
     // commitment -> output, pseudo output, outputmask, amount mask
+    Commitment commitment;
+    write_voterecord(district_id, blsagSig, candidateSA, commitment);
 
     // assign the string keyimage and test_output here
     to_string(vote.key_image, blsagSig.key_image, 32);
