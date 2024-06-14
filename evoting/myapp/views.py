@@ -95,7 +95,7 @@ def view_user_accounts(request):
             Q(username__icontains=query) |
             Q(district__name__icontains=query) |
             Q(party__party__icontains=query) |  # Assuming 'party' field references a related Party model
-            Q(role__icontains=query)
+            Q(role__profile_name__icontains=query) #### add this to search
         )
     else:
         users = UserAccount.objects.all()
