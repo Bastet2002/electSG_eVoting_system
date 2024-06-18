@@ -27,7 +27,7 @@ User get_voter(int32_t voter_id)
 
     // 1. get the pkV from the voter table in django db
     pqxx::nontransaction txn_d{c_django};
-    pqxx::row r = txn_d.exec1("select pkV from voter where voter_id = " + to_string(voter_id) + ";");
+    pqxx::row r = txn_d.exec1("select pkV from myapp_voter where voter_id = " + to_string(voter_id) + ";");
     string pkV = r[0].as<string>();
 
     // 2. get all the keys with pkV in the rinct db
@@ -53,7 +53,7 @@ User get_candidate(int32_t &district_id, const int32_t candidate_id)
 
     // 1. get the pkV from the voter table in django db
     pqxx::nontransaction txn_d{c_django};
-    pqxx::row r = txn_d.exec1("select pkV, pkS from candidate_publickey where candidate_id = " + to_string(candidate_id) + ";");
+    pqxx::row r = txn_d.exec1("select pkV, pkS from myapp_candidatepublickey where candidate_id = " + to_string(candidate_id) + ";");
     string pkV = r["pkV"].as<string>();
     string pkS = r["pkS"].as<string>();
 
@@ -61,7 +61,7 @@ User get_candidate(int32_t &district_id, const int32_t candidate_id)
     cout << "pkV: " << pkV << endl;
 
     // 2. get the district id from useraccount table
-    r = txn_d.exec1("select district_id from myapp_useraccount where id = '" + to_string(candidate_id) + "';");
+    r = txn_d.exec1("select district_id from myapp_useraccount where user_id = '" + to_string(candidate_id) + "';");
     district_id = r["district_id"].as<int>();
 
     return User(pkV, pkS);
@@ -96,7 +96,7 @@ void write_voter(const int32_t district_id, const User &voter)
     {
         throw runtime_error("Failed to open connection to " + string(c_d.dbname()));
     }
-    c_d.prepare("insert voter_public", "insert into voter (district_id, pkV) values ($1, $2);");
+    c_d.prepare("insert voter_public", "insert into myapp_voter (district_id, pkV) values ($1, $2);");
 
     pqxx::work txn_d(c_d);
     txn_d.exec_prepared("insert voter_public", district_id, pkV);
@@ -139,7 +139,7 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
     {
         throw runtime_error("Failed to open connection to " + string(C.dbname()));
     }
-    C.prepare("insert vote_currency", "insert into voting_currency (district_id, stealth_address, commitment_record) values ($1, $2, $3);");
+    C.prepare("insert vote_currency", "insert into myapp_votingcurrency (district_id, stealth_address, commitment_record) values ($1, $2, $3);");
     pqxx::work W(C);
     W.exec_prepared("insert vote_currency", district_id, stealth_address, json);
     W.commit();
@@ -176,7 +176,7 @@ void write_candidate(const int32_t candidate_id, const User &candidate)
     {
         throw runtime_error("Failed to open connection to " + string(c_d.dbname()));
     }
-    c_d.prepare("insert candidate_public", "insert into candidate_publickey (candidate_id, pkV, pkS) values ($1, $2, $3);");
+    c_d.prepare("insert candidate_public", "insert into myapp_candidatepublickey (candidate_id, pkV, pkS) values ($1, $2, $3);");
 
     pqxx::work txn_d(c_d);
     txn_d.exec_prepared("insert candidate_public", candidate_id, pkV, pkS);
@@ -196,7 +196,7 @@ void scan_for_stealthaddress(StealthAddress &sa, const int32_t district_id, cons
     }
     pqxx::work W(C);
 
-    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG from voting_currency where district_id = " + to_string(district_id) + ";");
+    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
 
     // TODO : what if the record is too much
     for (const auto &row : r)
@@ -228,7 +228,7 @@ bool verify_double_voting(const int32_t district_id, const BYTE *key_image)
 
     cout << "verify double voting in " << district_id << " with key image " << key_image_str << endl;
 
-    pqxx::result r = W.exec("select * from vote_records where district_id=" + to_string(district_id) + " and key_image='" + key_image_str + "';");
+    pqxx::result r = W.exec("select * from myapp_voterecords where district_id=" + to_string(district_id) + " and key_image='" + key_image_str + "';");
 
     return r.empty();
 }
@@ -316,7 +316,7 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
 
     string record_str = record_json.dump();
 
-    C.prepare("insert vote_record", "insert into vote_records (district_id, key_image, transaction_record) values ($1, $2, $3);");
+    C.prepare("insert vote_record", "insert into myapp_voterecords (district_id, key_image, transaction_record) values ($1, $2, $3);");
     W.exec_prepared("insert vote_record", district_id, key_image, record_str);
     W.commit();
 }

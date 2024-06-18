@@ -2,10 +2,10 @@
 
 .container {
     margin: 20px auto 0; /* Updated to remove top margin */
-    background-color: #fff;
+    background-color: #ffffff;
     margin-left: 240px; /* Adjusted to accommodate the sidebar */
     padding: 20px;
-    padding-top: 80px; /* Ensure there's space for the fixed header */
+    padding-top: 100px; /* Ensure there's space for the fixed header */
 }
 
 .phase-details {

@@ -24,15 +24,11 @@
     
     <div class="main-content">
         <div class="login-container">
-            <h2>Login</h2>
-            <div class="singpass-login">
-                <button type="button" onclick="window.location.href='/singpass_login'">Login with Singpass</button>
-            </div>
-            <p class="or-text">Or</p>
-            <form method="POST" action="{% url 'login' %}">
+            <h2>Singpass Login</h2>
+            <form method="POST" action="{% url 'singpass_login' %}">
                 {% csrf_token %}
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
+                <label for="singpass_id">Singpass ID:</label>
+                <input type="text" id="username" name="singpass_id" required>
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
                 <button type="submit">Login</button>

@@ -7,7 +7,7 @@ body, html {
 .main {
     margin-left: 240px; /* Adjusted to accommodate the sidebar */
     padding: 20px;
-    padding-top: 80px; /* Ensure there's space for the fixed header */
+    padding-top: 100px; /* Ensure there's space for the fixed header */
 }
 .container {
     position: relative;

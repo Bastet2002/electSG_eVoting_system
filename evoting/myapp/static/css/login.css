@@ -5,7 +5,8 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
-    background-color: #f3e8e8;
+    
+    background: linear-gradient(to top, #c53e3e, #ffffff);
 }
 
 .header {
@@ -13,7 +14,7 @@ body {
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background-color: white;
+    background: white;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -43,7 +44,7 @@ body {
 }
 
 .navigation a:hover {
-    background-color: #575757; /* Darker background on hover */
+    background-color: #d74b4b; /* Darker background on hover */
     color: #f1f1f1; /* Lighter text on hover */
 }
 
@@ -116,7 +117,7 @@ body {
 }
 
 .login-container a {
-    color: #007bff;
+    color: #ca4646;
     text-decoration: none;
 }
 
@@ -136,11 +137,11 @@ body {
 }
 
 .login-container button:hover {
-    background-color: #0056b3;
+    background-color: #ff3305;
 }
 
 footer {
-    background-color: white;
+    background: linear-gradient(to left, #ede9e9, #ffffff);
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;

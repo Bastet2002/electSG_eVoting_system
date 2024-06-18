@@ -22,9 +22,9 @@
                     <tr>
                         <td>{{ announcement.header }}</td>
                         <td>
-                            <a href="{% url 'view_announcement_detail' announcement.id %}" class="btn btn-primary">View</a>
-                            <a href="{% url 'edit_announcement' announcement.id %}" class="btn btn-primary">Update</a>
-                            <form method="post" action="{% url 'delete_announcement' announcement.id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                            <a href="{% url 'view_announcement_detail' announcement.announcement_id %}"><button class="btn btn-danger">View</button></a>
+                            <a href="{% url 'edit_announcement' announcement.announcement_id %}" ><button class="btn btn-danger">Update</button></a>
+                            <form method="post" action="{% url 'delete_announcement' announcement.announcement_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger">Delete</button>
                             </form>

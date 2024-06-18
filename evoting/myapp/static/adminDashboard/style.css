@@ -1,7 +1,7 @@
 body {
-    font-family: "Lato", sans-serif;
-  }
-
+  font-family: "Lato", sans-serif;
+  
+}
 
 /* Header styles */
 .header {
@@ -37,30 +37,28 @@ body {
   color: black;
   font-weight: bold;
   transition: color 0.3s ease;
-  padding: 8px 12px; /* Padding around links */
-  border-radius: 4px; /* Rounded corners */
-  transition: background-color 0.3s, color 0.3s; /* Transition for hover effects */
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
 }
 
 .navigation a:hover {
-  background-color: #575757; /* Darker background on hover */
-  color: #f1f1f1; /* Lighter text on hover */
+  background-color: #575757;
+  color: #f1f1f1;
 }
 
-
-
- /* Sidebar styles */
+/* Sidebar styles */
 .sidenav {
-  margin-top: 105px;
+  margin-top: 90px;
   height: 100%;
   width: 220px;
   position: fixed;
   z-index: 1;
   left: 0;
-  background-color: #d35959;
+  background-color: #c53e3e;
   overflow-x: hidden;
   padding-top: 20px;
-  z-index: 1;
+ 
   top: 0;
 }
 
@@ -72,21 +70,23 @@ body {
 .sidenav a, .dropdown-btn {
   padding: 15px;
   text-decoration: none;
-  font-size: 17px;
-  color: #141212;
+  font-size: 15px;
+  color: #ffffff;
   display: block;
   text-align: left;
-  border: black;
   background: none;
   width: 100%;
   cursor: pointer;
   outline: none;
   border-bottom: 1px solid rgb(14, 14, 14);
   font-weight: bold;
+  border: none; /* Remove any borders */
+  background-color: transparent; /* Ensure background is transparent */
+  margin: 0; /* Reset margins */
 }
 
 .sidenav a:hover, .dropdown-btn:hover {
-  color: #f1f1f1;
+  color: #060303;
 }
 
 .dropdown-container {
@@ -102,7 +102,45 @@ body {
 
 /* Main content styles */
 .content {
-  margin-left: 240px; /* Adjusted to accommodate the sidebar */
+  margin-left: 240px;
   padding: 20px;
-  padding-top: 80px; /* Ensure there's space for the fixed header */
+  padding-top: 80px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+      flex-direction: column;
+      align-items: flex-start;
   }
+
+  .navigation {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+  }
+
+  .navigation li {
+      margin-right: 0;
+      width: 100%;
+  }
+
+  .navigation a {
+      width: 100%;
+      text-align: left;
+  }
+
+  .sidenav {
+      width: 100%;
+      height: auto;
+      position: relative;
+  }
+
+  .sidenav .dropdown-container {
+      padding-left: 0;
+  }
+
+  .content {
+      margin-left: 0;
+  }
+}

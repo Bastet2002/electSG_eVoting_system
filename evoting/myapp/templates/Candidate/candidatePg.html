@@ -24,8 +24,8 @@
                     {% endif %}
                 </div>
                 <div class="profile-info">
-                    <h3>Name: {{ candidate_profile.user_account.name }}</h3>
-                    <h3>Party: {{ candidate_profile.user_account.party.party }}</h3>
+                    <h3>Name: {{ candidate_profile.candidate.full_name }}</h3>
+                    <h3>Party: {{ candidate_profile.candidate.party.party_name }}</h3>
                 </div>
             </div>
         </div>

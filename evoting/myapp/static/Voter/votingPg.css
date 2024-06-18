@@ -1,16 +1,14 @@
 body {
     font-family: "Lato", sans-serif;
-    background-color: rgb(255, 252, 252);
-  }
+    background-color: rgb(255, 255, 255);
+}
+
 .main {
     padding-top: 100px;
-    text-align: center; /* Align content in the center */
+    text-align: center;
     position: relative;
     background-color: rgb(254, 251, 251);
-  }
-
-
-/* Add this CSS to your existing voterPg.css file or create a new CSS file */
+}
 
 .ballot-paper {
     background-color: #f0f0f0;
@@ -18,34 +16,49 @@ body {
     border: 1px solid #ccc;
     border-radius: 10px;
     justify-content: center;
-    width: 350px;
-    display: flex;
+    width: 80%;
+    max-width: 600px;
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.candidate-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
 }
 
 .candidate {
     display: flex;
     align-items: center;
-    margin-bottom: 10px;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 500px;
+    justify-content: space-between;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fff;
 }
 
 .candidate img {
-    width: 120px;
-    height: 120px;
+    width: 80px;
+    height: 80px;
     border-radius: 50%;
     margin-right: 20px;
 }
 
 .party-name {
     font-weight: bold;
-    margin-right: 20px;
-
+    flex-grow: 1;
+    text-align: center;
 }
 
 .candidate input[type="checkbox"] {
-    width: 35px;
-    height: 35px;
-    margin: 0;
+    width: 25px;
+    height: 25px;
 }
 
 .vote-button-container {

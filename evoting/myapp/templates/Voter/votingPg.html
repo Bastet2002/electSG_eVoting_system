@@ -15,13 +15,14 @@
                 <div class="candidate">
                     <label>
                         {% if candidate.profile_picture %}
-                        <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.user_account.name }}">
+                        <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candidate.full_name }}">
                         {% else %}
-                        <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.user_account.name }}">
+                        <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
                         {% endif %}
                     </label>
-                    <span class="party-name">{{ candidate.user_account.party.party }}</span>
-                    <input type="checkbox" name="candidate" value="{{ candidate.user_account.id }}">
+                    <span class="party-name">{{ candidate.candidate.full_name}}</span>
+                    <span class="party-name">{{ candidate.candidate.party.party_name }}</span>
+                    <input type="checkbox" name="candidate" value="{{ candidate.candidate.user_id }}">
                 </div>
             </div>
             {% endfor %}

@@ -3,72 +3,70 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete
 
-class District(models.Model):
-    name = models.CharField(max_length=100, unique=True)
+# SINGPASS_USER Model
+class SingpassUser(models.Model):
+    singpass_id = models.CharField(max_length=255, primary_key=True)
+    password = models.CharField(max_length=255)
+    full_name = models.CharField(max_length=255)
+    date_of_birth = models.DateField()
+    phone_num = models.CharField(max_length=20)
+    district = models.CharField(max_length=20)
+
+# PROFILE Model
+class Profile(models.Model):
+    profile_id = models.AutoField(primary_key=True)
+    profile_name = models.CharField(max_length=255)
+    description = models.TextField()
 
     def __str__(self):
-        return self.name
+        return self.profile_name
+
+# DISTRICT Model
+class District(models.Model):
+    district_id = models.AutoField(primary_key=True)
+    district_name = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.district_name
 
 class UserAccountManager(BaseUserManager):
     def get_by_natural_key(self, username):
         return self.get(username=username)
-
+    
+# USERACCOUNT Model
 class UserAccount(AbstractBaseUser):
+    user_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=200)
-    date_of_birth = models.DateField()
     password = models.CharField(max_length=200)
-    party = models.ForeignKey('Party', on_delete=models.SET_NULL, null=True, blank=True)
-    district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
+    full_name = models.CharField(max_length=200)
+    date_of_birth = models.DateField()
     role = models.ForeignKey('Profile', on_delete=models.SET_NULL, null=True, blank=True)
+    district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
+    party = models.ForeignKey('Party', on_delete=models.SET_NULL, null=True, blank=True)
+    
     USERNAME_FIELD = 'username'  # Use username as the unique identifier
-    REQUIRED_FIELDS = ['name', 'date_of_birth', 'password']
+    REQUIRED_FIELDS = ['full_name', 'date_of_birth', 'password']
 
     objects = UserAccountManager()
 
     def __str__(self):
         return self.username
 
+# CANDIDATE_PUBLIC_KEY Model
+class CandidatePublicKey(models.Model):
+    candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
+    pkv = models.CharField(max_length=64)
+    pks = models.CharField(max_length=64)
 
-class Profile(models.Model):
-    profile_name = models.CharField(max_length=200)
-    description = models.TextField()
-
-    def __str__(self):
-        return self.profile_name
-    
-class ElectionPhase(models.Model):
-    name = models.CharField(max_length=100, unique=True)
-    is_active = models.BooleanField(default=False)
-
-    def __str__(self):
-        return self.name
-
-
-class Announcement(models.Model):
-    header = models.CharField(max_length=200)
-    content = models.TextField()
-    date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return self.header
-
-class Party(models.Model):
-    party = models.CharField(max_length=200)
-    information = models.TextField()
-
-    def __str__(self):
-        return self.party
-
-#-------------------Candidate--------------------------
+# CANDIDATE_PROFILE Model
 class CandidateProfile(models.Model):
-    user_account = models.OneToOneField('UserAccount', on_delete=models.CASCADE)
-    election_poster = models.ImageField(upload_to='election_posters/', blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-    candidate_statement = models.TextField(blank=True)
+    candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
+    profile_picture = models.ImageField(upload_to='candidate_pictures/')
+    election_poster = models.ImageField(upload_to='election_posters/')
+    candidate_statement = models.TextField()
 
     def __str__(self):
-        return self.user_account.user.username + "'s Candidate Profile"
+        return self.candidate_id.user.username + "'s Candidate Profile"
     
 @receiver(post_delete, sender=CandidateProfile)
 def delete_candidateprofile_images(sender, instance, **kwargs):
@@ -78,18 +76,68 @@ def delete_candidateprofile_images(sender, instance, **kwargs):
     if instance.profile_picture:
         instance.profile_picture.delete(save=False)
 
+# VOTE_RESULTS Model
+class VoteResults(models.Model):
+    candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
+    total_vote = models.IntegerField()
 
-#-------------------------Temp voter-----------------------------
-from django.db import models
-from django.utils import timezone
-
-class TemporaryVoter(models.Model):
-    username = models.CharField(max_length=200, unique=True)
-    name = models.CharField(max_length=200)
-    date_of_birth = models.DateField()
-    password = models.CharField(max_length=200)
-    district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
-    last_login = models.DateTimeField(null=True, blank=True)  # Add this field
+# PARTY Model
+class Party(models.Model):
+    party_id = models.AutoField(primary_key=True)
+    party_name = models.CharField(max_length=255)
+    description = models.TextField()
 
     def __str__(self):
-        return self.username
+        return self.party_name
+
+# ANNOUNCEMENT Model
+class Announcement(models.Model):
+    announcement_id = models.AutoField(primary_key=True)
+    header = models.CharField(max_length=255)
+    content = models.TextField()
+    date = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.header
+
+# ELECTION_PHASE Model
+class ElectionPhase(models.Model):
+    phase_id = models.AutoField(primary_key=True)
+    phase_name = models.CharField(max_length=255)
+    is_active = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.phase_name
+
+# VOTE_RECORDS Model
+class VoteRecords(models.Model):
+    key_image = models.CharField(max_length=64, primary_key=True)
+    district = models.ForeignKey('District', on_delete=models.CASCADE)
+    transaction_record = models.JSONField()
+
+# VOTING_CURRENCY Model
+class VotingCurrency(models.Model):
+    id = models.AutoField(primary_key=True)
+    district = models.ForeignKey('District', on_delete=models.CASCADE)
+    stealth_address = models.CharField(max_length=64, unique=True)
+    commitment_record = models.JSONField()
+
+# class VoterManager(BaseUserManager):
+#     def get_by_natural_key(self, voter_id):
+#         return self.get(voter_id=voter_id)
+    
+# VOTER Model
+class Voter(models.Model):
+    voter_id = models.AutoField(primary_key=True)
+    district = models.ForeignKey('District', on_delete=models.CASCADE)
+    hash_from_info = models.CharField(max_length=128, unique=True, null=True)
+    pkv = models.CharField(max_length=64)
+    last_login = models.DateTimeField(null=True, blank=True)  # Add this field
+
+    @property
+    def is_authenticated(self):
+        return True
+
+    # REQUIRED_FIELDS = ['district', 'pkv']
+
+    # objects=VoterManager()

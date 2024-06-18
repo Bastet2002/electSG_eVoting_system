@@ -1,21 +1,10 @@
 from django import forms
 from .models import UserAccount, District, Announcement, Party, Profile, ElectionPhase
-    
-roles = [
-    ('user', 'User'),
-    ('candidate', 'Candidate'),
-    ('admin', 'Admin'),
-]
-
-election_status = [
-    ('polling day', 'Polling Day'),
-    ('cool off day'), ('Cool Off Day'),
-]
 
 class CreateNewUser(forms.ModelForm):  # Class names typically start with a capital letter
     class Meta:
         model = UserAccount
-        fields = ['username', 'name', 'date_of_birth', 'password', 'role','party', 'district']
+        fields = ['username', 'full_name', 'date_of_birth', 'password', 'role', 'party', 'district']
         widgets = {
             'password': forms.PasswordInput(),
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
@@ -27,7 +16,6 @@ class EditUser(forms.ModelForm):
         exclude = ['password', 'role', 'last_login']
         widgets = {
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
-
         }
 
     def __init__(self, *args, **kwargs):
@@ -51,7 +39,7 @@ class CreateProfileForm(forms.ModelForm):
     def clean_profile_name(self):
         profile_name = self.cleaned_data.get('profile_name')
         forbidden_names = ['candidate', 'admin']
-        if Profile.objects.filter(profile_name__iexact=profile_name).exists() or profile_name.lower() in forbidden_names:
+        if profile_name.lower() in forbidden_names:
             raise forms.ValidationError("This profile name is not allowed or already exists.")
         return profile_name
 
@@ -63,20 +51,17 @@ class CreateDistrict(forms.Form):
 class EditDistrict(forms.ModelForm):
     class Meta:
         model = District
-        fields = ['name']
-
+        fields = ['district_name']
 
 class CreateAnnouncement(forms.ModelForm):
     class Meta:
         model = Announcement
         fields = ['header', 'content']
 
-
 class CreateParty(forms.ModelForm):
     class Meta:
         model = Party
-        fields = ['party']
-        
+        fields = ['party_name']
         
 #--------------------------------Candidate Forms---------------------------------------- 
 from .models import CandidateProfile 
@@ -104,6 +89,7 @@ class CandidateStatementForm(forms.ModelForm):
         widgets = { 
             'candidate_statement': forms.Textarea(attrs={'rows': 5}), 
         }
+        
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if 'instance' in kwargs:

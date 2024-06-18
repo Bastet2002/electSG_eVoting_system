@@ -18,29 +18,30 @@
             <table id="user-table">
                 <thead>
                     <tr>
-                        <th>Username</th>
-                        <th>Name</th>
-                        <th>Date of Birth</th>
                         <th>ID</th>
+                        <th>Username</th>
+                        <th>Full Name</th>
+                        <th>Date of Birth</th>
+                        <th>Role</th>
                         <th>Party</th>
                         <th>District</th>
-                        <th>Role</th>
                         <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for user in users %}
                     <tr>
+                        <td>{{ user.user_id }}</td>
                         <td>{{ user.username }}</td>
-                        <td>{{ user.name }}</td>
+                        <td>{{ user.full_name }}</td>
                         <td>{{ user.date_of_birth }}</td>
-                        <td>{{ user.id }}</td>
+                        <td>{{ user.role }}</td>
                         <td>{{ user.party }}</td>
                         <td>{{ user.district }}</td>
-                        <td>{{ user.role }}</td>
                         <td>
-                            <a href="{% url 'edit_user' user.id %}" class="btn btn-primary">Update</a>
-                            <form method="post" action="{% url 'delete_user' user.id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                            <a href="{% url 'edit_user' user.user_id %}"><button type="submit" class="btn btn-danger">Update</button></a>
+    
+                            <form method="post" action="{% url 'delete_user' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger">Delete</button>
                             </form>

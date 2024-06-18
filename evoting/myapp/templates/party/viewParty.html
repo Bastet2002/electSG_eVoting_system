@@ -20,10 +20,10 @@
                 <tbody>
                     {% for party in parties %}
                     <tr>
-                        <td>{{ party.party }}</td>
+                        <td>{{ party.party_name }}</td>
                         <td>
-                            <a href="{% url 'edit_party' party.id %}" class="btn btn-primary">Update</a>
-                            <form method="post" action="{% url 'delete_party' party.id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                            <a href="{% url 'edit_party' party.party_id %}"><button class="btn btn-danger">Update</button></a>
+                            <form method="post" action="{% url 'delete_party' party.party_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger">Delete</button>
                             </form>

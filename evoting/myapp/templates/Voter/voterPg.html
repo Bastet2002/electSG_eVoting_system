@@ -16,15 +16,15 @@
     </div>
     <div class="candidates-container">
         {% for candidate in candidates %}
-        <a href="{% url 'view_candidate' candidate.id %}" class="candidate-link">
+        <a href="{% url 'view_candidate' candidate.candidate.user_id %}" class="candidate-link">
             <div class="candidate">
                 {% if candidate.profile_picture %}
-                <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.user_account.name }}">
+                <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
                 {% else %}
-                <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.user_account.name }}">
+                <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
                 {% endif %}
-                <h3>{{ candidate.user_account.name }}</h3>
-                <p>Party: {{ candidate.user_account.party.party }}</p>
+                <h3>{{ candidate.candidate.full_name }}</h3>
+                <p>Party: {{ candidate.candidate.party.party_name }}</p>
             </div>
         </a>
         {% endfor %}
