@@ -3,17 +3,21 @@
 
 #include <exception>
 #include <sstream>
+#define ENUM_TO_STRING(x) case x: return #x;
 
-// enum class RingCTErrorCode {
-//     CORE_DOUBLE_VOTING = 101,
-// };
+using namespace std;
+
+enum class RingCTErrorCode {
+    CORE_DOUBLE_VOTING = 101,
+};
+
 
 template<typename ErrorCode_T>
 class CustomException : public exception {
     public:
     CustomException(const string&message, const ErrorCode_T& errorcode) : message_(message), errorcode_(errorcode) {
         ostringstream oss;
-        oss << "Error code: " << errorcode_ << " >> " << message_;
+        oss << errorcode_ << " " << message_;
         fullmessage_ = oss.str();
     }
 
@@ -31,4 +35,5 @@ class CustomException : public exception {
     string fullmessage_;
 };
 
+string enumToString (RingCTErrorCode errorCode);
 #endif

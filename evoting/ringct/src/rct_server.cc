@@ -96,8 +96,9 @@ public:
             voter_cast_vote(vote);
         }
         catch (const CustomException<int>& e) {
-            if (e.getErrorCode() == 101)
+            if (e.getErrorCode() == static_cast<int>(RingCTErrorCode::CORE_DOUBLE_VOTING))
                 return Status(grpc::ALREADY_EXISTS, e.what());
+
             return Status(grpc::ABORTED, e.what());
         }
         catch (const exception &e)

@@ -79,6 +79,7 @@ add_executable(rct_server
     "src/rct_server.cc"
     "src/vote.cc"
     "util/db_util.cc"
+    "util/custom_exception.cc"
     "src/core.cc"
     "rct/lsag.cpp"
     "rct/commitment.cpp")

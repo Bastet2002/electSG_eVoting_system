@@ -112,9 +112,10 @@ void voter_cast_vote(Vote &vote)
     compute_key_image(blsagSig, receivedSA);
 
     if (!verify_double_voting(district_id, blsagSig.key_image)){
-        string msg = fmt::format("Double voting detected for district {} and voter id {}", district_id, vote.voter_id);
+        RingCTErrorCode errorCode = RingCTErrorCode::CORE_DOUBLE_VOTING;
+        string msg = fmt::format("{} Double voting detected for district {} and voter id {}", enumToString(errorCode), district_id, vote.voter_id);
         cerr << msg << endl;
-        throw CustomException(msg, 101);
+        throw CustomException(msg, static_cast<int>(errorCode));
     }
 
     // TODO after having stealth address, decode amount_t from the output
