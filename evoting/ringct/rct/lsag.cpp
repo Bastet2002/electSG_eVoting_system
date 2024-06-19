@@ -56,6 +56,10 @@ void int_to_scalar_BYTE(BYTE *out, const long long input)
     memcpy(out, &input, sizeof(input));
 }
 
+void byte_to_int(long long &output, const BYTE* input, const size_t n){
+    memcpy(&output, input, n);
+}
+
 void generate_H(BYTE *H)
 {
     BYTE hash[crypto_generichash_BYTES];
@@ -111,11 +115,11 @@ void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b,
     int is_success_aG = crypto_scalarmult_ed25519_base_noclamp(aG, a);
     int is_success_bH = crypto_scalarmult_ed25519_noclamp(bH, b, H);
     if (is_success_aG != 0 || is_success_bH != 0)
-        cout << "scalar multiplication fail on aG or bH" << endl;
+        throw logic_error("Scalar multiplication fail on aG or bH");
 
     int is_success_add = crypto_core_ed25519_add(aGbH, aG, bH);
     if (is_success_add != 0)
-        cout << "point addition aG + bH fail due to invalid points" << endl;
+        throw logic_error("Point addition aG + bH fail due to invalid points");
 }
 
 // aKbH, where a and b are scalar, and K and B are the points
@@ -130,32 +134,21 @@ void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b,
     int is_success_aK = crypto_scalarmult_ed25519_noclamp(aK, a, K);
     int is_success_bH = crypto_scalarmult_ed25519_noclamp(bH, b, H);
     if (is_success_aK != 0 || is_success_bH != 0)
-        cout << "scalar multiplication fail on aK or bH" << endl;
+        throw logic_error("Scalar multiplication fail on aK or bH");
 
     int is_success_add = crypto_core_ed25519_add(aKbH, aK, bH);
     if (is_success_add != 0)
-        cout << "point addition aK + bH fail due to invalid points" << endl;
+        throw logic_error("Point addition aK + bH fail due to invalid points");
 }
 
-// use by CA
-// TODO do i need another one for normal voter
 // input: user with public key (the private key is present here but is no harm as long CA is not compromised)
 // output: stealth_address (one time public key)  and rG (transaction public key)
 void compute_stealth_address(StealthAddress &stealth_address, const User &receiver)
 {
-    cout << "======================" << endl;
-    cout << "Inside compute_stealth_address" << endl;
-    // BYTE r[32];
     crypto_core_ed25519_scalar_random(stealth_address.r);
-    cout << "r " << endl;
-    print_hex(stealth_address.r, crypto_core_ed25519_SCALARBYTES);
-    cout << "pkV " << endl;
-    print_hex(receiver.pkV, crypto_core_ed25519_BYTES);
 
     BYTE r_pkV_b[32];
     int is_success = crypto_scalarmult_ed25519_noclamp(r_pkV_b, stealth_address.r, receiver.pkV);
-    cout << "r_pkV_b: " << endl;
-    print_hex(r_pkV_b, crypto_core_ed25519_BYTES);
 
     if (is_success != 0)
     {
@@ -169,36 +162,22 @@ void compute_stealth_address(StealthAddress &stealth_address, const User &receiv
     BYTE G_hn_r_pkV_b[32];
     is_success = crypto_scalarmult_ed25519_base_noclamp(G_hn_r_pkV_b, hn_r_pkV_b);
 
-    cout << "G_hn_r_pkV_b: " << endl;
-    print_hex(G_hn_r_pkV_b, crypto_core_ed25519_BYTES);
-
     if (is_success != 0)
-        cout << "Scalar operation of G with hash scalar fails" << endl;
+        throw logic_error("Scalar operation of G with hash scalar fails");
 
     is_success = crypto_core_ed25519_add(stealth_address.pk, G_hn_r_pkV_b, receiver.pkS);
+
     if (is_success != 0)
-        cout << "Point addition for stealth address fail due to invalid point" << endl;
+        throw logic_error("Point addition for stealth address fail due to invalid point");
 
     // compute rG
     crypto_scalarmult_ed25519_base_noclamp(stealth_address.rG, stealth_address.r);
-
-    cout << "rG " << endl;
-    print_hex(stealth_address.rG, crypto_core_ed25519_BYTES);
-
-    cout << "======================" << endl;
 }
 
-// TODO when store the stealth address in the db, need to mix up the order of the stealth address
+// when store the stealth address in the db, need to mix up the order of the stealth address
 // as people could conclude the address belongs to the same person
 void CA_generate_address(vector<StealthAddress> &address_list, const vector<User> &users)
 {
-    // for (const User &user : users)
-    // {
-    //     StealthAddress address;
-    //     compute_stealth_address(address, user);
-    //     address_list.push_back(address);
-    // }
-
     // Modify to pass r
     // vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> r(users.size());
     for (int i = 0; i < users.size(); i++)
@@ -213,8 +192,6 @@ void CA_generate_address(vector<StealthAddress> &address_list, const vector<User
 // address belongs to receiver
 bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &receiver)
 {
-    cout << "======================" << endl;
-    cout << "Inside receiver test stealth addrss" << endl;
     BYTE rG_skV[32];
     BYTE scalar_skV[32];
     BYTE seed_skV[32];
@@ -238,17 +215,9 @@ bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &
 
     crypto_core_ed25519_scalar_add(stealth_address_sk, scalar_skS, hn_rG_skV);
 
-    cout << "Stealth address secret key: " << endl;
-    print_hex(stealth_address_sk, crypto_core_ed25519_SCALARBYTES);
-
     // is the stealth address belongs to the receiver?
     StealthAddress test_stealth_address;
     crypto_scalarmult_ed25519_base_noclamp(test_stealth_address.pk, stealth_address_sk);
-
-    cout << "Stealth address : " << endl;
-    print_hex(stealth_address.pk, crypto_core_ed25519_BYTES);
-    cout << "Test stealth address: " << endl;
-    print_hex(test_stealth_address.pk, crypto_core_ed25519_BYTES);
 
     // set the sk if the stealth address belongs to the receiver
     if (memcmp(stealth_address.pk, test_stealth_address.pk, crypto_core_ed25519_BYTES) == 0)

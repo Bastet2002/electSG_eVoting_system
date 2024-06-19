@@ -126,8 +126,7 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
     to_string(input_commitment, commitment.inputs_commitments[0].data(), 32);
     to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
     to_string(pseudo_output_commitment, commitment.pseudoouts_commitments[0].data(), 32);
-    // TODO amount mask not implemented
-    // to_string(amount_mask, commitment.amount_masks[0].data(), 32);
+    to_string(amount_mask, commitment.amount_masks[0].data(), 8);
     amount_mask = "10";
 
     string json = fmt::format(R"({{"rG": "{}", "commitment": {{"input_commitment": "{}", "output_commitment": "{}", "pseudoout_commitment": "{}", "amount_mask": "{}"}}}})",

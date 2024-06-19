@@ -13,6 +13,7 @@
 // if would like to increase the anonymity in the future, can generate more keys, and put in decoys with signature
 void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
 {
+    int count = 0;
     for (int i = 0; i < gen_user_curr.voter_num; i++)
     {
         User user;
@@ -53,10 +54,11 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
             throw runtime_error(e.what());
         }
 
-        cout << "I have generated voter "<< i << " for district " << gen_user_curr.district_id << " stealthAddress and commitment and stored in db" << endl;
+        cout << "I have generated voter "<< i + 1 << " for district " << gen_user_curr.district_id << " stealthAddress and commitment and stored in db" << endl;
+        count += 1;
     }
     // TODO: remove test output
-    gen_user_curr.test_output = "I have looped for " + to_string(gen_user_curr.voter_num) + " times";
+    gen_user_curr.test_output = "I have looped for " + to_string(count) + " times";
     // TODO mix the order of the voters/stealth address in the db
 }
 

@@ -32,13 +32,28 @@ void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& s
     verify_commitment_balancing(commitment.outputs_commitments, commitment.pseudoouts_commitments);
 
     // amount mask
-    BYTE amount_mask[32];
-    // TODO create amont mask function
+    BYTE amount_mask[8];
+    BYTE c_byte[32];
+    array<BYTE, 8> amount_mask_array;
+    int_to_scalar_BYTE(c_byte, c);
+    XOR_amount_mask(amount_mask, c_byte, 0, sa, receiver);
+    copy(begin(amount_mask), end(amount_mask), amount_mask_array.begin());
+    commitment.amount_masks.push_back(amount_mask_array);
 }
 
 // one to one
-void compute_commitment_simple(){
+void compute_commitment_simple(Commitment& commitment, const User& receiver, const Commitment& received_commitment, const StealthAddress& received_sa, const User& signer){
+    const int c = 30;
+    BYTE amount_byte[8];
+    XOR_amount_mask(amount_byte, received_commitment.amount_masks[0].data(), 0, sa, receiver);
 
+    long long amount;
+    byte_to_int(amount, amount_byte, 8);
+    if (amount != c)
+        throw logic_error("The amount is not equal to currency given in compute commitment simple.");
+    
+    array<BYTE, 32> input_commitment;
+    copy(received_commitment.outputs_commitments[0].begin(), received_commitment.outputs_commitments[0].end(), input_commitment.begin());
 }
 
 // one to many
@@ -47,9 +62,41 @@ void compute_commitment(){
 }
 
 // compute the amount mask to conceal the amount
-// amount = b 8-byte-XOR Hn("amount", Hn(rKv_b, t))
-void compute_amount_mask(){
+// amount_mask = b 8-byte-XOR Hn("amount", Hn(rKv_b, t))
+// the max t is probably not more than 10
+// in and out can be either amountmask or amount
+void XOR_amount_mask(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver){
+    BYTE rKv_b[32];
+    BYTE t_byte[8];
+    BYTE rKv_b_t[40];
+    BYTE Hn_rKv_b_t[32];
+    const string domain = "amount";
+    BYTE domain_Hn_rKv_b_t[32 + domain.size()];
+    BYTE Hn_domain_Hn_rKv_b_t[32];
+    BYTE XOR_R[8];
 
+    int is_success = crypto_scalarmult_ed25519_noclamp(rKv_b, sa.r, receiver.pkV);
+    if (is_success != 0)
+        throw logic_error("Failed to compute rKv_b in XOR_amount_mask.");
+
+    BYTE temp[32];
+    int_to_scalar_BYTE(temp, t); 
+    memmove(t_byte, temp, 8);
+    
+    memmove(rKv_b_t, rKv_b, 32);
+    memmove(rKv_b_t + 32, t_byte, 8);
+
+    hash_to_scalar(Hn_rKv_b_t, rKv_b_t, 40);
+    memmove(domain_Hn_rKv_b_t, domain.c_str(), domain.size());
+    memmove(domain_Hn_rKv_b_t + domain.size(), Hn_rKv_b_t, 32);
+
+    hash_to_scalar(Hn_domain_Hn_rKv_b_t, domain_Hn_rKv_b_t, 32 + domain.size());
+
+    memcpy(XOR_R, Hn_domain_Hn_rKv_b_t, 8);
+
+    for(int i = 0; i < 8; i++){
+        out[i] = XOR_R[i] ^ in[i];
+    }
 }
 
 void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments)

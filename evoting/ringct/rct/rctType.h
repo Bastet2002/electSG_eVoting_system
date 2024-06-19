@@ -152,7 +152,7 @@ struct Commitment{
 
     vector<array<BYTE,32>> pseudoouts_blindingfactor_masks;
     vector<array<BYTE,32>> outputs_blindingfactor_masks;
-    vector<array<BYTE,32>> amount_masks;
+    vector<array<BYTE,8>> amount_masks;
 
     Commitment(){
         pseudoouts_commitments.resize(0);
@@ -168,6 +168,7 @@ struct Commitment{
 void to_string(string &output, const BYTE *BYTE, const size_t n);
 void compare_BYTE(const BYTE *a, const BYTE *b, const size_t n);
 void int_to_scalar_BYTE(BYTE *out, const long long input);
+void byte_to_int(long long &output, const BYTE* input, const size_t n);
 void print_bytearray(const BYTE *key, const size_t n);
 void print_hex(const BYTE *key, const size_t n);
 
@@ -191,6 +192,7 @@ bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m);
 void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& sa, const User& receiver);
 void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
 
+void XOR_amount_mask(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
 void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index);
 void generatePseudoBfs(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
 bool compareBlindingFactors(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);

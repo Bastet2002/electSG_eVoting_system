@@ -66,6 +66,8 @@ def grpc_compute_vote_run(candidate_id, voter_id):
             raise grpc.RpcError("Output Error: Key image not found in grpc_compute_vote")
 
     except grpc.RpcError as e:
+        print(e)
+        print(e.code())
         raise GrpcError(f"Grpc error: {e.details()}")
 
     return vote_response
