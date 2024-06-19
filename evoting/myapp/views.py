@@ -68,7 +68,7 @@ def create_account(request):
                 CandidateProfile.objects.create(candidate=new_user)
                 # Generate user and voting currency via gRPC
                 try:
-                    grpc_generate_candidate_keys_run(candidate_id=new_user.id)
+                    grpc_generate_candidate_keys_run(candidate_id=new_user.user_id)
                 except Exception as e:
                     # Handle the exception
                     print(f"Error in gRPC call: {e}")
@@ -146,7 +146,7 @@ def create_district(request):
                 district, created = District.objects.get_or_create(district_name=name)
                 if created:
                     try:
-                        grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=1)
+                        grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
                     except Exception as e:
                         print(f"Error in gRPC call: {e}")
 

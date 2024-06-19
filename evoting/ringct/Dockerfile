@@ -48,4 +48,4 @@ RUN chmod +x ./wait-for-it.sh
 
 EXPOSE 50051
 
-CMD ["./wait-for-it.sh", "db", "--", "./build/rct_server"]
+CMD ["./wait-for-it.sh", "--", "./build/rct_server"]
