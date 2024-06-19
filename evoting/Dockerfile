@@ -38,4 +38,4 @@ RUN chmod +x ./wait-for-postgres.sh
 
 EXPOSE 8000
 
-CMD ["./wait-for-postgres.sh", "db", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["./wait-for-postgres.sh", "djangodb", "python", "manage.py", "runserver", "0.0.0.0:8000"]

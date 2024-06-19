@@ -12,8 +12,8 @@ if __name__ == "__main__":
 
     grpc_generate_candidate_keys_run(2)
 
-    try: 
-        grpc_compute_vote_run(2, 1)
-        grpc_compute_vote_run(2, 1)
-    except GrpcError as e:   
-        print(e)
+    # try: 
+    #     grpc_compute_vote_run(2, 1)
+    #     grpc_compute_vote_run(2, 1)
+    # except GrpcError as e:   
+    #     print(e)
