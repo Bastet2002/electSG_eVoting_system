@@ -48,7 +48,7 @@ void compute_commitment(){
 
 // compute the amount mask to conceal the amount
 // amount = b 8-byte-XOR Hn("amount", Hn(rKv_b, t))
-void compute_amount_mask(BYTE* mask, ){
+void compute_amount_mask(){
 
 }
 
