@@ -28,7 +28,23 @@
             // Hide the alert after 5 seconds
             setTimeout(() => {
                 alertBox.classList.remove('show');
-            }, 3000);
+            }, 5000); // Adjusted to 5 seconds
+        </script>
+    {% endif %}
+
+    {% if error_message %}
+        <div id="popupAlert" class="popup-alert show">
+            Error: {{ error_message }}
+        </div>
+        <script>
+            // Show the alert
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.classList.add('show');
+            
+            // Hide the alert after 5 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 5000); // Adjusted to 5 seconds
         </script>
     {% endif %}
 {% endblock %}

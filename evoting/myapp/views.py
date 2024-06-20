@@ -3,6 +3,7 @@ from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
+from django.contrib.messages import get_messages
 from django.db.models import Q
 from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter
@@ -69,9 +70,17 @@ def create_account(request):
                 # Generate user and voting currency via gRPC
                 try:
                     grpc_generate_candidate_keys_run(candidate_id=new_user.user_id)
+                    messages.success(request, 'Account successfully created.')
+                except GrpcError as grpc_error:
+                    # Handle specific gRPC errors
+                    print(f"Error in gRPC call: {grpc_error}")
+                    messages.error(request, f"Error in creating candidate keys: {grpc_error}")
                 except Exception as e:
-                    # Handle the exception
-                    print(f"Error in gRPC call: {e}")
+                    # Handle other unexpected exceptions
+                    print(f"Unexpected error: {e}")
+                    messages.error(request, f"Unexpected error in creating candidate keys: {e}")
+            else:
+                messages.success(request, 'Account successfully created.')
 
             return render(request, "userAccount/createUserAcc.html", {"form": CreateNewUser(), "success": True})
         else:
@@ -79,6 +88,7 @@ def create_account(request):
             return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
     else:
         form = CreateNewUser()
+    
     return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
 
 
@@ -135,7 +145,6 @@ def list_election_phases(request):
 
 # ---------------------------------------District views-----------------------------------------------------
 def create_district(request):
-   
     if request.method == 'POST':
         form = CreateDistrict(request.POST)
         if form.is_valid():
@@ -147,15 +156,20 @@ def create_district(request):
                 if created:
                     try:
                         grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
+                    except RpcError as rpc_error:
+                        # Handle gRPC errors
+                        print(f"Error in gRPC call: {rpc_error}")
+                        messages.error(request, f"Error in gRPC call: {rpc_error}")
                     except Exception as e:
-                        print(f"Error in gRPC call: {e}")
+                        # Handle other exceptions
+                        print(f"Unexpected error: {e}")
+                        messages.error(request, f"Error: {e}")
 
-            
-            return render(request, 'district/createDistrict.html', {'form': CreateDistrict(), "success": True})
+            return render(request, 'district/createDistrict.html', {'form': CreateDistrict(), 'success': True})
     else:
         form = CreateDistrict()
 
-    return render(request, 'district/createDistrict.html', {'form': form, "success": False})
+    return render(request, 'district/createDistrict.html', {'form': form, 'success': False})
 
 
 def view_district(request):
@@ -340,7 +354,7 @@ def voter_home(request):
 
     candidates = CandidateProfile.objects.filter(candidate__district_id=district_id).select_related('candidate', 'candidate__party')
     user_district = voter.district.district_name if voter.district else "No District"
-
+    list(messages.get_messages(request))
     return render(request, 'Voter/voterPg.html', {
         'candidates': candidates,
         'user_district': user_district,
@@ -348,12 +362,12 @@ def voter_home(request):
     })
 
 def ballot_paper(request):
-    if isinstance(request.user, Voter):
-        voter = request.user
-    else:
+    list(messages.get_messages(request))
+    if not isinstance(request.user, Voter):
         messages.error(request, 'Error: Only voters can view the ballot paper.')
         return redirect('login')
 
+    voter = request.user
     district_id = voter.district.district_id if voter.district else None
 
     if not district_id:
@@ -361,7 +375,15 @@ def ballot_paper(request):
         return redirect('login')
 
     candidates = CandidateProfile.objects.filter(candidate__district_id=district_id).select_related('candidate', 'candidate__party')
+    
+    
+    # Also ensure session messages are cleared
+    if 'messages' in request.session:
+        del request.session['messages']
+    request.session.modified = True
+
     return render(request, 'Voter/votingPg.html', {'candidates': candidates})
+
     
 
 # def view_candidate(request, candidate_id):
@@ -396,22 +418,30 @@ def cast_vote(request):
             messages.error(request, 'Error: Voter does not belong to a district.')
             return redirect('voter_home')
 
+        double_voting_detected = False  # Flag to check if double voting error occurred
+
         for candidate_id in selected_candidates:
             try:
                 grpc_compute_vote_run(candidate_id=int(candidate_id), voter_id=voter.voter_id)
             except GrpcError as e:
-                # Handle the exceptions
-                print(f"Error in gRPC call: {e}")
-                messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
+                # Check if the error message indicates double voting
+                if "CORE_DOUBLE_VOTING" in str(e):
+                    double_voting_detected = True
+                    messages.error(request, 'Double voting detected. Your vote is invalid.')
+                    break  # Exit loop on double voting detection
+                else:
+                    print(f"Error in gRPC call: {e}")
+                    messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
             except Exception as e:
-                # Handle the exceptions
-                print(f"Error in gRPC call: {e}")
+                print(f"Unexpected error: {e}")
                 messages.error(request, f"Error in voting for candidate {candidate_id}: {e}")
 
-        messages.success(request, 'Your vote has been submitted.')
-        return redirect('voter_home')
+        if not double_voting_detected:
+            messages.success(request, 'Your vote has been submitted.')
+        
+        return redirect('ballot_paper')
     else:
-        candidates = CandidateProfile.objects.select_related('user_account', 'user_account__party').all()
+        candidates = CandidateProfile.objects.select_related('candidate', 'candidate__party').all()
         return render(request, 'voting/ballot_paper.html', {'candidates': candidates})
 
 
