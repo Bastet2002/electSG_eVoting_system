@@ -190,7 +190,8 @@ bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m);
 
 
 void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& sa, const User& receiver);
-void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
+bool verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
+void compute_commitment_simple(Commitment& commitment, const StealthAddress& sa, const User& receiver, const Commitment& received_commitment, const StealthAddress& received_sa, const User& signer);
 
 void XOR_amount_mask(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
 void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index);

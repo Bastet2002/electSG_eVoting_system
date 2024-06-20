@@ -184,7 +184,7 @@ void write_candidate(const int32_t candidate_id, const User &candidate)
     cout << "Candidate id:" << candidate_id << " written to candidate_publickey" << endl;
 }
 
-void scan_for_stealthaddress(StealthAddress &sa, const int32_t district_id, const User &signer)
+void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const int32_t district_id, const User &signer)
 {
     cout << "scan for stealth address in district " << district_id << endl;
 
@@ -195,7 +195,7 @@ void scan_for_stealthaddress(StealthAddress &sa, const int32_t district_id, cons
     }
     pqxx::work W(C);
 
-    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
+    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
 
     // TODO : what if the record is too much
     for (const auto &row : r)
@@ -207,6 +207,14 @@ void scan_for_stealthaddress(StealthAddress &sa, const int32_t district_id, cons
         {
             cout << "Stealth address found" << endl;
             sa = sa_temp;
+            string output_commitment_str = row["output_commitment"].as<string>();
+
+            BYTE output_commitment[32];
+            hex_to_bytearray(output_commitment, output_commitment_str);
+
+            array<BYTE, 32> output_commitment_arr;
+            copy(begin(output_commitment), end(output_commitment), output_commitment_arr.begin());
+            receivedCmt.outputs_commitments.push_back(output_commitment_arr);
             return; // Stealth address found and valid
         }
     }
@@ -241,7 +249,6 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     "rG": "hex",
     "stealth_address": "hex",
     "commitment": {
-        "input_commitment": "hex",
         "output_commitment": "hex",
         "pseudoout_commitment": "hex",
         "amount_mask": "hex"
@@ -270,7 +277,6 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     to_string(key_image, blsagSig.key_image, 32);
     to_string(rg, sa.rG, 32);
     to_string(stealth_address, sa.pk, 32);
-    // to_string(input_commitment, commitment.inputs_commitments[0].data(), 32);
     // to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
     // to_string(pseudoout_commitment, commitment.pseudoouts_commitments[0].data(), 32);
 

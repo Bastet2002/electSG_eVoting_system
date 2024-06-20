@@ -268,6 +268,30 @@ int secret_index_gen(size_t n)
     return randombytes_uniform(n);
 }
 
+// compute m
+// H(tx_prefix) = H(keyiamge || candidate stealth address || ringmember stealth address || rG)
+// H(ss) = H(pseduout_commitment || amount mask || output blindingfactor mask || output commitment)
+// H(rangeproof)
+// m = H(H(tx_prefix) || H(ss) || H(rangeproof))
+void compute_message(const blsagSig& blsag, const StealthAddress& sa, const Commitment& commitment){
+    string keyimage, candidate_stealth_address, rG;
+
+    to_string(keyimage, blsag.key_image, 32);
+    to_string(candidate_stealth_address, sa.pk, 32);
+    to_string(rG, sa.rG, 32);
+    // TODO missing ring member stealth address
+
+    // TODO need change if in the future one to many
+    string pseudout_commitment, amount_mask, output_blindingfactor_mask, output_commitment;
+    to_string(pseudout_commitment, commitment.pseudoouts_commitments[0].data(), 32);
+    to_string(amount_mask, commitment.amount_masks[0].data(), 8);
+    to_string(output_blindingfactor_mask, commitment.outputs_blindingfactor_masks[0].data(), 32);
+    to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
+
+    string tx_prefix = keyimage + candidate_stealth_address + rG;
+    
+}
+
 void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA)
 {
     BYTE Hp_stealth_address[crypto_core_ed25519_BYTES];

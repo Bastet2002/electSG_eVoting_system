@@ -29,7 +29,8 @@ void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& s
     add_key(pseudoout_commitment.data(), commitment.pseudoouts_blindingfactor_masks[0].data(), b, H_point);
     commitment.pseudoouts_commitments.push_back(pseudoout_commitment);
 
-    verify_commitment_balancing(commitment.outputs_commitments, commitment.pseudoouts_commitments);
+    if (!verify_commitment_balancing(commitment.outputs_commitments, commitment.pseudoouts_commitments))
+        throw logic_error("Commitment balancing failed in CA_generate_voting_currency.");
 
     // amount mask
     BYTE amount_mask[8];
@@ -42,18 +43,40 @@ void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& s
 }
 
 // one to one
-void compute_commitment_simple(Commitment& commitment, const User& receiver, const Commitment& received_commitment, const StealthAddress& received_sa, const User& signer){
+void compute_commitment_simple(Commitment& commitment, const StealthAddress& sa, const User& receiver, const Commitment& received_commitment, const StealthAddress& received_sa, const User& signer){
     const int c = 30;
     BYTE amount_byte[8];
     XOR_amount_mask(amount_byte, received_commitment.amount_masks[0].data(), 0, sa, receiver);
 
+    // extract amount from mask
     long long amount;
     byte_to_int(amount, amount_byte, 8);
     if (amount != c)
         throw logic_error("The amount is not equal to currency given in compute commitment simple.");
     
+    // input commitment
     array<BYTE, 32> input_commitment;
     copy(received_commitment.outputs_commitments[0].begin(), received_commitment.outputs_commitments[0].end(), input_commitment.begin());
+
+    // output commitment
+    array<BYTE, 32> yt;
+    BYTE b[32];
+    array<BYTE, 32> output_commitment;
+    int_to_scalar_BYTE(b, static_cast<int>(amount));
+    compute_commitment_mask(yt.data(), sa.r, receiver.pkV, 0);
+    commitment.outputs_blindingfactor_masks.push_back(yt);
+    add_key(output_commitment.data(), yt.data(), b, H_point);
+    commitment.outputs_commitments.push_back(output_commitment);
+
+    // pseudo output commitment
+    array<BYTE, 32> pseudoout_commitment;
+    commitment.pseudoouts_blindingfactor_masks.resize(1);
+    generatePseudoBfs(commitment.pseudoouts_blindingfactor_masks, commitment.outputs_blindingfactor_masks);
+    add_key(pseudoout_commitment.data(), commitment.pseudoouts_blindingfactor_masks[0].data(), b, H_point);
+    commitment.pseudoouts_commitments.push_back(pseudoout_commitment);
+
+    if (!verify_commitment_balancing(commitment.outputs_commitments, commitment.pseudoouts_commitments))
+        throw logic_error("Commitment balancing failed in compute_commitment_simple.");
 }
 
 // one to many
@@ -99,7 +122,7 @@ void XOR_amount_mask(BYTE* out, const BYTE* in, const size_t t, const StealthAdd
     }
 }
 
-void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments)
+bool verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments)
 {
     // sum output commitments
     BYTE sum_output_commitments[32] = {0};
@@ -111,12 +134,7 @@ void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitment
     for (size_t i = 0; i < pseudo_output_commitments.size(); ++i)
         crypto_core_ed25519_add(sum_pseudo_output_commitments, pseudo_output_commitments[i].data(), sum_pseudo_output_commitments);
 
-    // compare the sum of output commitments and pseudo output commitments
-    if (memcmp(sum_output_commitments, sum_pseudo_output_commitments, 32) != 0){
-        throw logic_error("The output commitments and pseudo output commitments are not balanced.");
-    }
-    else
-        cout << "The output commitments and pseudo output commitments are balanced.\n";
+    return memcmp(sum_output_commitments, sum_pseudo_output_commitments, 32) == 0;
 }
 
 void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index)

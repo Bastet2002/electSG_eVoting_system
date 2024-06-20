@@ -8,7 +8,7 @@
 101 CORE_DOUBLE_VOTING
 */
 
-// TODO CA generate all the voters keys, currency and store in db without signature and decoys
+// CA generate all the voters keys, currency and store in db without signature and decoys
 // Would need to separate with district
 // if would like to increase the anonymity in the future, can generate more keys, and put in decoys with signature
 void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
@@ -100,13 +100,15 @@ void voter_cast_vote(Vote &vote)
     StealthAddress candidateSA;
     blsagSig blsagSig;
     int32_t district_id;
+    Commitment receivedCmt;
+    Commitment candidateCmt;
 
     // get from db
     User signer = get_voter(vote.voter_id);
     User candidate = get_candidate(district_id, vote.candidate_id);
 
     // the r is set in compute_stealth_address,
-    scan_for_stealthaddress(receivedSA, district_id, signer);
+    scan_for_stealthaddress(receivedCmt, receivedSA, district_id, signer);
     compute_stealth_address(candidateSA, candidate);
     receiver_test_stealth_address(candidateSA, candidate);
 
@@ -120,10 +122,8 @@ void voter_cast_vote(Vote &vote)
         throw CustomException(msg, static_cast<int>(errorCode));
     }
 
-    // TODO after having stealth address, decode amount_t from the output
-
-    // TODO compute commitment and masks (amount and yt)
-    // commitment balancing
+    // extract amount, compute commitment, mask, and verify commitment balancing
+    compute_commitment_simple(candidateCmt, candidateSA, candidate, receivedCmt, receivedSA, signer);
 
     // TODO grab decoy from db
     vector<User> users_blsag(10);
