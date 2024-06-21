@@ -81,15 +81,13 @@ def create_account(request):
                     messages.error(request, f"Unexpected error in creating candidate keys: {e}")
             else:
                 messages.success(request, 'Account successfully created.')
-
-            return render(request, "userAccount/createUserAcc.html", {"form": CreateNewUser(), "success": True})
+            return redirect('create_account')  # Redirect to clear the form and show the success message
         else:
-            print(form.errors)  # using this to debug
-            return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
+            messages.error(request, 'Invalid form submission.')
     else:
         form = CreateNewUser()
-    
-    return render(request, "userAccount/createUserAcc.html", {"form": form, "success": False})
+
+    return render(request, 'userAccount/createUserAcc.html', {'form': form})
 
 
 def view_accounts(request):
@@ -116,10 +114,13 @@ def edit_account(request, user_id):
         form = EditUser(request.POST, instance=user)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Account successfully updated.')
             return redirect('view_user_accounts')
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = EditUser(instance=user)
-    return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase})
+    return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase, 'user': user})
 
 
 def delete_account(request, user_id):
@@ -165,12 +166,14 @@ def create_district(request):
                         print(f"Unexpected error: {e}")
                         messages.error(request, f"Error: {e}")
 
-            return render(request, 'district/createDistrict.html', {'form': CreateDistrict(), 'success': True})
+            messages.success(request, 'District(s) successfully created.')
+            return redirect('create_district')  # Redirect to clear the form and show the success message
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = CreateDistrict()
 
-    return render(request, 'district/createDistrict.html', {'form': form, 'success': False})
-
+    return render(request, 'district/createDistrict.html', {'form': form})
 
 def view_district(request):
     query = request.GET.get('search', '')
@@ -181,7 +184,7 @@ def view_district(request):
         district = District.objects.all()
 
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_deletion = current_phase and current_phase.name in ['Cooling Off Day', 'Polling Day']
+    disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
 
     return render(request, 'district/viewDistrict.html', {'district': district, 'disable_deletion': disable_deletion})
 
@@ -192,7 +195,10 @@ def edit_district(request, district_id):
         form = EditDistrict(request.POST, instance=district)
         if form.is_valid():
             form.save()
+            messages.success(request, 'District successfully updated.')
             return redirect('view_district')
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = EditDistrict(instance=district)
 
@@ -213,7 +219,10 @@ def create_profile(request):
         form = CreateProfileForm(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Profile successfully created.')
             return redirect('create_profile')
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = CreateProfileForm()
     return render(request, 'userProfile/createProfile.html', {'form': form})
@@ -221,7 +230,7 @@ def create_profile(request):
 def view_profiles(request):
     profiles = Profile.objects.all()
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_deletion = current_phase and current_phase.name in ['Cooling Off Day', 'Polling Day']
+    disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
     not_allow = ['Admin', 'Candidate']
 
     return render(request, 'userProfile/viewProfiles.html', {'profiles': profiles, 'disable_deletion': disable_deletion, "disable_edit_list": not_allow})
@@ -232,7 +241,10 @@ def edit_profile(request, profile_id):
         form = CreateProfileForm(request.POST, instance=profile)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Profile successfully updated.')
             return redirect('view_profiles')
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = CreateProfileForm(instance=profile)
     return render(request, 'userProfile/editProfile.html', {'form': form, 'profile': profile})
@@ -251,6 +263,7 @@ def create_announcement(request):
         form = CreateAnnouncement(request.POST)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Announcement successfully created.')
             return redirect('create_announcement')
     else:
         form = CreateAnnouncement()
@@ -273,10 +286,11 @@ def edit_announcement(request, announcement_id):
         form = CreateAnnouncement(request.POST, instance=announcement)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Announcement successfully updated.')
             return redirect('view_announcement')
     else:
         form = CreateAnnouncement(instance=announcement)
-    return render(request, 'announcement/editAnnouncement.html', {'form': form})
+    return render(request, 'announcement/editAnnouncement.html', {'form': form, 'announcement': announcement})
 
 
 def delete_announcement(request, announcement_id):
@@ -293,10 +307,13 @@ def create_party(request):
         form = CreateParty(request.POST)
         if form.is_valid():
             form.save()
-            return render(request, 'party/createParty.html', {'form': CreateParty(), "success": True})
+            messages.success(request, 'Party successfully created.')
+            return redirect('create_party')
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = CreateParty()
-    return render(request, 'party/createParty.html', {'form': form, "success": False})
+    return render(request, 'party/createParty.html', {'form': form})
 
 
 def view_party(request):
@@ -310,7 +327,10 @@ def edit_party(request, party_id):
         form = CreateParty(request.POST, instance=party)
         if form.is_valid():
             form.save()
+            messages.success(request, 'Party successfully updated.')
             return redirect('view_party')
+        else:
+            messages.error(request, 'Invalid form submission.')
     else:
         form = CreateParty(instance=party)
     return render(request, 'party/editParty.html', {'form': form})

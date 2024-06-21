@@ -43,11 +43,26 @@
         </div>
     </div>
 </div>
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
 
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+{% endif %}
 <script>
     function confirmDelete() {
         return confirm('Are you sure you want to delete this profile?');
     }
 </script>
-
 {% endblock %}

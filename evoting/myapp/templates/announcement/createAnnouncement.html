@@ -4,14 +4,32 @@
 {% block title %}Create Announcement{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="{% static 'announcement/createAnnouncement.css' %}">
+<link rel="stylesheet" href="{% static 'announcement/createAnnouncement.css' %}">
     
-    <div class="main">
-        <h1 style="text-align: center;">Create Announcement</h1>
-        <form method="post" action="{% url 'create_announcement' %}" class="create-announcement-form">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="submit" name="publish">Publish</button>
-        </form>
+<div class="main">
+    <h1 style="text-align: center;">Create Announcement</h1>
+    <form method="post" action="{% url 'create_announcement' %}" class="create-announcement-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="publish">Publish</button>
+    </form>
+</div>
+
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
     </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+{% endif %}
 {% endblock %}

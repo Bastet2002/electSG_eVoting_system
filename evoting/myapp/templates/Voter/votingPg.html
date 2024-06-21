@@ -22,7 +22,7 @@
                     </label>
                     <span class="party-name">{{ candidate.candidate.full_name }}</span>
                     <span class="party-name">{{ candidate.candidate.party.party_name }}</span>
-                    <input type="checkbox" name="candidate" value="{{ candidate.candidate.user_id }}">
+                    <input type="radio" name="candidate" value="{{ candidate.candidate.user_id }}">
                 </div>
             </div>
             {% endfor %}
@@ -33,18 +33,13 @@
     </form>
         
     {% if messages %}
-        {% for message in messages %}
-        {% endfor %}
-    {% endif %}
-
-    {% if messages %}
-    <div class="errors" id="messages">
-        {% for message in messages %}
-        {% if message %}
-        <p class="error">{{ message }}</p>
-        {% endif %}
-        {% endfor %}
-    </div>
+        <div class="errors" id="messages">
+            {% for message in messages %}
+            {% if message %}
+            <p class="error">{{ message }}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
     {% endif %}
 </div>
 

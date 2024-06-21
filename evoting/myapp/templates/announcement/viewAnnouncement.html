@@ -23,7 +23,7 @@
                         <td>{{ announcement.header }}</td>
                         <td>
                             <a href="{% url 'view_announcement_detail' announcement.announcement_id %}"><button class="btn btn-danger">View</button></a>
-                            <a href="{% url 'edit_announcement' announcement.announcement_id %}" ><button class="btn btn-danger">Update</button></a>
+                            <a href="{% url 'edit_announcement' announcement.announcement_id %}"><button class="btn btn-danger">Update</button></a>
                             <form method="post" action="{% url 'delete_announcement' announcement.announcement_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger">Delete</button>
@@ -40,6 +40,24 @@
         </div>
     </div>
 </div>
+
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+{% endif %}
 
 <script>
     function confirmDelete() {

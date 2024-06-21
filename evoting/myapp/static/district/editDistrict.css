@@ -45,3 +45,21 @@
     padding: 20px;
     padding-top: 100px; /* Ensure there's space for the fixed header */
 }
+
+.popup-alert {
+  position: fixed;
+  top: 70px; /* Adjust to be below the header */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: none;
+}
+
+.popup-alert.show {
+  display: block;
+}

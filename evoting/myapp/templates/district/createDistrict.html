@@ -4,47 +4,33 @@
 {% block title %}Add District{% endblock %}
 
 {% block content %}
-    <link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
-    
-    <div class="main">
-        <h1 style="text-align: center;">Add District</h1>
-        <form method="post" action="{% url 'create_district' %}" class="add-district-form">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <p>Enter multiple district names separated by semicolons (;)</p>
-            <button type="submit" name="create-district">Add District</button>
-        </form>
+<link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
+
+<div class="main">
+    <h1 style="text-align: center;">Add District</h1>
+    <form method="post" action="{% url 'create_district' %}" class="add-district-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <p>Enter multiple district names separated by semicolons (;)</p>
+        <button type="submit" name="create-district">Add District</button>
+    </form>
+</div>
+
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
     </div>
-
-    {% if success %}
-        <div id="popupAlert" class="popup-alert show">
-            District(s) successfully added!
-        </div>
-        <script>
-            // Show the alert
-            const alertBox = document.getElementById('popupAlert');
-            alertBox.classList.add('show');
-            
-            // Hide the alert after 5 seconds
-            setTimeout(() => {
-                alertBox.classList.remove('show');
-            }, 5000); // Adjusted to 5 seconds
-        </script>
-    {% endif %}
-
-    {% if error_message %}
-        <div id="popupAlert" class="popup-alert show">
-            Error: {{ error_message }}
-        </div>
-        <script>
-            // Show the alert
-            const alertBox = document.getElementById('popupAlert');
-            alertBox.classList.add('show');
-            
-            // Hide the alert after 5 seconds
-            setTimeout(() => {
-                alertBox.classList.remove('show');
-            }, 5000); // Adjusted to 5 seconds
-        </script>
-    {% endif %}
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+        
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+{% endif %}
 {% endblock %}

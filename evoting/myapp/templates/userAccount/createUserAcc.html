@@ -14,9 +14,12 @@
         <button type="submit" name="create_new">Create New Account</button>
     </form>
 </div>
-{% if success %}
+
+{% if messages %}
     <div id="popupAlert" class="popup-alert show">
-        Account successfully created!
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
     </div>
     <script>
         // Show the alert
