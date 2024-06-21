@@ -8,7 +8,7 @@
 <div class="container">
     <!-- Display the active election phase -->
     {% if active_phase %}
-    <h1>Election Status : {{ active_phase.name }}</h1>
+    <h1>Election Status : {{ active_phase.phase_name }}</h1>
     {% else %}
     <p style="text-align: center;">No active election phase found.</p>
     {% endif %}
