@@ -133,13 +133,14 @@ void voter_cast_vote(Vote &vote)
 
     // blsag
     // TODO change to real message from hash transaction data
-    BYTE m[32];
-    crypto_core_ed25519_scalar_random(m);
+    // BYTE m[32];
+    // crypto_core_ed25519_scalar_random(m);
+    compute_message(blsagSig, candidateSA, candidateCmt);
 
     // TODO need to move the key image out from blsag simple gen.
     // The reason is to compare double voting, and move it to earlier step for efficiency
-    blsag_simple_gen(blsagSig, m, secret_index, receivedSA, blsagSA);
-    bool is_verified = blsag_simple_verify(blsagSig, m);
+    blsag_simple_gen(blsagSig, blsagSig.m, secret_index, receivedSA, blsagSA);
+    bool is_verified = blsag_simple_verify(blsagSig, blsagSig.m);
     if (!is_verified)
     {
         throw logic_error("Ring signature Verification fail");
@@ -152,11 +153,13 @@ void voter_cast_vote(Vote &vote)
     // blsag -> c, r, keyimage, membersSA.pk/index in db
     // stealth address -> pk, rG
     // commitment -> output, pseudo output, outputmask, amount mask
-    Commitment commitment;
-    write_voterecord(district_id, blsagSig, candidateSA, commitment);
+    write_voterecord(district_id, blsagSig, candidateSA, candidateCmt);
 
     // assign the string keyimage and test_output here
     to_string(vote.key_image, blsagSig.key_image, 32);
+
+    string msg = fmt::format("TEST OUTPUT:: Voter {} has casted vote in district {}", vote.voter_id, district_id);
+    cout << msg << endl;
 }
 
 void CA_compute_result(Compute_Total_Vote &compute_total_vote)

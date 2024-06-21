@@ -127,7 +127,6 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
     to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
     to_string(pseudo_output_commitment, commitment.pseudoouts_commitments[0].data(), 32);
     to_string(amount_mask, commitment.amount_masks[0].data(), 8);
-    amount_mask = "10";
 
     string json = fmt::format(R"({{"rG": "{}", "commitment": {{"input_commitment": "{}", "output_commitment": "{}", "pseudoout_commitment": "{}", "amount_mask": "{}"}}}})",
                               rG, input_commitment, output_commitment, pseudo_output_commitment, amount_mask);
@@ -181,7 +180,6 @@ void write_candidate(const int32_t candidate_id, const User &candidate)
     txn_d.exec_prepared("insert candidate_public", candidate_id, pkV, pkS);
     txn_d.commit();
 
-    cout << "Candidate id:" << candidate_id << " written to candidate_publickey" << endl;
 }
 
 void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const int32_t district_id, const User &signer)
@@ -195,7 +193,7 @@ void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const 
     }
     pqxx::work W(C);
 
-    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
+    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment,  commitment_record->'commitment'->>'amount_mask' as amount_mask from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
 
     // TODO : what if the record is too much
     for (const auto &row : r)
@@ -212,9 +210,17 @@ void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const 
             BYTE output_commitment[32];
             hex_to_bytearray(output_commitment, output_commitment_str);
 
+            BYTE amount_mask[8];
+            hex_to_bytearray(amount_mask, row["amount_mask"].as<string>());
+
             array<BYTE, 32> output_commitment_arr;
             copy(begin(output_commitment), end(output_commitment), output_commitment_arr.begin());
+
+            array<BYTE, 8> amount_mask_arr;
+            copy(begin(amount_mask), end(amount_mask), amount_mask_arr.begin());
+
             receivedCmt.outputs_commitments.push_back(output_commitment_arr);
+            receivedCmt.amount_masks.push_back(amount_mask_arr);
             return; // Stealth address found and valid
         }
     }
@@ -269,7 +275,7 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     pqxx::work W(C);
 
     string key_image;
-    string rg, stealth_address, input_commitment, output_commitment, pseudout_commitment, amount_mask;
+    string rg, stealth_address, output_commitment, pseudout_commitment, amount_mask;
     string c, m;
     vector<string> r;
     vector<string> members;
@@ -277,16 +283,9 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     to_string(key_image, blsagSig.key_image, 32);
     to_string(rg, sa.rG, 32);
     to_string(stealth_address, sa.pk, 32);
-    // to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
-    // to_string(pseudoout_commitment, commitment.pseudoouts_commitments[0].data(), 32);
-
-    // to_string(amount_mask, commitment.amount_masks[0].data(), 32);
-
-    // TODO amount mask not implemented
-    input_commitment = "10";
-    output_commitment = "10";
-    pseudout_commitment = "10";
-    amount_mask = "10";
+    to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
+    to_string(pseudout_commitment, commitment.pseudoouts_commitments[0].data(), 32);
+    to_string(amount_mask, commitment.amount_masks[0].data(), 8);
 
     to_string(c, blsagSig.c, 32);
     to_string(m, blsagSig.m, 32);
@@ -304,7 +303,6 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     }
 
     json commit_json = {
-        {"input_commitment", input_commitment},
         {"output_commitment", output_commitment},
         {"pseudoout_commitment", pseudout_commitment},
         {"amount_mask", amount_mask}};

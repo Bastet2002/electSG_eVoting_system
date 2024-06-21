@@ -140,8 +140,9 @@ struct blsagSig
     blsagSig()
     {
         sodium_memzero(c, 32);
-        r.resize(0);
+        sodium_memzero(m, 32);
         sodium_memzero(key_image, 32);
+        r.resize(0);
     }
 };
 
@@ -173,6 +174,7 @@ void print_bytearray(const BYTE *key, const size_t n);
 void print_hex(const BYTE *key, const size_t n);
 
 // core functions
+void extract_scalar_from_sk(BYTE *scalar, const BYTE *seed);
 void generate_H(BYTE *H);
 void hash_to_scalar(BYTE *scalar, const BYTE *key, const size_t key_size);
 void hash_to_point(BYTE *point, const BYTE *BYTE, const size_t key_size);
@@ -185,6 +187,7 @@ void public_network_stealth_address_communication(vector<StealthAddress> &addres
 void mix_address(vector<StealthAddress> &vec);
 int secret_index_gen(size_t n);
 void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA);
+void compute_message(blsagSig& blsag, const StealthAddress& sa, const Commitment& commitment);
 void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy);
 bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m);
 
@@ -193,7 +196,8 @@ void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& s
 bool verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
 void compute_commitment_simple(Commitment& commitment, const StealthAddress& sa, const User& receiver, const Commitment& received_commitment, const StealthAddress& received_sa, const User& signer);
 
-void XOR_amount_mask(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
+void XOR_amount_mask_signer(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
+void XOR_amount_mask_receiver(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
 void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index);
 void generatePseudoBfs(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
 bool compareBlindingFactors(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);

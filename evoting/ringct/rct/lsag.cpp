@@ -273,13 +273,16 @@ int secret_index_gen(size_t n)
 // H(ss) = H(pseduout_commitment || amount mask || output blindingfactor mask || output commitment)
 // H(rangeproof)
 // m = H(H(tx_prefix) || H(ss) || H(rangeproof))
-void compute_message(const blsagSig& blsag, const StealthAddress& sa, const Commitment& commitment){
+void compute_message(blsagSig& blsag, const StealthAddress& sa, const Commitment& commitment){
+
     string keyimage, candidate_stealth_address, rG;
+
 
     to_string(keyimage, blsag.key_image, 32);
     to_string(candidate_stealth_address, sa.pk, 32);
     to_string(rG, sa.rG, 32);
     // TODO missing ring member stealth address
+
 
     // TODO need change if in the future one to many
     string pseudout_commitment, amount_mask, output_blindingfactor_mask, output_commitment;
@@ -289,7 +292,27 @@ void compute_message(const blsagSig& blsag, const StealthAddress& sa, const Comm
     to_string(output_commitment, commitment.outputs_commitments[0].data(), 32);
 
     string tx_prefix = keyimage + candidate_stealth_address + rG;
-    
+    string ss = pseudout_commitment + amount_mask + output_blindingfactor_mask + output_commitment;
+
+    // TODO missing rangeproof
+
+
+    vector<BYTE> tx_prefix_byte(tx_prefix.begin(), tx_prefix.end());
+    vector<BYTE> ss_byte(ss.begin(), ss.end());
+
+    BYTE H_tx_prefix[32];
+    BYTE H_ss[32];
+
+
+    crypto_generichash(H_tx_prefix, 32, tx_prefix_byte.data(), tx_prefix_byte.size(), NULL, 0);
+    crypto_generichash(H_ss, 32, ss_byte.data(), ss_byte.size(), NULL, 0);
+
+
+    BYTE H_tx_prefix_H_ss[64];
+    memcpy(H_tx_prefix_H_ss, H_tx_prefix, 32);
+    memcpy(H_tx_prefix_H_ss + 32, H_ss, 32);
+
+    crypto_generichash(blsag.m, 32, H_tx_prefix_H_ss, 64, NULL, 0);
 }
 
 void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA)
@@ -328,16 +351,12 @@ void blsag_simple_gen(blsagSig &blsagSig, const BYTE *m, const size_t secret_ind
     hash_to_point(Hp_stealth_address, signerSA.pk, crypto_core_ed25519_BYTES);
     if (crypto_scalarmult_ed25519_noclamp(test_key_image, signerSA.sk, Hp_stealth_address) != 0)
     {
-        throw std::runtime_error("Failed to compute key image");
+        throw std::runtime_error("Failed to compute test key image");
     }
     if (sodium_memcmp(test_key_image, blsagSig.key_image, crypto_core_ed25519_BYTES) != 0)
     {
-        throw logic_error("Key image mismatch");
+        throw logic_error("Key image comparison mismatch");
     }
-
-    cout << "Compute Key image: " << endl;
-    print_hex(blsagSig.key_image, crypto_core_ed25519_BYTES);
-    cout << endl;
 
     // 2.1 generate random alpha (scalar) for the ring signature
     BYTE alpha[crypto_core_ed25519_SCALARBYTES];
