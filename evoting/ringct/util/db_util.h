@@ -2,6 +2,7 @@
 #define DB_UTIL_H
 
 #include "../rct/rctType.h"
+#include "../rct/rctOps.h"
 #include <pqxx/pqxx>
 
 // TODO change to separate db later
