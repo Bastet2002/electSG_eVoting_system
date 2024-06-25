@@ -28,6 +28,7 @@ target_link_libraries(pqxx)
 
 # fmt using fetch to avoid long rebuilding time in docker
 include(FetchContent)
+
 FetchContent_Declare(
     fmt
     GIT_REPOSITORY https://github.com/fmtlib/fmt.git
@@ -38,6 +39,15 @@ FetchContent_MakeAvailable(fmt)
 # include nlohmann/json for json parsing
 FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
 FetchContent_MakeAvailable(json)
+
+# catch 2 for cpp unit, integration test
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+FetchContent_MakeAvailable(Catch2)
+
 
 # proto file
 get_filename_component(rct_proto "./proto/ringct.proto" ABSOLUTE)
@@ -77,19 +87,31 @@ target_link_libraries(rct_grpc_proto
 # 
 add_executable(rct_server
     "src/rct_server.cc"
-    "src/vote.cc"
     "util/db_util.cc"
     "util/custom_exception.cc"
     "src/core.cc"
-    "rct/lsag.cpp"
+    "rct/rctOps.cpp"
     "rct/commitment.cpp")
 
 target_link_libraries(rct_server
     rct_grpc_proto
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
-    ${_PROTOBUF_LIBPROTOBUF}
     sodium
     fmt::fmt
     nlohmann_json::nlohmann_json
+    Catch2::Catch2WithMain
     pqxx)
+
+add_executable(test_rct
+    "util/custom_exception.cc"
+    "rct/rctOps.cpp"
+    "rct/commitment.cpp"
+    "test/test_hash.cpp")
+
+target_link_libraries(test_rct
+    sodium
+    fmt::fmt
+    nlohmann_json::nlohmann_json
+    Catch2::Catch2WithMain
+    )

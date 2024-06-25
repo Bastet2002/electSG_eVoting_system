@@ -2,6 +2,7 @@
 #define CORE_H
 
 #include "../rct/rctType.h"
+#include "../rct/rctOps.h"
 #include "../util/db_util.h"
 #include "evoting.h"
 
