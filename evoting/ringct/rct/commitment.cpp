@@ -1,4 +1,5 @@
 #include "rctType.h"
+#include "rctOps.h"
 
 void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &sa, const User &receiver)
 {
