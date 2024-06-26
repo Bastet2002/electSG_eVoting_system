@@ -6,7 +6,7 @@ body {
     display: flex;
     flex-direction: column;
     align-items: center;
-    background-color: #ffffff;
+    background: linear-gradient(to top, #c53e3e, #ffffff);
 }
 
 
@@ -26,7 +26,7 @@ main {
     align-items: center;
     gap: 20px;
     padding: 2em;
-    background-color: #cbcbcb;
+    background-color: #e8dbdb;
 }
 
 .section-box {
@@ -79,14 +79,15 @@ main {
 
 .edit-icon {
     position: absolute;
-    bottom: 10px;
+    bottom: 9px;
     right: 8px;
     background-color: rgba(0, 0, 0, 0.6);
     color: white;
     border: none;
-    border-radius: 50%;
-    padding: 5px 10px;
+    padding: 5px 8px;
     cursor: pointer;
+    border-radius: 50%;
+
 }
 .edit-icon i {
     font-size: 1rem;

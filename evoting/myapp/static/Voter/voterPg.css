@@ -1,109 +1,117 @@
 body {
-    font-family: "Lato", sans-serif;
-    background-color: rgb(255, 252, 252);
-  }
-
-  .main {
-    padding-top: 100px;
-    text-align: center; /* Align content in the center */
-    position: relative;
-    background-color: rgb(254, 251, 251);
-  }
-  .status-container {
-    display: flex;
-    justify-content: space-between; /* Distribute space between the status and district */
-    align-items: center; /* Align items vertically */
-    margin-bottom: 15px;
-    padding: 10px 20px;
-    background-color: #ffffff; /* Light background color */
-    border-radius: 8px; /* Rounded corners */
-    
+  background: linear-gradient(to top, #c53e3e, #ffffff);
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-.status {
-    font-weight: bold;
-    font-size: 25px;
-    color: #333; /* Dark text color */
-    text-align: left; /* Align the text to the left */
+.main {
+  padding-top: 100px;
+  text-align: center;
+  position: relative;
+}
+
+.status-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  background-color: #f8d7da;
+  border-radius: 8px;
+}
+
+.status, .district {
+  font-weight: bold;
+  font-size: 25px;
+  color: #000000;
 }
 
 .status span {
-    color: #d76359; /* Highlight specific part of the text */
-}
-
-.district {
-    font-weight: bold;
-    font-size: 25px;
-    color: #333; /* Dark text color */
-    text-align: right; /* Align the text to the right */
+  color: #d76359;
 }
 
 .district span {
-    color: #337ab7; /* Different highlight color for the district */
+  color: #000000;
 }
-  
-  .candidates-container {
-    display: flex;
-    flex-wrap: wrap; /* Enable wrapping */
-    justify-content: center;
-    gap: 30px; /* Space between candidates */
-    max-height: 65vh; /* Set the max height to allow scrolling */
-    overflow-y: auto; /* Enable vertical scrolling */
-    margin-bottom: 20px;
-  }
-  
-  .candidate {
-    width: 350px; /* Adjust width to fit three per row, accounting for gap */
-    background-color: rgb(207, 178, 178);
-    padding: 10px;
-    box-sizing: border-box;
-    text-align: center;
-    display: flex; /* Use flexbox for alignment */
-    flex-direction: column; /* Stack content vertically */
-    justify-content: space-between; /* Space content evenly */
-  }
-  
-  .candidate img {
-    width: 250px; /* Set the fixed width */
-    height: 250px; /* Set the fixed height */
-    border-radius: 50%; /* Make the image round */
-    object-fit: cover; /* Ensure the image covers the entire space */
-    margin: auto; /* Center the image horizontally */
-  }
-  
-  .candidate h3 {
-    margin-bottom: 5px;
-  }
-  
-  .candidate p {
-    margin: 0;
-  }
-  
-  .vote-button-container {
-    position: fixed;
-    bottom: 35px; /* Position the button 20px from the bottom */
-    left: 50%;
-    transform: translateX(-50%);
-  }
-  
-  button {
-    width: 150px;
-    height: 50px;
-    background-color: #d76359;
-    color: white;
-    border: none;
-    cursor: pointer;
-    font-size: 20px;
-  }
-  
-  button:hover {
-    background-color: #c05044; /* Slightly darker on hover */
-  }
-  
-  .candidate p {
-    font-size: 20px;
-  }
-  .candidate h3 {
-    font-size: 25px;
-  }
-  
+
+.candidates-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 30px;
+  max-height: 65vh;
+  overflow-y: auto;
+  margin-bottom: 20px;
+}
+
+.candidate {
+  width: 350px;
+  background-color: #f0f0f0;
+  padding: 10px;
+  box-sizing: border-box;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 15px;
+  transition: transform 0.2s;
+}
+
+.candidate:hover {
+  transform: scale(1.08);
+}
+
+.candidate img {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: auto;
+}
+
+.candidate-link{
+  text-decoration: none;
+}
+
+.candidate h3 {
+  margin-bottom: 5px;
+  color: #000000;
+  text-decoration: none;
+  font-size: 25px;
+}
+
+.candidate p {
+  margin: 0;
+  color: #000000;
+  text-decoration: none;
+  font-size: 20px;
+}
+
+
+.vote-button-container {
+  position: fixed;
+  bottom: 35px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+button {
+  width: 150px;
+  height: 50px;
+  background-color: #ffffff;
+  color: #333;
+  cursor: pointer;
+  font-size: 25px;
+  border: 2px solid #c53e3e;
+  transition: transform 0.2s;
+}
+
+button:hover {
+  background-color: #161313;
+  color: #ffffff;
+  transform: scale(1.05);
+}

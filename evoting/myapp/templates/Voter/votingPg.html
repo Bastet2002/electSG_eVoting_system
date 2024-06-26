@@ -4,10 +4,10 @@
 {% block title %}Digital Ballot{% endblock %}
 
 {% block content %}
-<link rel="stylesheet" href="{% static 'Voter/votingPg.css' %}"> 
+<link rel="stylesheet" href="{% static 'Voter/votingPg.css' %}">
 <div class="main">
     <h2>Digital Ballot Paper</h2>
-    <form method="post" action="{% url 'cast_vote' %}">
+    <form method="post" action="{% url 'cast_vote' %}" id="ballotForm">
         {% csrf_token %}
         <div class="ballot-paper">
             {% for candidate in candidates %}
@@ -22,7 +22,7 @@
                     </label>
                     <span class="party-name">{{ candidate.candidate.full_name }}</span>
                     <span class="party-name">{{ candidate.candidate.party.party_name }}</span>
-                    <input type="radio" name="candidate" value="{{ candidate.candidate.user_id }}">
+                    <input type="checkbox" name="candidate" value="{{ candidate.candidate.user_id }}" class="candidate-checkbox">
                 </div>
             </div>
             {% endfor %}
@@ -31,7 +31,7 @@
             <button type="submit">Submit</button>
         </div>
     </form>
-        
+
     {% if messages %}
         <div class="errors" id="messages">
             {% for message in messages %}
@@ -49,8 +49,18 @@
         if (messagesContainer) {
             setTimeout(() => {
                 messagesContainer.innerHTML = "";
-            }, 3000);  // Adjust the timeout as needed (3000ms = 3 seconds)
+            }, 3000);
         }
+
+        // Limit selection to one checkbox
+        const checkboxes = document.querySelectorAll('.candidate-checkbox');
+        checkboxes.forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                checkboxes.forEach(box => {
+                    if (box !== this) box.checked = false;
+                });
+            });
+        });
     });
 </script>
 

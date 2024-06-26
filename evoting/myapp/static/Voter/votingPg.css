@@ -1,13 +1,18 @@
 body {
     font-family: "Lato", sans-serif;
-    background-color: rgb(255, 255, 255);
+    background: linear-gradient(to top, #c53e3e, #ffffff);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 .main {
+    flex-grow: 1;
     padding-top: 100px;
     text-align: center;
     position: relative;
-    background-color: rgb(254, 251, 251);
 }
 
 .ballot-paper {
@@ -67,14 +72,14 @@ body {
 
 .vote-button-container button {
     padding: 10px 20px;
-    background-color: #c84b4b;
-    color: white;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
 
 .vote-button-container button:hover {
-    background-color: #d05050;
+    background-color: #140a0a;
+    color :white;
 }
-
