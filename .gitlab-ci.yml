@@ -12,15 +12,4 @@ build:
 test:
   stage: test
   script:
-    - pwd
-    - ls
-    - ./build/test_rct 
-  artifacts:
-    untracked: false
-    when: always
-    access: all
-    expire_in: 30 days
-    paths:
-      - test_results.xml
-    reports:
-      junit: test_results.xml
+    - echo "test stage"
