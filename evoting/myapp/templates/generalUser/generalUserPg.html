@@ -1,17 +1,20 @@
 {% extends "Voter/header.html" %}
 {% load static %}
 
-{% block title %}Home{% endblock %}
+{% block title %}General User Home{% endblock %}
 
 {% block content %}
-<body>
+<link rel="stylesheet" href="{% static 'generalUser/generalUserPg.css' %}"> 
+<div class="wrapper">
     <div class="container">
+
+        <h1>Election Status : {{ active_phase.phase_name }}</h1>    <!--need to edit this one in view-->
+
         <div class="content">
             <div class="election_phase">
                 <h2>Election Status: {{ active_phase.phase_name }}</h2>
             </div>
             <div class="announcements">
-                <h2>Announcements</h2>
                 {% for announcement in announcements %}
                 <div class="announcement-box">
                     <h3>{{ announcement.header }}</h3>
@@ -19,21 +22,33 @@
                 </div>
                 {% endfor %}
                 <div class="view-all">
-                    <a href="{% url 'view_all_announcements' %}">View all</a>
+                    <a href="{% url 'view_all_announcements' %}">View All</a>
                 </div>
             </div>
-            <div class="districts" onclick="location.href='{% url 'view_all_districts' %}'" style="cursor: pointer;">
-                <h2>Districts</h2>
-                <div class="district-list">
-                    <ul>
-                        {% for district in districts %}
-                        <li>{{ district.district_name }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
+            <div class="districts">
+                <a href="#" class="district-link">
+                    <img src="{% static 'images/district_image.png' %}" alt="Districts">
+                    <div class="hover-text">Click here to see all districts</div>
+                </a>
             </div>
         </div>
     </div>
-</body>
+    <footer>
+        <div class="logo-container">
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+        </div>
+        <div class="contact-support-container">
+            <div class="contact-info">
+                <h3>Contact Us</h3>
+                <p>Email: info@example.com</p>
+                <p>Phone: +1234567890</p>
+            </div>
+            <div class="support-info">
+                <h3>Support</h3>
+                <p>Email: support@example.com</p>
+                <p>Phone: +1234567890</p>
+            </div>
+        </div>
+    </footer>
+</div>
 {% endblock %}
-

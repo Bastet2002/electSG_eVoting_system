@@ -6,6 +6,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'Candidate/candidatePg.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-..." crossorigin="anonymous" />
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 <main>
     <section class="upload-section">
         <div class="section-box profile-section">
@@ -18,7 +19,7 @@
                     {% endif %}
                     
                     {% if is_owner %}
-                    <button class="edit-icon" onclick="openProfilePopup()"> 
+                    <button class="edit-icon btn btn-secondary position-absolute" onclick="openProfilePopup()"> 
                         <i class="fas fa-pencil-alt"></i> <!-- Font Awesome edit icon -->
                     </button>
                     {% endif %}
@@ -39,7 +40,7 @@
                 <img id="posterPictureDisplay" src="{% static 'images/poster.png' %}" alt="Poster Picture" class="poster-preview">
                 {% endif %}
                 {% if is_owner %}
-                <button class="edit-icon" onclick="openPosterPopup()">
+                <button class="edit-icon btn btn-secondary position-absolute" onclick="openPosterPopup()">
                     <i class="fas fa-pencil-alt"></i> <!-- Font Awesome edit icon -->
                 </button>
                 {% endif %}
@@ -56,7 +57,7 @@
                 {% endif %}
                 
                 {% if is_owner %}
-                <button class="edit-icon" onclick="openEditPopup()">
+                <button class="edit-icon btn btn-secondary position-absolute" onclick="openEditPopup()">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
                 {% endif %}
@@ -107,4 +108,7 @@
 </div>
 
 <script src="{% static 'Candidate/candidatePg.js' %}"></script>
+<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
 {% endblock %}

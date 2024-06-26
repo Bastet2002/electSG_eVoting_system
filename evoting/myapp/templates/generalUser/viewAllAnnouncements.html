@@ -1,21 +1,27 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>View All Announcements</title>
-</head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>All Announcements</h1>
-        </div>
-        {% for announcement in announcements %}
-        <div class="announcement">
-            <h3>{{ announcement.header }}</h3>
-            <p>{{ announcement.content }}</p>
-        </div>
-        {% endfor %}
+{% extends "Voter/header.html" %}
+{% load static %}
+
+{% block title %}View All Announcements{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'adminDashboard/home.css' %}"> 
+<style>
+    body{
+        background: linear-gradient(to top, #c53e3e, #ffffff);
+    }
+</style>
+<div class="container_general">
+    {% if announcements %}
+    <h2>All Announcements</h2>
+    {% for announcement in announcements %}
+    <div class="announcement-box">
+        <h3>{{ announcement.header }}</h3>
+        <p>{{ announcement.content }}</p>
+        <p><strong>Date:</strong> {{ announcement.date }}</p> 
     </div>
-</body>
-</html>
+    {% endfor %}
+    {% else %}
+    <p style="text-align: center;">No announcements found.</p>
+    {% endif %}
+</div>
+{% endblock %}

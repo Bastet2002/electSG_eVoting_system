@@ -4,11 +4,12 @@
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
-    background-color: white;
+    background-color: rgb(248, 249, 248);
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     position: fixed;
     width: 100%;
     top: 0;
+    left: 0;
     z-index: 2;
     font-family: "Lato", sans-serif;
   }
