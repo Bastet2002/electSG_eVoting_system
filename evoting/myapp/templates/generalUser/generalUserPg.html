@@ -11,6 +11,9 @@
         <h1>Election Status : {{ active_phase.phase_name }}</h1>    <!--need to edit this one in view-->
 
         <div class="content">
+            <div class="election_phase">
+                <h2>Election Status: {{ active_phase.phase_name }}</h2>
+            </div>
             <div class="announcements">
                 {% for announcement in announcements %}
                 <div class="announcement-box">

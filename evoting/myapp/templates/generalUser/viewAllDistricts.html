@@ -1,0 +1,27 @@
+{% comment %} {% extends "Voter/header.html" %} {% endcomment %}
+{% load static %}
+
+{% block title %}View All Districts{% endblock %}
+
+{% block content %}
+<body>
+    <div class="container">
+        <div class="content">
+            <div class="districts">
+                <h2>All Districts</h2>
+                <div class="district-list">
+                    <ul class="district-grid">
+                        {% for district in districts %}
+                        <li>
+                            <a href="{% url 'view_district_detail' district.district_id %}" class="district-box">
+                                {{ district.district_name }}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}
