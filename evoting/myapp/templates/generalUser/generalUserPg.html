@@ -1,14 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>General User Home</title>
+{% extends "Voter/header.html" %}
+{% load static %}
 
-</head>
+{% block title %}Home{% endblock %}
+
+{% block content %}
 <body>
     <div class="container">
         <div class="content">
+            <div class="election_phase">
+                <h2>Election Status: {{ active_phase.phase_name }}</h2>
+            </div>
             <div class="announcements">
                 <h2>Announcements</h2>
                 {% for announcement in announcements %}
@@ -21,12 +22,12 @@
                     <a href="{% url 'view_all_announcements' %}">View all</a>
                 </div>
             </div>
-            <div class="districts">
+            <div class="districts" onclick="location.href='{% url 'view_all_districts' %}'" style="cursor: pointer;">
                 <h2>Districts</h2>
                 <div class="district-list">
                     <ul>
                         {% for district in districts %}
-                        <li>{{ district.name }}</li>
+                        <li>{{ district.district_name }}</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -34,4 +35,5 @@
         </div>
     </div>
 </body>
-</html>
+{% endblock %}
+

@@ -157,7 +157,7 @@ def create_district(request):
                 if created:
                     try:
                         grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
-                    except RpcError as rpc_error:
+                    except GrpcError as grpc_error:
                         # Handle gRPC errors
                         print(f"Error in gRPC call: {rpc_error}")
                         messages.error(request, f"Error in gRPC call: {rpc_error}")
@@ -530,15 +530,27 @@ def upload_candidate_statement(request):
 
 # ---------------------------------------Genereal user views------------------------------------------------
 def general_user_home(request):
-    announcements = Announcement.objects.all()[:2] # only get latest 2 annoucements
+    announcements = Announcement.objects.all()[:2]  # only get latest 2 announcements
     districts = District.objects.all()
+    active_phase = ElectionPhase.objects.filter(is_active=True).first()
     return render(request, 'generalUser/generalUserPg.html', {
         'announcements': announcements,
         'districts': districts,
+        'active_phase': active_phase,
     })
 
 def view_all_announcements(request):
     announcements = Announcement.objects.all()
     return render(request, 'generalUser/viewAllAnnouncements.html', {'announcements': announcements})
 
-# ---------------------------------------TEMPORARY views------------------------------------------------
+def view_all_districts(request):
+    districts = District.objects.all()
+    return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
+
+def view_district_detail(request, district_id):
+    district = get_object_or_404(District, pk=district_id)
+    candidates = CandidateProfile.objects.filter(candidate__district=district)
+    return render(request, 'generalUser/viewDistrictDetail.html', {
+        'district': district,
+        'candidates': candidates,
+    })

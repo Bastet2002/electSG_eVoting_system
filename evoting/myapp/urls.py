@@ -2,7 +2,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("", views.index, name="index"),
+    # path("", views.index, name="index"),
     path("base/", views.base, name="base"),
     path('admin_home/', views.admin_home, name='admin_home'),
     path("create_profile/", views.create_profile, name="create_profile"),
@@ -38,6 +38,8 @@ urlpatterns = [
     path('candidate_home/election_poster', views.upload_election_poster, name='upload_election_poster'),
     path('candidate_home/profile_picture', views.upload_profile_picture, name='upload_profile_picture'),
     path('candidate_home/candidate_statement', views.upload_candidate_statement, name='upload_candidate_statement'),
-    path('general_user_home/', views.general_user_home, name='general_user_home'),
-    path('general_user_home/view_all_announcements/', views.view_all_announcements, name='view_all_announcements'),
+    path('', views.general_user_home, name='general_user_home'),
+    path('announcements/', views.view_all_announcements, name='view_all_announcements'),
+    path('districts/', views.view_all_districts, name='view_all_districts'),
+    path('districts/<int:district_id>/', views.view_district_detail, name='view_district_detail'),
 ]
