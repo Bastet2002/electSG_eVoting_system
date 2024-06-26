@@ -12,7 +12,9 @@ build:
 test:
   stage: test
   script:
-    - ./build/test_rct --reporter junit --out test_results.xml
+    - pwd
+    - ls
+    - ./build/test_rct 
   artifacts:
     untracked: false
     when: always
