@@ -1,18 +1,17 @@
 stages:
   - test
 
+services:
+  - docker:dind
+
+variables:
+  DOCKER_DRIVER: overlay2
+  TEST_IMAGE: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ringct:latest
 
 test:
   stage: test
-  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ringct:latest
-  services:
-    - docker:dind
   before_script:
     - docker info
   script:
-    - docker run --name ringct -d registry.gitlab.com/cookanddrum/fyp-24-s2-19/ringct:latest
-    - docker exec ringct /bin/bash -c "./build/test_rct"
-  after_script:
-    - docker stop ringct
-    - docker rm ringct
-  
+    - docker pull $TEST_IMAGE
+    - docker run --rm $TEST_IMAGE /app/build/test_rct
