@@ -162,3 +162,14 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
         }
     }
 }
+
+
+SCENARIO( "test case scenario ", "[tag]" ) {
+    GIVEN( "Given the arranged variable" ) {
+
+        // Arrange variables with assertions
+        int val = 5
+        REQUIRE( val == 6 );
+
+    }
+}
