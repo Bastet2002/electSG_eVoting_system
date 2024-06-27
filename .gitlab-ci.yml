@@ -1,15 +1,18 @@
-image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ringct:latest
-
 stages:
-  - build
   - test
 
-build:
-  stage: build
-  script:
-    - echo "Hello, $GITLAB_USER_LOGIN!"
 
 test:
   stage: test
+  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ringct:latest
+  services:
+    - docker:dind
+  before_script:
+    - docker info
   script:
-    - echo "test stage"
+    - docker run --name ringct -d registry.gitlab.com/cookanddrum/fyp-24-s2-19/ringct:latest
+    - docker exec ringct /bin/bash -c "./build/test_rct"
+  after_script:
+    - docker stop ringct
+    - docker rm ringct
+  
