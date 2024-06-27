@@ -63,9 +63,9 @@ vector<string> tokeniser(const string &aline, const char delimeter = ' ')
 SCENARIO("Test the consistency of the hash to point function", "[hash]")
 {
     // base hex string of variety length for use
-    const string base_file = filesystem::absolute("./test/text/hash_infile");
+    const string base_file = filesystem::absolute("/app/test/text/hash_infile");
     // contain expected output
-    const string h2p_file = filesystem::absolute("./test/text/h2p.txt");
+    const string h2p_file = filesystem::absolute("/app/test/text/h2p.txt");
 
     GIVEN("Any inputs to the hash to point function")
     {
