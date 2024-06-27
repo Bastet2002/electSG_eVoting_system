@@ -168,7 +168,7 @@ SCENARIO( "test case scenario ", "[tag]" ) {
     GIVEN( "Given the arranged variable" ) {
 
         // Arrange variables with assertions
-        int val = 5
+        int val = 5;
         REQUIRE( val == 6 );
 
     }
