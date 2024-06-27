@@ -46,6 +46,7 @@ services:
   ring-ct:
     build:
       context: ./ringct
+    image: ringct:latest
     depends_on:
       - djangodb
       - ringct-db
