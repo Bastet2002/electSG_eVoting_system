@@ -9,6 +9,6 @@ variables:
 build:
   stage: build
   before_script:
-    - echo "$gitlab_pass" | docker login $DOCKER_REGISTRY --username $gitlab_cr_user --password-stdin
+    - echo "$gitlab_pass" | docker login $CR_REGISTRY --username $gitlab_cr_user --password-stdin
   script:
     - docker-compose -f evoting/docker-compose.test.yml up --exit-code-from web
