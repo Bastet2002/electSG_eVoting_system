@@ -33,6 +33,9 @@ before_script:
       sleep 1
     done
   # Run migrations
+  - pwd
+  - cd /app/pygrpc
+  - ls
   - python /app/manage.py migrate
 
 test:
