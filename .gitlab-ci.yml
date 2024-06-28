@@ -30,4 +30,4 @@ test:
   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
   script:
     - echo "running django unit test"
-    - python /app/manage.py test myapp.tests.test_urls
+    - python /app/manage.py test myapp.tests.test_models
