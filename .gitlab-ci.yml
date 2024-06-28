@@ -18,11 +18,11 @@ services:
 
 
 variables:
-  POSTGRES_DB: mydb
-  POSTGRES_USER: admin
-  POSTGRES_PASSWORD: password
-  POSTGRES_HOST: djangodb
-  POSTGRES_PORT: 5432
+  DJANGO_DB_NAME: mydb
+  DJANGO_DB_USER: admin
+  DJANGO_DB_PASSWORD: password
+  DJANGO_DB_HOST: djangodb
+  DJANGO_DB_PORT: 5432
   DATABASE_URL: postgres://admin:password@postgres:5432/mydb
 
 before_script:
@@ -33,7 +33,7 @@ before_script:
   #     sleep 1
   #   done
   # Run migrations
-  - /app/wait-for-postgres.sh "$POSTGRES_HOST" "python" "manage.py" "test myapp.tests.test_models" 
+  - /app/wait-for-postgres.sh "$DJANGO_DB_HOST" "python" "manage.py" "test myapp.tests.test_models" 
 
 test:
   stage: test
