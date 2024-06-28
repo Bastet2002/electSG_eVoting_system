@@ -26,6 +26,7 @@ variables:
   POSTGRES_HOST: djangodb
   POSTGRES_PORT: 5432
   PYTHONPATH: /app:/app/pygrpc
+  DATABASE_URL: postgres://admin:password@djangodb:5432/mydb
 
 before_script:
   # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
