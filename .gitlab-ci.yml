@@ -34,6 +34,7 @@ before_script:
     done
   # Run migrations
   - pwd
+  - python -c "import sys; print('Python path:', sys.path)"
   - cd /app/pygrpc
   - ls
   - python /app/manage.py migrate
