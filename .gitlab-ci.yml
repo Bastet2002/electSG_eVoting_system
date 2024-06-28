@@ -25,7 +25,7 @@ stages:
 image: docker:27.0.2
 
 before_script:
-  - docker login -u $gitlab_cr_user -p $gitlab_pass
+  - echo $gitlab_pass | docker login -u $gitlab_cr_user -password-stdin
 
 services:
   - docker:27.0.2-dind
