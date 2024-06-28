@@ -25,9 +25,20 @@ variables:
   POSTGRES_PORT: 5432
   DATABASE_URL: postgres://admin:password@postgres:5432/mydb
 
+before_script:
+  # Wait for the PostgreSQL service to be available
+  - >
+    until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
+      echo "Waiting for PostgreSQL to be ready..."
+      sleep 1
+    done
+  # Run migrations
+  - python /app/manage.py migrate
+
 test:
   stage: test
   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
   script:
     - echo "running django unit test"
     - python /app/manage.py test myapp.tests.test_models
+  timeout: 5 minutes
