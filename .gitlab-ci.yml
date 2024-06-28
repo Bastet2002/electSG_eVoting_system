@@ -1,35 +1,14 @@
-stages:
-  - build
-  - test
-  
-# django-build:
-#   stage: build
-#   image: docker:27.0.2
-#   services:
-#     - docker:27.0.2-dind
-  
-# test:
-#   stage: test
-#   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
-#   script:
-#     - echo "running django unit test"
-#     - python /app/manage.py test myapp.tests.test_urls
-
-# image: docker:20.10.16
-
-# services:
-#   - docker:20.10.16-dind
-
-test:
-  stage: test
-  image: docker:27.0.2
+default:
+  image: docker:24.0.5
   services:
-    - docker:27.0.2-dind
-  variables:
-    DOCKER_TLS_CERTDIR: "/certs"
+    - docker:24.0.5-dind
+
+variables:
+  DOCKER_TLS_CERTDIR: "/certs"
+
+build:
+  stage: build
   before_script:
-  # - echo $gitlab_pass | docker login -u $gitlab_cr_user --password-stdin $CI_REGISTRY
-    - docker login -u $gitlab_cr_user -p $gitlab_pass $CI_REGISTRY
+    - echo "$gitlab_pass" | docker login $DOCKER_REGISTRY --username $gitlab_cr_user --password-stdin
   script:
-    - echo "running test"
     - docker-compose -f evoting/docker-compose.test.yml up --exit-code-from web
