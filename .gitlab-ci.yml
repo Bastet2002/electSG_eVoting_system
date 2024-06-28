@@ -23,7 +23,8 @@ variables:
   POSTGRES_PASSWORD: password
   POSTGRES_HOST: postgres
   POSTGRES_PORT: 5432
-  DATABASE_URL: postgres://admin:password@postgres:5432/mydb
+  # DATABASE_URL: postgres://admin:password@postgres:5432/mydb
+  PYTHONPATH: /app:/app/pygrpc
 
 before_script:
   # Wait for the PostgreSQL service to be available
