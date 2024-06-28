@@ -15,7 +15,11 @@
 
 services:
   - name: postgres:15
-
+    alias: postgres
+    variables:
+        POSTGRES_DB: mydb
+        POSTGRES_USER: admin
+        POSTGRES_PASSWORD: password
 
 variables:
   POSTGRES_DB: mydb
