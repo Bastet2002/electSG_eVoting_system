@@ -20,19 +20,19 @@ services:
 
 variables:
   # Configure postgres service (https://hub.docker.com/_/postgres/)
-  DJANGO_DB_NAME: mydb
-  DJANGO_DB_USER: admin
-  DJANGO_DB_PASSWORD: password
-  DJANGO_DB_HOST: djangodb
-  DJANGO_DB_PORT: 5432
+  POSTGRES_DB: mydb
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST: djangodb
+  POSTGRES_PORT: 5432
   PYTHONPATH: /app:/app/pygrpc
 
 before_script:
   # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
-  - export PGPASSWORD=$DJANGO_DB_PASSWORD
-  - psql -h "djangodb" -U "$DJANGO_DB_USER" -d "$DJANGO_DB_NAME" -c "SELECT 'OK' AS status;"
+  - export PGPASSWORD=$POSTGRES_PASSWORD
+  - psql -h "djangodb" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
   - >
-    until pg_isready -h $DJANGO_DB_HOST -p $DJANGO_DB_PORT -U $DJANGO_DB_USER; do
+    until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
       echo "Waiting for PostgreSQL to be ready..."
       sleep 1
     done
