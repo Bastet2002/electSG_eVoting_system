@@ -1,13 +1,6 @@
 stages:
   - build
   - test
-
-# test:
-#   stage: test
-#   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest
-#   script:
-#     - echo "running test"
-#     - /app/build/test_rct
   
 # django-build:
 #   stage: build
@@ -24,14 +17,13 @@ stages:
 
 image: docker:27.0.2
 
-before_script:
-  - echo $gitlab_pass | docker login -u $gitlab_cr_user --password-stdin $CI_REGISTRY
-
 services:
   - docker:27.0.2-dind
 
 test:
   stage: test
+  before_script:
+  - echo $gitlab_pass | docker login -u $gitlab_cr_user --password-stdin $CI_REGISTRY
   script:
     - echo "running test"
     - docker-compose -f evoting/docker-compose.test.yml up --exit-code-from web
