@@ -33,6 +33,11 @@ before_script:
       sleep 1
     done
   # Run migrations
+  - ls
+  - cd evoting
+  - ls
+  - cd /app
+  - ls
   - pwd
   - python -c "import sys; print('Python path:', sys.path)"
   - cd /app/pygrpc
