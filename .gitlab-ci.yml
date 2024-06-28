@@ -33,7 +33,9 @@ before_script:
       sleep 1
     done
   # Run migrations
-  - python /app/manage.py migrate
+  - cd /app
+  - python manage.py makemigrations
+  - python manage.py migrate
 
 test:
   stage: test
