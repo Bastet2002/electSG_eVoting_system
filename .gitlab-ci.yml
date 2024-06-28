@@ -48,4 +48,5 @@ test:
   script:
     - echo "running django unit test"
     - python /app/manage.py test myapp.tests.test_models
+    - python /app/manage.py test myapp.tests.test_urls
   timeout: 5 minutes
