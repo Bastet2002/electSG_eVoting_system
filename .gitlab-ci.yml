@@ -42,6 +42,7 @@ before_script:
   - python -c "import sys; print('Python path:', sys.path)"
   - cd /app/pygrpc
   - ls
+  - cat ringct_pb2.py
   - python /app/manage.py migrate
 
 test:
