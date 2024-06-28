@@ -24,6 +24,9 @@ stages:
 
 image: docker:27.0.2
 
+before_script:
+  - docker login -u $gitlab_cr_user -p $gitlab_pass
+
 services:
   - docker:27.0.2-dind
 
