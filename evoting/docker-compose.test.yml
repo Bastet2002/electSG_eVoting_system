@@ -36,7 +36,7 @@ services:
       - "5433:5432"
 
   ring-ct:
-    image: 
+    image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest 
     depends_on:
       - djangodb
       - ringct-db
