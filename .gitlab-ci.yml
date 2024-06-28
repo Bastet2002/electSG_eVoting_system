@@ -15,9 +15,20 @@ stages:
 #   services:
 #     - docker:27.0.2-dind
   
+# test:
+#   stage: test
+#   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
+#   script:
+#     - echo "running django unit test"
+#     - python /app/manage.py test myapp.tests.test_urls
+
+image: docker:27.0.2
+
+services:
+  - docker:27.0.2-dind
+
 test:
   stage: test
-  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
   script:
-    - echo "running django unit test"
-    - python /app/manage.py test myapp.tests.test_urls
+    - echo "running test"
+    - docker-compose -f docker-compose.test.yml up --exit-code-from web

@@ -25,8 +25,6 @@ services:
       - "5432:5432"
     volumes:
       - ./dbinit:/dbinit
-    # volumes:
-    #   - pgdata:/var/lib/postgresql/data
   
   ringct-db:
     image: postgres:15
@@ -38,9 +36,7 @@ services:
       - "5433:5432"
 
   ring-ct:
-    build:
-      context: ./ringct
-    image: ring-ct:latest
+    image: 
     depends_on:
       - djangodb
       - ringct-db
@@ -57,6 +53,3 @@ services:
       - RINGCT_DB_NAME=ringct
       - RINGCT_DB_USER=admin
       - RINGCT_DB_PASSWORD=password
-      # volumes:
-      #   pgdata:
-      #     driver: local
