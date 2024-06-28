@@ -33,13 +33,17 @@ variables:
 
 before_script:
   # Wait for the PostgreSQL service to be available
-  # - >
-  #   until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
-  #     echo "Waiting for PostgreSQL to be ready..."
-  #     sleep 1
-  #   done
+  - >
+    until pg_isready -h $DJANGO_DB_HOST -p $DJANGO_DB_PORT -U $DJANGO_DB_USER; do
+      echo "Waiting for PostgreSQL to be ready..."
+      sleep 1
+    done
   # Run migrations
-  - /app/wait-for-postgres.sh "$DJANGO_DB_HOST" "python" "manage.py" "test myapp.tests.test_models" 
+  # - /app/wait-for-postgres.sh "$DJANGO_DB_HOST" "python" "manage.py" "test myapp.tests.test_models" 
+  - python /app/manage.py makemigrations
+  - python /app/manage.py migrate
+
+
 
 test:
   stage: test
