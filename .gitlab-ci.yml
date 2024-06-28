@@ -28,21 +28,21 @@ variables:
   PYTHONPATH: /app:/app/pygrpc
   DATABASE_URL: postgres://admin:password@djangodb:5432/mydb
 
-before_script:
-  # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
-  - export PGPASSWORD=$POSTGRES_PASSWORD
-  - psql -h "djangodb" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
-  - >
-    until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
-      echo "Waiting for PostgreSQL to be ready..."
-      sleep 1
-    done
-  # Run migrations
-  - cd /app
-  - python manage.py makemigrations
-  - python manage.py migrate
 
 django-test:
+  before_script:
+    # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
+    - export PGPASSWORD=$POSTGRES_PASSWORD
+    - psql -h "djangodb" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
+    - >
+      until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
+        echo "Waiting for PostgreSQL to be ready..."
+        sleep 1
+      done
+    # Run migrations
+    - cd /app
+    - python manage.py makemigrations
+    - python manage.py migrate
   stage: test
   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
   script:
