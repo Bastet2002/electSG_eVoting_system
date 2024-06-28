@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from pathlib import Path
+import dj_database_url
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -86,16 +87,17 @@ WSGI_APPLICATION = 'evoting.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get('DJANGO_DB_NAME'),
-        'HOST': os.environ.get('DJANGO_DB_HOST'), 
-        'USER': os.environ.get('DJANGO_DB_USER'),
-        'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD'),
-        'TEST' : {
-            'NAME' : 'test_mydb',
-        },
-    }
+    # 'default': {
+    #     'ENGINE': 'django.db.backends.postgresql',
+    #     'NAME': os.environ.get('DJANGO_DB_NAME'),
+    #     'HOST': os.environ.get('DJANGO_DB_HOST'), 
+    #     'USER': os.environ.get('DJANGO_DB_USER'),
+    #     'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD'),
+    #     'TEST' : {
+    #         'NAME' : 'test_mydb',
+    #     },
+    # }
+    'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 
 
