@@ -33,7 +33,7 @@ before_script:
   #     sleep 1
   #   done
   # Run migrations
-  - /app/wait-for-postgres.sh
+  - /app/wait-for-postgres.sh "mydb" "python" "manage.py" "test myapp.tests.test_models" 
 
 test:
   stage: test
