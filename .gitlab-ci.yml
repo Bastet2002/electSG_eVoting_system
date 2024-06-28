@@ -15,10 +15,10 @@ stages:
 #     - echo "running django unit test"
 #     - python /app/manage.py test myapp.tests.test_urls
 
-image: docker:26.1.4
+image: docker:20.10.16
 
 services:
-  - docker:26.1.4-dind
+  - docker:20.10.16-dind
 
 test:
   stage: test
