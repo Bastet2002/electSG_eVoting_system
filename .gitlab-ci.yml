@@ -15,35 +15,25 @@
 
 services:
   - name: postgres:15
-    alias: djangodb
-    # variables:
-    #     DJANGO_DB_NAME: mydb
-    #     DJANGO_DB_USER: admin
-    #     DJANGO_DB_PASSWORD: password
-    #     DJANGO_DB_HOST: djangodb
-    #     DJANGO_DB_PORT: 5432
+
 
 variables:
-  DJANGO_DB_NAME: mydb
-  DJANGO_DB_USER: admin
-  DJANGO_DB_PASSWORD: password
-  DJANGO_DB_HOST: postgres
-  DJANGO_DB_PORT: 5432
+  POSTGRES_DB: mydb
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST: postgres
+  POSTGRES_PORT: 5432
   DATABASE_URL: postgres://admin:password@postgres:5432/mydb
 
 before_script:
   # Wait for the PostgreSQL service to be available
   - >
-    until pg_isready -h $DJANGO_DB_HOST -p $DJANGO_DB_PORT -U $DJANGO_DB_USER; do
+    until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
       echo "Waiting for PostgreSQL to be ready..."
       sleep 1
     done
   # Run migrations
-  # - /app/wait-for-postgres.sh "$DJANGO_DB_HOST" "python" "manage.py" "test myapp.tests.test_models" 
-  - python /app/manage.py makemigrations
   - python /app/manage.py migrate
-
-
 
 test:
   stage: test
