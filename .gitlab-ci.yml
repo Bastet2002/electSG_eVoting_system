@@ -15,6 +15,7 @@
 
 services:
   - name: postgres:15
+    alias: djangodb
     variables:
         DJANGO_DB_NAME: mydb
         DJANGO_DB_USER: admin
