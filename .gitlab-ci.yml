@@ -20,11 +20,11 @@ services:
 
 variables:
   # Configure postgres service (https://hub.docker.com/_/postgres/)
-  DJANGO_DB_HOST: djangodb
-  DJANGO_DB_PORT: 5432
   DJANGO_DB_NAME: mydb
   DJANGO_DB_USER: admin
   DJANGO_DB_PASSWORD: password
+  DJANGO_DB_HOST: djangodb
+  DJANGO_DB_PORT: 5432
   PYTHONPATH: /app:/app/pygrpc
 
 before_script:
