@@ -13,25 +13,23 @@
 #   script:
 #     - docker-compose -f evoting/docker-compose.test.yml up --exit-code-from web
 
+
 services:
-  - name: postgres:15
-    alias: postgres
-    variables:
-        POSTGRES_DB: mydb
-        POSTGRES_USER: admin
-        POSTGRES_PASSWORD: password
+  - postgres:15
 
 variables:
+  # Configure postgres service (https://hub.docker.com/_/postgres/)
   POSTGRES_DB: mydb
   POSTGRES_USER: admin
   POSTGRES_PASSWORD: password
-  POSTGRES_HOST: postgres
+  POSTGRES_HOST: djangodb
   POSTGRES_PORT: 5432
-  # DATABASE_URL: postgres://admin:password@postgres:5432/mydb
   PYTHONPATH: /app:/app/pygrpc
 
 before_script:
-  # Wait for the PostgreSQL service to be available
+  # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
+  - export PGPASSWORD=$POSTGRES_PASSWORD
+  - psql -h "djangodb" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
   - >
     until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
       echo "Waiting for PostgreSQL to be ready..."
