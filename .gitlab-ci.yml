@@ -1,9 +1,23 @@
 stages:
+  - build
   - test
 
+# test:
+#   stage: test
+#   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest
+#   script:
+#     - echo "running test"
+#     - /app/build/test_rct
+  
+# django-build:
+#   stage: build
+#   image: docker:27.0.2
+#   services:
+#     - docker:27.0.2-dind
+  
 test:
   stage: test
-  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest
+  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
   script:
-    - echo "running test"
-    - /app/build/test_rct
+    - echo "running django unit test"
+    - python manage.py test myapp.tests.test_urls
