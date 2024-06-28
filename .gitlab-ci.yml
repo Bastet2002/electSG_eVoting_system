@@ -15,7 +15,8 @@
 
 
 services:
-  - postgres:15
+  - name: postgres:15
+    alias: djangodb
 
 variables:
   # Configure postgres service (https://hub.docker.com/_/postgres/)
