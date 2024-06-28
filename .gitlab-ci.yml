@@ -15,7 +15,12 @@
 
 services:
   - name: postgres:15
-
+    variables:
+        DJANGO_DB_NAME: mydb
+        DJANGO_DB_USER: admin
+        DJANGO_DB_PASSWORD: password
+        DJANGO_DB_HOST: djangodb
+        DJANGO_DB_PORT: 5432
 
 variables:
   DJANGO_DB_NAME: mydb
