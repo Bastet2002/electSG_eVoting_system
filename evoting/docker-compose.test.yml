@@ -1,12 +1,6 @@
-version: '3'
-
 services:
   web:
-    build: .
-    volumes:
-      - .:/app
-    entrypoint: [ "/app/wait-for-postgres.sh" ]
-    command: [ "djangodb", "python manage.py runserver 0.0.0.0:8000" ]
+    image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
     ports:
       - "8000:8000"
     depends_on:
@@ -18,8 +12,8 @@ services:
       - DJANGO_DB_NAME=mydb
       - DJANGO_DB_USER=admin
       - DJANGO_DB_PASSWORD=password
-    links:
-      - djangodb
+    entrypoint: [ "/app/wait-for-postgres.sh" ]
+    command: [ "djangodb", "python /app/manage.py test myapp.tests.test_urls" ]
 
   djangodb:
     image: postgres:15
@@ -46,6 +40,7 @@ services:
   ring-ct:
     build:
       context: ./ringct
+    image: ring-ct:latest
     depends_on:
       - djangodb
       - ringct-db
