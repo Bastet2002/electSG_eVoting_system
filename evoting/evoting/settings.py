@@ -92,6 +92,9 @@ DATABASES = {
         'HOST': os.environ.get('DJANGO_DB_HOST'), 
         'USER': os.environ.get('DJANGO_DB_USER'),
         'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD'),
+        'TEST' : {
+            'NAME' : 'test_mydb',
+        },
     }
 }
 
