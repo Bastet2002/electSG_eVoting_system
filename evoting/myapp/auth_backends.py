@@ -15,8 +15,8 @@ class SingpassBackend(BaseBackend):
                 if not voter:
                     # If no voter found with matching hash_info, fetch voter with empty hash_info
                     voter = Voter.objects.filter(district__district_name=singpass_user.district, hash_from_info=None).first()
-                    print(voter.district.district_name)
-                    print(singpass_user.district)
+                    # print(voter.district.district_name)
+                    # print(singpass_user.district)
                     if voter:
                         # Voter found with empty hash_info, update hash_info and last_login
                         voter.hash_from_info = hash_info
