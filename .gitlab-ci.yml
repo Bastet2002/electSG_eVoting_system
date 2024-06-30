@@ -30,7 +30,8 @@ build:
   services:
     - docker:24.0.5-dind
   before_script:
-    - echo "$gitlab_pass" | docker login $CR_REGISTRY --username $gitlab_cr_user --password-stdin
+    # - echo "$gitlab_pass" | docker login $CR_REGISTRY --username $gitlab_cr_user --password-stdin
+    - docker login registry.gitlab.com -u $gitlab_cr_user -p $gitlab_pass
   script:
     - docker build -t $WEB_IMAGE_TAG -f ./evoting/Dockerfile ./evoting
     - docker push $WEB_IMAGE_TAG
