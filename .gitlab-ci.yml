@@ -14,7 +14,7 @@ variables:
   services:
     - docker:24.0.5-dind
   before_script:
-    echo "<access_token>" | docker login $CI_REGISTRY -u <username> --password-stdin
+    echo "$CI_TOKEN" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
 
 django-build:
   stage: build
