@@ -6,15 +6,15 @@ variables:
   # for build image
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
-  WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/evoting-web:$CI_COMMIT_REF_SLUG
-  RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/ring-ct:$CI_COMMIT_REF_SLUG
+  WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
+  RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
 
 .docker-build: &build_configuration
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
   before_script:
-    echo "$CI_TOKEN" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+    echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
 
 django-build:
   stage: build
