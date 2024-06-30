@@ -6,17 +6,9 @@
 # variables:
 #   DOCKER_TLS_CERTDIR: "/certs"
 
-# build:
-#   stage: build
-#   before_script:
-#     - echo "$gitlab_pass" | docker login $CR_REGISTRY --username $gitlab_cr_user --password-stdin
-#   script:
-#     - docker-compose -f evoting/docker-compose.test.yml up --exit-code-from web
-
-
-services:
-  - name: postgres:15
-    alias: djangodb
+stages:
+  - build
+  - test
 
 variables:
   # Configure postgres service (https://hub.docker.com/_/postgres/)
@@ -27,33 +19,52 @@ variables:
   POSTGRES_PORT: 5432
   PYTHONPATH: /app:/app/pygrpc
   DATABASE_URL: postgres://admin:password@djangodb:5432/mydb
+  # for build image
+  DOCKER_DRIVER: overlay2
+  WEB_IMAGE_TAG: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
+  RINGCT_IMAGE_TAG: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
 
-
-django-test:
+build:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
   before_script:
-    # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
-    - export PGPASSWORD=$POSTGRES_PASSWORD
-    - psql -h "djangodb" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
-    - >
-      until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
-        echo "Waiting for PostgreSQL to be ready..."
-        sleep 1
-      done
-    # Run migrations
-    - cd /app
-    - python manage.py makemigrations
-    - python manage.py migrate
-  stage: test
-  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
+    - echo "$gitlab_pass" | docker login $CR_REGISTRY --username $gitlab_cr_user --password-stdin
   script:
-    - echo "running django unit test"
-    - python /app/manage.py test myapp.tests.test_models
-    - python /app/manage.py test myapp.tests.test_urls
-  timeout: 5 minutes
+    - docker build -t $WEB_IMAGE_TAG -f ./evoting/Dockerfile ./evoting
+    - docker push $WEB_IMAGE_TAG
 
-ringct-unittest:
-  stage: test
-  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest
-  script:
-    - echo "running ringct unit test"
-    - /app/build/test_rct
+# services:
+#   - name: postgres:15
+#     alias: djangodb
+
+
+# django-test:
+#   before_script:
+#     # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
+#     - export PGPASSWORD=$POSTGRES_PASSWORD
+#     - psql -h "djangodb" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
+#     - >
+#       until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
+#         echo "Waiting for PostgreSQL to be ready..."
+#         sleep 1
+#       done
+#     # Run migrations
+#     - cd /app
+#     - python manage.py makemigrations
+#     - python manage.py migrate
+#   stage: test
+#   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/evoting-web:latest
+#   script:
+#     - echo "running django unit test"
+#     - python /app/manage.py test myapp.tests.test_models
+#     - python /app/manage.py test myapp.tests.test_urls
+#   timeout: 5 minutes
+
+# ringct-unittest:
+#   stage: test
+#   image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest
+#   script:
+#     - echo "running ringct unit test"
+#     - /app/build/test_rct
