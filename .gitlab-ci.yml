@@ -6,15 +6,15 @@ variables:
   # for build image
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
-  WEB_IMAGE_TAG: $CR_REGISTRY/evoting-web:$CI_COMMIT_REF_SLUG
-  RINGCT_IMAGE_TAG: $CR_REGISTRY/ring-ct:$CI_COMMIT_REF_SLUG
+  WEB_IMAGE_TAG: $CI_REGISTRY/evoting-web:$CI_COMMIT_REF_SLUG
+  RINGCT_IMAGE_TAG: $CI_REGISTRY/ring-ct:$CI_COMMIT_REF_SLUG
 
 .docker-build: &build_configuration
   image: docker:24.0.5
   services:
     - docker:24.0.5-dind
   before_script:
-    - echo "$CI_REGISTRY_PASSWORD" | docker login $CR_REGISTRY --username $CI_REGISTRY_USER --password-stdin
+    - echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY --username $CI_REGISTRY_USER --password-stdin
 
 django-build:
   stage: build
@@ -48,7 +48,7 @@ ringct-build:
 
 django-test:
   stage: test
-  image: $CR_REGISTRY/evoting-web:$CI_COMMIT_REF_SLUG
+  image: $CI_REGISTRY/evoting-web:$CI_COMMIT_REF_SLUG
   services:
   - name: postgres:15
     alias: djangodb
@@ -73,7 +73,7 @@ django-test:
 
 ringct-unittest:
   stage: test
-  image: $CR_REGISTRY/ring-ct:$CI_COMMIT_REF_SLUG
+  image: $CI_REGISTRY/ring-ct:$CI_COMMIT_REF_SLUG
   script:
     - echo "running ringct unit test"
     - /app/build/test_rct
