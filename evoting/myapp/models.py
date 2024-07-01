@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete
+from django.core.exceptions import ValidationError
 
 # SINGPASS_USER Model
 class SingpassUser(models.Model):
@@ -58,11 +59,17 @@ class CandidatePublicKey(models.Model):
     pkv = models.CharField(max_length=64)
     pks = models.CharField(max_length=64)
 
+# Define the validation function
+def validate_file_size(file):
+    max_size_mb = 5  # Set maximum file size to 5 MB
+    if file.size > max_size_mb * 1024 * 1024:
+        raise ValidationError(f"File size should not exceed {max_size_mb} MB")
+    
 # CANDIDATE_PROFILE Model
 class CandidateProfile(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
-    profile_picture = models.ImageField(upload_to='candidate_pictures/')
-    election_poster = models.ImageField(upload_to='election_posters/')
+    profile_picture = models.ImageField(upload_to='candidate_pictures/', validators=[validate_file_size])
+    election_poster = models.ImageField(upload_to='election_posters/', validators=[validate_file_size])
     candidate_statement = models.TextField()
 
     def __str__(self):

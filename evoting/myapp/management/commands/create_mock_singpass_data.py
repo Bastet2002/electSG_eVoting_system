@@ -28,4 +28,16 @@ class Command(BaseCommand):
                 phone_num='09876543',
                 district='Jurong East'
             )
+
+        # #test
+        # if not SingpassUser.objects.filter(singpass_id='A1234567D').exists():
+        #     hashed_password = make_password('123456')
+        #     SingpassUser.objects.create(
+        #         singpass_id=None,
+        #         password=hashed_password,
+        #         full_name=None,
+        #         date_of_birth='1980-01-01',
+        #         phone_num='09876543',
+        #         district='Jurong East'
+        #     )
             

@@ -1,6 +1,7 @@
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
+from django.core.exceptions import ValidationError
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.messages import get_messages
@@ -95,10 +96,10 @@ def view_accounts(request):
     if query:
         # Filter users where the search query matches any of the desired fields
         users = UserAccount.objects.filter(
-            Q(name__icontains=query) |
+            Q(full_name__icontains=query) |
             Q(username__icontains=query) |
-            Q(district__name__icontains=query) |
-            Q(party__party__icontains=query) |  # Assuming 'party' field references a related Party model
+            Q(district__district_name__icontains=query) |
+            Q(party__party_name__icontains=query) |  # Assuming 'party' field references a related Party model
             Q(role__profile_name__icontains=query) #### add this to search
         )
     else:
@@ -509,8 +510,13 @@ def upload_profile_picture(request):
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.profile_picture = form.cleaned_data['profile_picture']
-            candidate_profile.save()
-            return redirect('candidate_home')  # Redirect to candidate home page after successful upload
+            try:
+                candidate_profile.save()
+            except ValidationError as e:
+                form.add_error('profile_picture', e.message)
+                messages.error(request, "File size should not exceed the limit.")
+            # candidate_profile.save()
+        return redirect('candidate_home')  # Redirect to candidate home page after successful upload
     # else:
     #     form = ProfilePictureForm()
     # return render(request, 'upload_profile_picture.html', {'form': form})
