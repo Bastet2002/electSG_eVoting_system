@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.http import HttpResponse
 from django.shortcuts import render, redirect, get_object_or_404
@@ -37,7 +37,10 @@ def user_login(request):
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
     else:
         return render(request, 'login.html')
-    
+
+def user_logout(request):
+    logout(request)
+    return redirect('login')
     
 def index(response):
     return HttpResponse("<h1>Hello World!</h1>")
@@ -179,14 +182,18 @@ def view_district(request):
     query = request.GET.get('search', '')
     if query:
         # Filter districts where the search query matches the name field
-        district = District.objects.filter(name__icontains=query)
+        districts = District.objects.filter(name__icontains=query)
     else:
-        district = District.objects.all()
-
+        districts = District.objects.all()
+    
+    # for general user
+    if not request.user.is_authenticated:
+        return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
+    
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
     disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
 
-    return render(request, 'district/viewDistrict.html', {'district': district, 'disable_deletion': disable_deletion})
+    return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
 
 
 def edit_district(request, district_id):
@@ -272,7 +279,10 @@ def create_announcement(request):
 
 def view_announcement(request):
     announcements = Announcement.objects.all()
-    return render(request, 'announcement/viewAnnouncement.html', {'announcements': announcements})
+    if not request.user.is_authenticated:
+        return render(request, 'generalUser/viewAllAnnouncements.html', {'announcements': announcements})
+    else:
+        return render(request, 'announcement/viewAnnouncement.html', {'announcements': announcements})
 
 
 def view_announcement_detail(request, announcement_id):
@@ -404,24 +414,6 @@ def ballot_paper(request):
 
     return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
-    
-
-# def view_candidate(request, candidate_id):
-#     candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
-#     is_owner = request.user == candidate_profile.candidate
-    
-#     profile_picture_form = ProfilePictureForm()
-#     election_poster_form = ElectionPosterForm()
-#     candidate_statement_form = CandidateStatementForm()
-#     candidate_statement_form.fields['candidate_statement'].initial = candidate_profile.candidate_statement
-
-#     return render(request, 'Candidate/candidatePg.html', {
-#         'profile_picture_form': profile_picture_form,
-#         'election_poster_form': election_poster_form,
-#         'candidate_statement_form': candidate_statement_form,
-#         'candidate_profile': candidate_profile,
-#     })
-
 def cast_vote(request):
     if request.method == 'POST':
         selected_candidates = request.POST.getlist('candidate')
@@ -539,13 +531,9 @@ def general_user_home(request):
         'active_phase': active_phase,
     })
 
-def view_all_announcements(request):
-    announcements = Announcement.objects.all()
-    return render(request, 'generalUser/viewAllAnnouncements.html', {'announcements': announcements})
-
-def view_all_districts(request):
-    districts = District.objects.all()
-    return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
+# def view_all_districts(request):
+#     districts = District.objects.all()
+#     return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
 
 def view_district_detail(request, district_id):
     district = get_object_or_404(District, pk=district_id)

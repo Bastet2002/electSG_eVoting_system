@@ -23,8 +23,8 @@
                 {% else %}
                 <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
                 {% endif %}
-                <h3 class ="candidate_link">{{ candidate.candidate.full_name }}</h3>
-                <p class ="candidate_link">Party: {{ candidate.candidate.party.party_name }}</p>
+                <h3>{{ candidate.candidate.full_name }}</h3>
+                <p>Party: {{ candidate.candidate.party.party_name }}</p>
             </div>
         </a>
         {% endfor %}

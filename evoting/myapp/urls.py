@@ -23,6 +23,7 @@ urlpatterns = [
     path('party/edit/<int:party_id>/', views.edit_party, name='edit_party'),
     path('party/delete/<int:party_id>/', views.delete_party, name='delete_party'),
     path('login/', views.user_login, name='login'),
+    path('logout/', views.user_logout, name='logout'),
     path('account/', views.view_accounts, name='view_user_accounts'),
     path('account/edit/<int:user_id>/', views.edit_account, name='edit_user'),
     path('account/delete/<int:user_id>/', views.delete_account, name='delete_user'),
@@ -39,7 +40,7 @@ urlpatterns = [
     path('candidate_home/profile_picture', views.upload_profile_picture, name='upload_profile_picture'),
     path('candidate_home/candidate_statement', views.upload_candidate_statement, name='upload_candidate_statement'),
     path('', views.general_user_home, name='general_user_home'),
-    path('announcements/', views.view_all_announcements, name='view_all_announcements'),
-    path('districts/', views.view_all_districts, name='view_all_districts'),
+    path('announcements/', views.view_announcement, name='view_all_announcements'),
+    path('districts/', views.view_district, name='view_all_districts'),
     path('districts/<int:district_id>/', views.view_district_detail, name='view_district_detail'),
 ]
