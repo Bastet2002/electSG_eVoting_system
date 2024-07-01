@@ -3,6 +3,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete
 from django.core.exceptions import ValidationError
+import json
 
 # SINGPASS_USER Model
 class SingpassUser(models.Model):
@@ -59,18 +60,36 @@ class CandidatePublicKey(models.Model):
     pkv = models.CharField(max_length=64)
     pks = models.CharField(max_length=64)
 
-# Define the validation function
-def validate_file_size(file):
-    max_size_mb = 5  # Set maximum file size to 5 MB
-    if file.size > max_size_mb * 1024 * 1024:
-        raise ValidationError(f"File size should not exceed {max_size_mb} MB")
+# # Define the validation function
+# def validate_file_size(file):
+#     max_size_mb = 5  # Set maximum file size to 5 MB
+#     if file.size > max_size_mb * 1024 * 1024:
+#         raise ValidationError(f"File size should not exceed {max_size_mb} MB")
     
 # CANDIDATE_PROFILE Model
 class CandidateProfile(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
-    profile_picture = models.ImageField(upload_to='candidate_pictures/', validators=[validate_file_size])
-    election_poster = models.ImageField(upload_to='election_posters/', validators=[validate_file_size])
+    profile_picture = models.ImageField(upload_to='candidate_pictures/')
+    election_poster = models.ImageField(upload_to='election_posters/')
     candidate_statement = models.TextField()
+
+    def clean(self):
+        max_size_mb = 5  # Set maximum file size to 5 MB
+
+        # Validate profile_picture size
+        if self.profile_picture:
+            if self.profile_picture.size > max_size_mb * 1024 * 1024:
+                raise ValidationError(f"Profile picture size should not exceed {max_size_mb} MB")
+
+        # Validate election_poster size
+        if self.election_poster:
+            if self.election_poster.size > max_size_mb * 1024 * 1024:
+                raise ValidationError(f"Election poster size should not exceed {max_size_mb} MB")
+            
+    
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.candidate_id.user.username + "'s Candidate Profile"
@@ -87,6 +106,16 @@ def delete_candidateprofile_images(sender, instance, **kwargs):
 class VoteResults(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
     total_vote = models.IntegerField()
+
+    def clean(self):
+        if self.total_vote < 0:
+            raise ValidationError("Total vote cannot be negative.")
+        if self.total_vote > 1000000:  # Example threshold for a very large vote count
+            raise ValidationError("Total vote is unrealistically large.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
 
 # PARTY Model
 class Party(models.Model):
@@ -121,6 +150,14 @@ class VoteRecords(models.Model):
     key_image = models.CharField(max_length=64, primary_key=True)
     district = models.ForeignKey('District', on_delete=models.CASCADE)
     transaction_record = models.JSONField()
+
+    def save(self, *args, **kwargs):
+        if isinstance(self.transaction_record, str):
+            try:
+                json.loads(self.transaction_record)
+            except json.JSONDecodeError:
+                raise ValidationError('Invalid JSON in transaction_record')
+        super().save(*args, **kwargs)
 
 # VOTING_CURRENCY Model
 class VotingCurrency(models.Model):

@@ -216,12 +216,20 @@ class ModelsTestCase(TestCase):
                 is_active=True
             )
 
-    def test_invalid_vote_record_creation(self):
+    def test_invalid_vote_record_district_creation(self):
         with self.assertRaises(IntegrityError):
             VoteRecords.objects.create(
                 key_image="abcd1234",  
                 district=None,   # Invalid district (None)
                 transaction_record=self.vote_record.transaction_record 
+            )
+    
+    def test_invalid_vote_record_json_creation(self):
+        with self.assertRaises(ValidationError):
+            VoteRecords.objects.create(
+                key_image="x" * 64,
+                district=self.district,
+                transaction_record="invalid_json"
             )
 
     def test_invalid_voting_currency_creation(self):
@@ -298,19 +306,16 @@ class ModelsTestCase(TestCase):
         # Create a large image file (5 MB)
         large_image = SimpleUploadedFile(
             name='large_image.jpg',
-            content=b'\x00' * 10 * 1024 * 1024,  # 5 MB of zero bytes
+            content=b'\x00' * 10 * 1024 * 1024,  # 10 MB of zero bytes
             content_type='image/jpeg'
         )
-        candidate_profile = CandidateProfile(
-            candidate=self.user_account_two,
-            profile_picture=large_image,
-            election_poster=large_image,
-            candidate_statement="This is a test statement."
-        )
-
         with self.assertRaises(ValidationError):
-            candidate_profile.full_clean()  # This will trigger validation
-            candidate_profile.save()
+            CandidateProfile.objects.create(
+                candidate=self.user_account_two,
+                profile_picture=large_image,
+                election_poster=large_image,
+                candidate_statement="This is a test statement."
+            )
 
     def test_candidatepublickey_invalid_pkv_length(self):
         with self.assertRaises(DataError):
@@ -321,27 +326,26 @@ class ModelsTestCase(TestCase):
             )
 
     def test_voteresults_negative_total_vote(self):
-        user = UserAccount.objects.create(
-            username="testuser",
-            password="password123",
-            full_name="John Doe",
-            date_of_birth="1990-01-01",
-            role=self.profile,
-            district=self.district,
-            party=self.party
-        )
-        with self.assertRaises(IntegrityError):
-            VoteResults.objects.create(candidate=user, total_vote=-1)
+        with self.assertRaises(ValidationError):
+            VoteResults.objects.create(candidate=self.user_account_two, total_vote=-1)
 
-    # def test_announcement_future_date(self):
-    #     from django.utils import timezone
-    #     future_date = timezone.now() + timezone.timedelta(days=1)
-    #     announcement = Announcement.objects.create(
-    #         header="Future Announcement",
-    #         content="This is from the future",
-    #         date=future_date
-    #     )
-    #     self.assertGreater(announcement.date, timezone.now())
+    def test_voteresults_big_total_vote(self):
+        with self.assertRaises(ValidationError):
+            VoteResults.objects.create(candidate=self.user_account_two, total_vote=5000000)
+
+    def test_party_long_party_name(self):
+        with self.assertRaises(DataError):
+            Party.objects.create(party_name="x" * 256)  # Invalid party_name (too long)
+
+    def test_announcement_future_date(self):
+        threshold_date = timezone.now()
+        future_date = threshold_date + timezone.timedelta(days=1)
+        announcement = Announcement.objects.create(
+            header="Future Announcement",
+            content="This is from the future",
+            date=future_date
+        )
+        self.assertGreater(announcement.date, threshold_date)
 
     # def test_electionphase_multiple_active_phases(self):
     #     ElectionPhase.objects.create(phase_name="Phase 1", is_active=True)
@@ -349,31 +353,38 @@ class ModelsTestCase(TestCase):
     #     active_phases = ElectionPhase.objects.filter(is_active=True)
     #     self.assertEqual(active_phases.count(), 2)
 
-    # def test_voterecords_invalid_json(self):
-    #     with self.assertRaises(ValidationError):
-    #         VoteRecords.objects.create(
-    #             key_image="x" * 64,
-    #             district=self.district,
-    #             transaction_record="invalid_json"
-    #         )
+    def test_electionphase_long_phase_name(self):
+        with self.assertRaises(DataError):
+            ElectionPhase.objects.create(
+                phase_name="x" * 256,
+                is_active=False
+            )
 
-    # def test_votingcurrency_duplicate_stealth_address(self):
-    #     VotingCurrency.objects.create(
-    #         district=self.district,
-    #         stealth_address="x" * 64,
-    #         commitment_record={"some": "data"}
-    #     )
-    #     with self.assertRaises(IntegrityError):
-    #         VotingCurrency.objects.create(
-    #             district=self.district,
-    #             stealth_address="x" * 64,
-    #             commitment_record={"other": "data"}
-    #         )
+    def test_voterecords_long_key_image(self):
+        with self.assertRaises(DataError):
+            VoteRecords.objects.create(
+                key_image="x" * 65,
+                district=self.district,
+                transaction_record=json.dumps({"txid": "12345"})
+            )
 
-    # def test_voter_invalid_hash_length(self):
-    #     with self.assertRaises(DataError):
-    #         Voter.objects.create(
-    #             district=self.district,
-    #             hash_from_info="x" * 129,  # Should be max 128 characters
-    #             pkv="y" * 64
-    #         )
+    def test_votingcurrency_duplicate_stealth_address(self):
+        VotingCurrency.objects.create(
+            district=self.district,
+            stealth_address="x" * 64,
+            commitment_record={"some": "data"}
+        )
+        with self.assertRaises(IntegrityError):
+            VotingCurrency.objects.create(
+                district=self.district,
+                stealth_address="x" * 64,
+                commitment_record={"other": "data"}
+            )
+
+    def test_voter_long_hash_length(self):
+        with self.assertRaises(DataError):
+            Voter.objects.create(
+                district=self.district,
+                hash_from_info="x" * 129,  # Should be max 128 characters
+                pkv="y" * 64
+            )
