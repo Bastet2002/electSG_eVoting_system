@@ -6,6 +6,9 @@
 // The error core prefix is "1"
 /*
 101 CORE_DOUBLE_VOTING
+201 NO_CANIDATE_IN_DISTRICT
+
+maybe all sql error in 5xx
 */
 
 // CA generate all the voters keys, currency and store in db without signature and decoys
@@ -42,7 +45,8 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
         CA_generate_voting_currency(commitment, userSA, user);
 
         // store in db
-        try {
+        try
+        {
             write_votercurrency(gen_user_curr.district_id, userSA, commitment);
         }
         catch (const pqxx::sql_error &e)
@@ -54,7 +58,7 @@ void CA_generate_voter_keys_currency(Gen_VoterCurr &gen_user_curr)
             throw runtime_error(e.what());
         }
 
-        cout << "I have generated voter "<< i + 1 << " for district " << gen_user_curr.district_id << " stealthAddress and commitment and stored in db" << endl;
+        cout << "I have generated voter " << i + 1 << " for district " << gen_user_curr.district_id << " stealthAddress and commitment and stored in db" << endl;
         count += 1;
     }
     // TODO: remove test output
@@ -108,14 +112,26 @@ void voter_cast_vote(Vote &vote)
     User candidate = get_candidate(district_id, vote.candidate_id);
 
     // the r is set in compute_stealth_address,
-    scan_for_stealthaddress(receivedCmt, receivedSA, district_id, signer);
+    try
+    {
+        scan_for_stealthaddress(receivedCmt, receivedSA, district_id, signer);
+    }
+    catch (pqxx::sql_error &e)
+    {
+        throw runtime_error("SQL error: " + string(e.what()));
+    }
+    catch (exception &e)
+    {
+        throw runtime_error(e.what());
+    }
+
     compute_stealth_address(candidateSA, candidate);
-    receiver_test_stealth_address(candidateSA, candidate);
 
     // check the keyimage against the voted table in db
     compute_key_image(blsagSig, receivedSA);
 
-    if (!verify_double_voting(district_id, blsagSig.key_image)){
+    if (!verify_double_voting(district_id, blsagSig.key_image))
+    {
         RingCTErrorCode errorCode = RingCTErrorCode::CORE_DOUBLE_VOTING;
         string msg = fmt::format("{} Double voting detected for district {} and voter id {}", enumToString(errorCode), district_id, vote.voter_id);
         cerr << msg << endl;
@@ -132,9 +148,7 @@ void voter_cast_vote(Vote &vote)
     CA_generate_address(blsagSA, users_blsag); // when storing in db, only store the stealthAddress.pk of the decoy and signer
 
     // blsag
-    // TODO change to real message from hash transaction data
     // BYTE m[32];
-    // crypto_core_ed25519_scalar_random(m);
     compute_message(blsagSig, candidateSA, candidateCmt);
 
     // TODO need to move the key image out from blsag simple gen.
@@ -153,7 +167,18 @@ void voter_cast_vote(Vote &vote)
     // blsag -> c, r, keyimage, membersSA.pk/index in db
     // stealth address -> pk, rG
     // commitment -> output, pseudo output, outputmask, amount mask
-    write_voterecord(district_id, blsagSig, candidateSA, candidateCmt);
+    try
+    {
+        write_voterecord(district_id, blsagSig, candidateSA, candidateCmt);
+    }
+    catch (const pqxx::sql_error &e)
+    {
+        throw runtime_error("SQL error: " + string(e.what()));
+    }
+    catch (const exception &e)
+    {
+        throw runtime_error(e.what());
+    }
 
     // assign the string keyimage and test_output here
     to_string(vote.key_image, blsagSig.key_image, 32);
@@ -165,7 +190,15 @@ void voter_cast_vote(Vote &vote)
 void CA_compute_result(Compute_Total_Vote &compute_total_vote)
 {
     // get all district_id
-    // vector<int> district_ids = get_district_ids();
+    vector<int> district_ids = get_district_ids();
+
+    // TODO remove
+    cout << "I have gotten all the district ids" << endl;
+    cout << "The district ids are: ";
+    for (const int &district_id : district_ids)
+    {
+        cout << district_id << " ";
+    }
 
     // check against all district matches the one django sent
     // if (compute_total_vote.district_ids != district_ids)
@@ -173,29 +206,45 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     //     throw logic_error("District ids do not match");
     // }
 
-    // for (const int &district_id :district_ids){
-    // vector<int> candidate_ids = get_candidate_ids(district_id);
+    // TODO: might need to do stg with it
+    if (district_ids.size() == 0)
+        return;
 
-    //     if (candidate_ids.size() == 0){
-    //         throw logic_error("No candidate in district " + to_string(district_id));
-    //     }
+    for (const int &district_id :district_ids){
+        vector<int> candidate_ids = get_candidate_ids(district_id);
 
-    //     // automatically win
-    //     if (candidate_ids.size() == 1){
-    //         continue;
-    //     }
+        // TODO remove 
+        cout << "I have gotten all the candidate ids for district " << district_id << endl;
+        cout << "The candidate ids are: ";
+        for (const int &candidate_id : candidate_ids)
+        {
+            cout << candidate_id << " ";
+        }
 
-    //     for (const int &candidate_id :candidate_ids){
-    //         // compute the total vote for each candidate
-    //         // store in db
-    //         // store_candidate_total_vote(district_id, candidate_id, total_vote);
-    //         compute_candidate_total_vote(district_id, candidate_id);
-    //     }
-    // verify the total vote match with the number of vote record
-    // if (!verify_total_vote(district_id)){
-    //     throw logic_error("Total vote does not match with the number of vote record in district " + to_string(district_id));
-    // }
-    // }
+        if (candidate_ids.size() == 0){
+            RingCTErrorCode errorCode = RingCTErrorCode::NO_CANDIDATE_IN_DISTRICT;
+            throw CustomException("No candidate in district " + to_string(district_id), static_cast<int>(errorCode));
+        }
+
+        // automatically win
+        // if (candidate_ids.size() == 1){
+        //     continue;
+        // }
+
+        for (const int &candidate_id :candidate_ids){
+            User candidate = get_candidate(district_id, candidate_id);
+
+            // compute the total vote for each candidate
+            // store in db
+            // verify_commitment();
+            compute_candidate_total_vote(district_id, candidate_id); // based on stealth address
+            // store_candidate_total_vote(district_id, candidate_id, total_vote);
+        }
+        // verify the total vote match with the number of vote record
+        // if (!verify_total_vote(district_id)){
+        //     throw logic_error("Total vote does not match with the number of vote record in district " + to_string(district_id));
+        // }
+    }
 
     // TODO remove test output
 }

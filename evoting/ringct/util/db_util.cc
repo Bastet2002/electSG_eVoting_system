@@ -225,6 +225,7 @@ void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const 
         }
     }
 
+    // TODO need to handle this error in the core.cc to let django know  
     throw runtime_error("Stealth address not found in scan_for_stealthaddress");
 }
 
@@ -324,10 +325,80 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     W.commit();
 }
 
+vector<int> get_district_ids () {
+    pqxx::connection C(cnt_django);
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::work W(C);
+
+    pqxx::result r = W.exec("select district_id from myapp_district;");
+
+    vector<int> district_ids;
+    for(const auto& row : r) {
+        district_ids.push_back(row["district_id"].as<int>());
+    }
+
+    return district_ids;
+}
+
+vector<int> get_candidate_ids(int32_t &district_id)
+{
+    cout << "get candidate ids in the district : " << district_id << endl;
+    pqxx::connection c_django{cnt_django};
+    if (!c_django.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(c_django.dbname()));
+    }
+    pqxx::work W(c_django);
+
+    c_django.prepare("get candidate ids in district", "select * from myapp_useraccount where district_id=$1;")
+    pqxx::result r = W.exec_prepared("get candidate ids in district", district_id);
+
+    vector<int> candidate_ids;
+    for (const auto& row : r){
+        // TODO
+        continue;
+    }
+
+    // TODO remove
+    return candidate_ids;
+}
+
 void grab_decoys()
 {
 }
 
 void verify_vote_record()
 {
+}
+
+
+int count_vote(const int32_t district_id, const User &candidate)
+{
+    cout << "scan for stealth address in district " << district_id << endl;
+
+    pqxx::connection C(cnt_django);
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::work W(C);
+
+    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment,  commitment_record->'commitment'->>'amount_mask' as amount_mask from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
+
+    int total_vote = 0;
+
+    // TODO : what if the record is too much
+    for (const auto &row : r)
+    {
+        string stealth_address = row["stealth_address"].as<string>();
+        string rG = row[1].as<string>();
+        StealthAddress sa_temp(stealth_address, rG);
+        if (receiver_test_stealth_address(sa_temp, candidate))
+            total_vote += 1;
+        // TODO verify commitment
+    }
+    return total_vote;
 }

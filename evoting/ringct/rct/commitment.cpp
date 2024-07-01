@@ -48,7 +48,6 @@ void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &s
 // one to one
 void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa, const User &receiver, const Commitment &received_commitment, const StealthAddress &received_sa, const User &signer)
 {
-
     const int c = 30;
     BYTE amount_byte[8];
 
@@ -90,6 +89,10 @@ void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa,
     array<BYTE, 8> amount_mask_array;
     XOR_amount_mask_signer(amount_mask_array.data(), amount_byte, 0, sa, receiver);
     commitment.amount_masks.push_back(amount_mask_array);
+}
+
+void verify_commitment() {
+    
 }
 
 // one to many

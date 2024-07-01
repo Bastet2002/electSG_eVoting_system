@@ -215,6 +215,10 @@ int main(int argc, char **argv)
     // input_path = filesystem::absolute("./test/text/hash_infile");
     // output_path = filesystem::absolute("./test/text/h2s.txt");
     // gen_h2s_file(output_path, input_path);
+    vector<int32_t> district_ids = {1, 2};
+    Compute_Total_Vote compute_total_vote;
+    compute_total_vote.district_ids = district_ids;
+    CA_compute_result(compute_total_vote); 
     RunServer();
 
     return 0;

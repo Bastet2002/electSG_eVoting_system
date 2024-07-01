@@ -9,6 +9,7 @@ using namespace std;
 
 enum class RingCTErrorCode {
     CORE_DOUBLE_VOTING = 101,
+    NO_CANDIDATE_IN_DISTRICT = 201,
 };
 
 
