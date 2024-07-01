@@ -7,13 +7,10 @@
 <link rel="stylesheet" href="{% static 'generalUser/generalUserPg.css' %}"> 
 <div class="wrapper">
     <div class="container">
-
-        <h1>Election Status : {{ active_phase.phase_name }}</h1>    <!--need to edit this one in view-->
-
+        <div class="status">
+            <h1>Election Status: {{ active_phase.phase_name }}</h1>
+        </div>
         <div class="content">
-            <div class="election_phase">
-                <h2>Election Status: {{ active_phase.phase_name }}</h2>
-            </div>
             <div class="announcements">
                 {% for announcement in announcements %}
                 <div class="announcement-box">
@@ -26,7 +23,7 @@
                 </div>
             </div>
             <div class="districts">
-                <a href="#" class="district-link">
+                <a href="{% url 'view_all_districts' %}" class="district-link">
                     <img src="{% static 'images/district_image.png' %}" alt="Districts">
                     <div class="hover-text">Click here to see all districts</div>
                 </a>

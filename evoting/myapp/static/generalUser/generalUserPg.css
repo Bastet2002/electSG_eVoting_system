@@ -4,62 +4,70 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background: linear-gradient(to top,  #c53e3e, #ffffff);
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
+    background: url('/static/images/image.png') no-repeat center center fixed;
+    background-size: 1450px;
+    color: #333;
 }
 
 .wrapper {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    min-height: 100vh;
 }
 
 .container {
-    max-width: 1200px;
+    max-width: 1400px;
     margin: 0 auto;
-    padding: 20px;
+    padding: 100px;
     flex: 1;
-    padding-top: 100px;
+   
+    
 }
 
-
-/* Main Content */
 h1 {
     text-align: center;
-    margin: 20px 0;
+   
+    color: #333;
+    font-weight: bold;
 }
-
+.status {
+    background-color: #ffffff9d;
+   
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding-left: 90px;
+    
+   
+}
 .content {
     display: flex;
     justify-content: space-between;
-    gap: 80px;
-    padding-top: 40px;
+    gap: 40px;
+    padding-top: 20px;
 }
 
-.announcements, .districts {
+.announcements{
     flex: 1;
-}
-
-.announcements {
-    background: #ffecec;
+    background: #f1efef;
     padding: 20px;
     border-radius: 8px;
-    width: 450px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    width: 500px;
 }
 
 .announcement-box {
-    background: #ffffff;
+    background: #fff;
     padding: 10px;
     margin-bottom: 10px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    transition: transform 0.2s;
+    transition: transform 0.2s, box-shadow 0.2s;
 }
 
 .announcement-box:hover {
-    transform: scale(1.05);
+    transform: scale(1.02);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .view-all {
@@ -79,11 +87,12 @@ h1 {
 .district-link {
     display: block;
     position: relative;
+    overflow: hidden;
+    border-radius: 8px;
 }
 
 .districts img {
     width: 100%;
-    border-radius: 8px;
     transition: transform 0.3s;
 }
 
@@ -109,13 +118,12 @@ h1 {
 }
 
 footer {
-    background-color: #dedede;
+    background-color: #ffffff;
     padding: 1rem 2rem;
     display: flex;
     justify-content: space-between;
     align-items: center;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
-    flex-shrink: 0;
 }
 
 .footer img {
@@ -134,13 +142,13 @@ footer {
 .contact-info h3,
 .support-info h3 {
     margin-bottom: 1rem;
-    color: black;
+    color: #333;
 }
 
 .contact-info p,
 .support-info p {
     margin-bottom: 0.5rem;
-    color: black;
+    color: #555;
 }
 
 .contact-info a,

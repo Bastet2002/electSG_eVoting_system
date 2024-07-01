@@ -41,7 +41,7 @@ urlpatterns = [
     path('candidate_home/profile_picture', views.upload_profile_picture, name='upload_profile_picture'),
     path('candidate_home/candidate_statement', views.upload_candidate_statement, name='upload_candidate_statement'),
     path('', views.general_user_home, name='general_user_home'),
-    path('announcements/', views.view_all_announcements, name='view_all_announcements'),
-    path('districts/', views.view_all_districts, name='view_all_districts'),
+    path('announcements/', views.view_announcement, name='view_all_announcements'),
+    path('districts/', views.view_district, name='view_all_districts'),
     path('districts/<int:district_id>/', views.view_district_detail, name='view_district_detail'),
 ]
