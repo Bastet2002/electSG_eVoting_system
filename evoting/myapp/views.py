@@ -162,8 +162,8 @@ def create_district(request):
                         grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
                     except GrpcError as grpc_error:
                         # Handle gRPC errors
-                        print(f"Error in gRPC call: {rpc_error}")
-                        messages.error(request, f"Error in gRPC call: {rpc_error}")
+                        print(f"Error in gRPC call: {grpc_error}")
+                        messages.error(request, f"Error in gRPC call: {grpc_error}")
                     except Exception as e:
                         # Handle other exceptions
                         print(f"Unexpected error: {e}")
