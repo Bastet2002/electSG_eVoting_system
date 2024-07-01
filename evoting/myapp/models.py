@@ -122,10 +122,6 @@ class VotingCurrency(models.Model):
     stealth_address = models.CharField(max_length=64, unique=True)
     commitment_record = models.JSONField()
 
-# class VoterManager(BaseUserManager):
-#     def get_by_natural_key(self, voter_id):
-#         return self.get(voter_id=voter_id)
-    
 # VOTER Model
 class Voter(models.Model):
     voter_id = models.AutoField(primary_key=True)
@@ -137,7 +133,3 @@ class Voter(models.Model):
     @property
     def is_authenticated(self):
         return True
-
-    # REQUIRED_FIELDS = ['district', 'pkv']
-
-    # objects=VoterManager()
