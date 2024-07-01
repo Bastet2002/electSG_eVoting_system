@@ -1,4 +1,6 @@
 #include "rctType.h"
+#include "rctOps.h"
+
 
 void to_string(string &output, const BYTE *key, const size_t n)
 {
@@ -38,14 +40,6 @@ void print_bytearray(const BYTE *key, const size_t n)
             cout << ", ";
     }
     cout << dec << endl;
-}
-
-void compare_BYTE(const BYTE *a, const BYTE *b, const size_t n)
-{
-    if (memcmp(a, b, n) == 0)
-        cout << "Both BYTE strings equal" << endl;
-    else
-        cout << "WARNING>> Both BYTE strings are not equal" << endl;
 }
 
 // input long long is guaranteed at least 64bit == 8 BYTE, output in little endian
@@ -227,23 +221,6 @@ bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &
         return true;
     }
     return false;
-}
-
-void public_network_stealth_address_communication(vector<StealthAddress> &address_list, const vector<User> &users)
-{
-    for (int i = 0; i < users.size(); i++)
-    {
-        cout << "User " << i << " test stealth address" << endl;
-        for (int j = 0; j < address_list.size(); j++)
-        {
-            if (receiver_test_stealth_address(address_list[j], users[i]))
-            {
-                cout << "stealth address " << j << " belongs to user " << i << endl;
-                break;
-            }
-        }
-        cout << "=====================" << endl;
-    }
 }
 
 // using a secured pseudo random number generator to shuffle the vector

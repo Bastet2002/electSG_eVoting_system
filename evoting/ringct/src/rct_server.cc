@@ -3,6 +3,8 @@
 #include "evoting.h"
 #include "core.h"
 #include "../util/custom_exception.h"
+#include "../test/text/gen_hash.cpp"
+#include <filesystem>
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -205,6 +207,14 @@ int main(int argc, char **argv)
         return 1;
     }
 
+    // string input_path = filesystem::absolute("./test/text/hash_infile");
+    // string output_path = filesystem::absolute("./test/text/h2p.txt");
+    // cout << input_path << endl;
+    // cout << output_path << endl;
+    // gen_h2p_file(output_path, input_path);
+    // input_path = filesystem::absolute("./test/text/hash_infile");
+    // output_path = filesystem::absolute("./test/text/h2s.txt");
+    // gen_h2s_file(output_path, input_path);
     RunServer();
 
     return 0;

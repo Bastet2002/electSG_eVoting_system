@@ -1,0 +1,9 @@
+stages:
+  - test
+
+test:
+  stage: test
+  image: registry.gitlab.com/cookanddrum/fyp-24-s2-19/ring-ct:latest
+  script:
+    - echo "running test"
+    - /app/build/test_rct
