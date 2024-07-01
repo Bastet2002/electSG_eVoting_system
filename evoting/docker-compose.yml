@@ -18,6 +18,7 @@ services:
       - DJANGO_DB_NAME=mydb
       - DJANGO_DB_USER=admin
       - DJANGO_DB_PASSWORD=password
+      - DATABASE_URL=postgres://admin:password@djangodb:5432/mydb
     links:
       - djangodb
 
@@ -46,7 +47,6 @@ services:
   ring-ct:
     build:
       context: ./ringct
-    image: ring-ct:latest
     depends_on:
       - djangodb
       - ringct-db
