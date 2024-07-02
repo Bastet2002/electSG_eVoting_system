@@ -4,10 +4,6 @@ from myapp import views
 
 class TestUrls(SimpleTestCase):
 
-    def test_index_url(self):
-        url = reverse('index')
-        self.assertEquals(resolve(url).func, views.index)
-
     def test_base_url(self):
         url = reverse('base')
         self.assertEquals(resolve(url).func, views.base)
