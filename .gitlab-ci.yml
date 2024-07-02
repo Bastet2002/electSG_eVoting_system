@@ -68,7 +68,7 @@ django-test:
   script:
     - echo "$GITLAB_USER_LOGIN running django unit test"
     - python /app/manage.py test myapp.tests.test_models
-    - python /app/manage.py test myapp.tests.test_url
+    - python /app/manage.py test myapp.tests.test_urls
     - python /app/manage.py test
   timeout: 10 minutes
 
