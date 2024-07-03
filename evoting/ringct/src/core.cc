@@ -190,12 +190,12 @@ void voter_cast_vote(Vote &vote)
 void CA_compute_result(Compute_Total_Vote &compute_total_vote)
 {
     // get all district_id
-    vector<int> district_ids = get_district_ids();
+    vector<int32_t> district_ids = get_district_ids();
 
     // TODO remove
     cout << "I have gotten all the district ids" << endl;
     cout << "The district ids are: ";
-    for (const int &district_id : district_ids)
+    for (const int32_t &district_id : district_ids)
     {
         cout << district_id << " ";
     }
@@ -210,13 +210,14 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     if (district_ids.size() == 0)
         return;
 
-    for (const int &district_id :district_ids){
-        vector<int> candidate_ids = get_candidate_ids(district_id);
+    for (const int32_t &district_id :district_ids){
+        vector<int32_t> candidate_ids = get_candidate_ids(district_id);
 
         // TODO remove 
         cout << "I have gotten all the candidate ids for district " << district_id << endl;
         cout << "The candidate ids are: ";
-        for (const int &candidate_id : candidate_ids)
+
+        for (const int32_t &candidate_id : candidate_ids)
         {
             cout << candidate_id << " ";
         }
@@ -231,13 +232,18 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
         //     continue;
         // }
 
-        for (const int &candidate_id :candidate_ids){
-            User candidate = get_candidate(district_id, candidate_id);
+        for (const int32_t &candidate_id :candidate_ids){
+            int32_t test_district_id;
+            User candidate = get_candidate(test_district_id, candidate_id);
+
+            if (test_district_id != district_id){
+                throw logic_error("Candidate " + to_string(candidate_id) + " is not in district " + to_string(district_id));
+            }
 
             // compute the total vote for each candidate
             // store in db
             // verify_commitment();
-            compute_candidate_total_vote(district_id, candidate_id); // based on stealth address
+            // compute_candidate_total_vote(district_id, candidate_id); // based on stealth address
             // store_candidate_total_vote(district_id, candidate_id, total_vote);
         }
         // verify the total vote match with the number of vote record

@@ -3,21 +3,19 @@
 
 #include <exception>
 #include <sstream>
-#define ENUM_TO_STRING(x) case x: return #x;
 
-using namespace std;
+#define ENUM_TO_STRING(x) case x: return #x;
 
 enum class RingCTErrorCode {
     CORE_DOUBLE_VOTING = 101,
     NO_CANDIDATE_IN_DISTRICT = 201,
 };
 
-
 template<typename ErrorCode_T>
-class CustomException : public exception {
+class CustomException : public std::exception {
     public:
-    CustomException(const string&message, const ErrorCode_T& errorcode) : message_(message), errorcode_(errorcode) {
-        ostringstream oss;
+    CustomException(const std::string&message, const ErrorCode_T& errorcode) : message_(message), errorcode_(errorcode) {
+        std::ostringstream oss;
         oss << errorcode_ << " " << message_;
         fullmessage_ = oss.str();
     }
@@ -31,10 +29,10 @@ class CustomException : public exception {
     }
 
     private:
-    string message_;
+    std::string message_;
     ErrorCode_T errorcode_;
-    string fullmessage_;
+    std::string fullmessage_;
 };
 
-string enumToString (RingCTErrorCode errorCode);
+std::string enumToString (RingCTErrorCode errorCode);
 #endif

@@ -325,7 +325,7 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     W.commit();
 }
 
-vector<int> get_district_ids () {
+vector<int32_t> get_district_ids () {
     pqxx::connection C(cnt_django);
     if (!C.is_open())
     {
@@ -337,13 +337,13 @@ vector<int> get_district_ids () {
 
     vector<int> district_ids;
     for(const auto& row : r) {
-        district_ids.push_back(row["district_id"].as<int>());
+        district_ids.push_back(row["district_id"].as<int32_t>());
     }
 
     return district_ids;
 }
 
-vector<int> get_candidate_ids(int32_t &district_id)
+vector<int32_t> get_candidate_ids(const int32_t &district_id)
 {
     cout << "get candidate ids in the district : " << district_id << endl;
     pqxx::connection c_django{cnt_django};
@@ -353,10 +353,10 @@ vector<int> get_candidate_ids(int32_t &district_id)
     }
     pqxx::work W(c_django);
 
-    c_django.prepare("get candidate ids in district", "select * from myapp_useraccount where district_id=$1;")
+    c_django.prepare("get candidate ids in district", "select * from myapp_useraccount where district_id=$1;");
     pqxx::result r = W.exec_prepared("get candidate ids in district", district_id);
 
-    vector<int> candidate_ids;
+    vector<int32_t> candidate_ids;
     for (const auto& row : r){
         // TODO
         continue;

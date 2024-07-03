@@ -1,9 +1,8 @@
 #include "ringct.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
+#include "../util/custom_exception.h"
 #include "evoting.h"
 #include "core.h"
-#include "../util/custom_exception.h"
-#include "../test/text/gen_hash.cpp"
 #include <filesystem>
 
 using grpc::Server;

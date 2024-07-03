@@ -3,6 +3,7 @@
 
 using namespace std;
 
+
 string enumToString (RingCTErrorCode errorCode){
     switch (errorCode)
     {

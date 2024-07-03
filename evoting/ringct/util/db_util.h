@@ -17,6 +17,6 @@ void write_votercurrency(const int32_t district_id, const StealthAddress &sa, co
 void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress& sa, const int32_t district_id, const User & signer);
 bool verify_double_voting(const int32_t district_id, const BYTE* key_image);
 void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment);
-vector<int> get_district_ids ();
-vector<int> get_candidate_ids(int32_t &district_id);
+vector<int32_t> get_district_ids ();
+vector<int32_t> get_candidate_ids(const int32_t &district_id);
 #endif
