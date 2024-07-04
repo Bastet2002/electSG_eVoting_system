@@ -18,6 +18,11 @@ if __name__ == "__main__":
     except GrpcError as e:   
         print(e)
     
+    try: 
+        grpc_compute_vote_run(2, 2)
+    except GrpcError as e:   
+        print(e)
+
     try:
         grpc_calculate_total_vote_run([1, 2])
     except GrpcError as e:   
