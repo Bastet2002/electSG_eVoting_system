@@ -1,5 +1,5 @@
 # Use an official Ubuntu as a parent image
-FROM ubuntu
+FROM ubuntu:22.04
 
 # Avoid prompts from apt-get
 ENV DEBIAN_FRONTEND=noninteractive

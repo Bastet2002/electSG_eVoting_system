@@ -189,7 +189,6 @@ void voter_cast_vote(Vote &vote)
 
 void CA_compute_result(Compute_Total_Vote &compute_total_vote)
 {
-    // get all district_id
     vector<int32_t> district_ids = get_district_ids();
 
     // TODO remove
@@ -199,6 +198,7 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     {
         cout << district_id << " ";
     }
+    cout << endl;
 
     // check against all district matches the one django sent
     // if (compute_total_vote.district_ids != district_ids)
@@ -221,30 +221,18 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
         {
             cout << candidate_id << " ";
         }
-
-        if (candidate_ids.size() == 0){
-            RingCTErrorCode errorCode = RingCTErrorCode::NO_CANDIDATE_IN_DISTRICT;
-            throw CustomException("No candidate in district " + to_string(district_id), static_cast<int>(errorCode));
-        }
-
-        // automatically win
-        // if (candidate_ids.size() == 1){
-        //     continue;
-        // }
+        cout << endl;
 
         for (const int32_t &candidate_id :candidate_ids){
             int32_t test_district_id;
-            User candidate = get_candidate(test_district_id, candidate_id);
+            User candidate = get_candidate_s(test_district_id, candidate_id);
 
             if (test_district_id != district_id){
-                throw logic_error("Candidate " + to_string(candidate_id) + " is not in district " + to_string(district_id));
+                cerr <<"Candidate " + to_string(candidate_id) + " is not in district " + to_string(district_id) << endl;
             }
 
-            // compute the total vote for each candidate
-            // store in db
-            // verify_commitment();
-            // compute_candidate_total_vote(district_id, candidate_id); // based on stealth address
-            // store_candidate_total_vote(district_id, candidate_id, total_vote);
+            cout << "Counting the total vote of candidate " << candidate_id << " in district " << district_id << endl;
+            count_write_vote(district_id, candidate_id, candidate);
         }
         // verify the total vote match with the number of vote record
         // if (!verify_total_vote(district_id)){

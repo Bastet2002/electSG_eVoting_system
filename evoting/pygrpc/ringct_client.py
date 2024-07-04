@@ -40,6 +40,7 @@ def grpc_construct_calculate_total_vote_request(district_ids):
     calculate_total_vote_request = ringct_pb2.Calculate_Total_Vote_Request()
     for district_id in district_ids:
         calculate_total_vote_request.district_ids.append(district_id)
+    return calculate_total_vote_request
 
 # ----------------- grpc client functions -----------------
 # assume the django backend only need to call these functions
@@ -121,6 +122,8 @@ def grpc_calculate_total_vote_run(district_ids):
     
     calculate_total_vote_request = grpc_construct_calculate_total_vote_request(district_ids)
 
+    print('calculate_total_vote_request', calculate_total_vote_request)
+
     try:
         print("-------------- CalculateTotalVote --------------")
         calculate_total_vote_response = stub.Calculate_Total_Vote(calculate_total_vote_request)
@@ -144,11 +147,3 @@ def grpc_calculate_total_vote_run(district_ids):
 
 if __name__ == "__main__":
     logging.basicConfig()
-
-    try :
-        # grpc_compute_vote_run(district_id=1, candidate_id=1, voter_id=1)
-        grpc_generate_user_and_votingcurr_run(district_id=1, voter_num=10)
-        grpc_generate_candidate_keys_run(district_id=1, candidate_id=199)
-    except Exception as e:
-        print(e)
-        print("Error in grpc client test run")

@@ -57,14 +57,33 @@ User get_candidate(int32_t &district_id, const int32_t candidate_id)
     string pkV = r["pkV"].as<string>();
     string pkS = r["pkS"].as<string>();
 
-    cout << "candidate id " << candidate_id << endl;
-    cout << "pkV: " << pkV << endl;
-
     // 2. get the district id from useraccount table
     r = txn_d.exec1("select district_id from myapp_useraccount where user_id = '" + to_string(candidate_id) + "';");
     district_id = r["district_id"].as<int>();
 
     return User(pkV, pkS);
+}
+
+User get_candidate_s(int32_t &district_id, const int32_t candidate_id) {
+    User candidate = get_candidate(district_id, candidate_id);
+    string pkV;
+    to_string(pkV, candidate.pkV, 32);
+
+    pqxx::connection C{cnt_rct};
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::nontransaction W{C};
+    C.prepare("get secret key", "select skv, sks from candidate_secretkey where pkv=$1;");
+    pqxx::result r = W.exec_prepared("get secret key", pkV);
+
+    string skV = r[0]["skv"].as<string>();
+    string skS = r[0]["sks"].as<string>();
+
+    hex_to_bytearray(candidate.skV, skV);
+    hex_to_bytearray(candidate.skS, skS);
+    return candidate;
 }
 
 void write_voter(const int32_t district_id, const User &voter)
@@ -345,7 +364,6 @@ vector<int32_t> get_district_ids () {
 
 vector<int32_t> get_candidate_ids(const int32_t &district_id)
 {
-    cout << "get candidate ids in the district : " << district_id << endl;
     pqxx::connection c_django{cnt_django};
     if (!c_django.is_open())
     {
@@ -358,11 +376,9 @@ vector<int32_t> get_candidate_ids(const int32_t &district_id)
 
     vector<int32_t> candidate_ids;
     for (const auto& row : r){
-        // TODO
-        continue;
+        candidate_ids.push_back(row["user_id"].as<int32_t>());
     }
 
-    // TODO remove
     return candidate_ids;
 }
 
@@ -375,30 +391,38 @@ void verify_vote_record()
 }
 
 
-int count_vote(const int32_t district_id, const User &candidate)
+void count_write_vote(const int32_t district_id, const int32_t candidate_id, const User &candidate)
 {
-    cout << "scan for stealth address in district " << district_id << endl;
-
     pqxx::connection C(cnt_django);
     if (!C.is_open())
     {
         throw runtime_error("Failed to open connection to " + string(C.dbname()));
     }
     pqxx::work W(C);
-
-    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment,  commitment_record->'commitment'->>'amount_mask' as amount_mask from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
+    pqxx::result r = W.exec("select transaction_record->>'stealth_address' as stealth_address, transaction_record->>'rG' as rG, transaction_record->'commitment'->>'output_commitment' as output_commitment,  transaction_record->'commitment'->>'amount_mask' as amount_mask from myapp_voterecords where district_id = " + to_string(district_id) + ";");
 
     int total_vote = 0;
-
     // TODO : what if the record is too much
     for (const auto &row : r)
     {
         string stealth_address = row["stealth_address"].as<string>();
-        string rG = row[1].as<string>();
+        string rG = row["rG"].as<string>();
         StealthAddress sa_temp(stealth_address, rG);
-        if (receiver_test_stealth_address(sa_temp, candidate))
-            total_vote += 1;
-        // TODO verify commitment
+
+        if (receiver_test_stealth_address(sa_temp, candidate)) {
+            BYTE amount_mask_byte[8];
+            hex_to_bytearray(amount_mask_byte, row["amount_mask"].as<string>());
+            BYTE amount_byte[8];
+            XOR_amount_mask_receiver(amount_byte, amount_mask_byte, 0, sa_temp, candidate);
+            long long amount;
+            byte_to_int(amount, amount_byte, 8);
+            if (amount == 30) 
+                total_vote += 1;
+        }
     }
-    return total_vote;
+
+    cout << "Total vote for candidate in district " << " is " << total_vote << endl;
+    C.prepare("insert total vote", "insert into myapp_voteresults (candidate_id, total_vote) values ($1, $2);");
+    W.exec_prepared("insert total vote", candidate_id, total_vote);
+    W.commit();
 }
