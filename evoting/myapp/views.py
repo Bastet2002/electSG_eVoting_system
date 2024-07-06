@@ -1,11 +1,14 @@
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
-from django.http import HttpResponse
+from django.contrib.sessions.models import Session
+from django.http import HttpResponse, HttpResponseRedirect
+from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.db.models import Q
-from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm
+from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter
 # from evoting.pygrpc.ringct_client import grpc_generate_user_and_votingcurr_run, grpc_compute_vote_run, grpc_generate_candidate_keys_run, grpc_calculate_total_vote_run 
 from django.contrib.auth.hashers import check_password # for temp voter
@@ -37,14 +40,44 @@ def user_login(request):
             return render(request, 'login.html', {'error': 'Invalid username or password.'})
     else:
         return render(request, 'login.html')
+
+@login_required
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.POST)
+        if form.is_valid():
+            current_password = form.cleaned_data.get('current_password')
+            new_password = form.cleaned_data.get('new_password')
+
+            if not check_password(current_password, request.user.password):
+                form.add_error('current_password', 'Current password is incorrect.')
+            else:
+                user = request.user
+                user.set_password(new_password)
+                user.save()
+                messages.success(request, 'Your password has been successfully changed.')
+                return redirect('login')
+    else:
+        form = PasswordChangeForm()
+
+    return render(request, 'changePassword.html', {'form': form})
     
-    
+@login_required
+def user_logout(request):
+    if request.method == 'GET':
+        user_sessions = Session.objects.filter(session_key=request.session.session_key)
+        user_sessions.delete()
+        logout(request)
+        messages.success(request, 'You have been successfully logged out.')
+        return HttpResponseRedirect(reverse('login'))
+
 def index(response):
     return HttpResponse("<h1>Hello World!</h1>")
 
 
 def base(response):
     return render(response, "adminDashboard/base.html", {})
+
 
 def admin_home(request):
     active_phase = ElectionPhase.objects.filter(is_active=True).first()
@@ -179,7 +212,7 @@ def view_district(request):
     query = request.GET.get('search', '')
     if query:
         # Filter districts where the search query matches the name field
-        district = District.objects.filter(name__icontains=query)
+        district = District.objects.filter(district_name__icontains=query)
     else:
         district = District.objects.all()
 
@@ -209,8 +242,11 @@ def delete_district(request, district_id):
     district = get_object_or_404(District, pk=district_id)
     if request.method == 'POST':
         district.delete()
+        messages.success(request, 'District successfully deleted.')
         return redirect('view_district')
-    return render(request, 'district/deleteDistrict.html', {'district': district})
+    else:
+        messages.error(request, 'Error deleting district.')
+        return redirect('view_district')
 
 
 # ---------------------------------------Profile view-----------------------------------------------------
@@ -253,8 +289,11 @@ def delete_profile(request, profile_id):
     profile = get_object_or_404(Profile, pk=profile_id)
     if request.method == 'POST':
         profile.delete()
+        messages.success(request, 'Profile successfully deleted.')
         return redirect('view_profiles')
-    return render(request, 'userProfile/deleteProfile.html', {'profile': profile})
+    else:
+        messages.error(request, 'Error deleting profile.')
+        return redirect('view_profiles')
 
 
 # ---------------------------------------Announcement views------------------------------------------------
@@ -297,8 +336,11 @@ def delete_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, pk=announcement_id)
     if request.method == 'POST':
         announcement.delete()
+        messages.success(request, 'Announcement successfully deleted.')
         return redirect('view_announcement')
-    return render(request, 'announcement/deleteAnnouncement.html', {'announcement': announcement})
+    else:
+        messages.error(request, 'Error deleting announcement.')
+        return redirect('view_announcement')
 
 
 # ---------------------------------------Party views------------------------------------------------
@@ -340,8 +382,11 @@ def delete_party(request, party_id):
     party = get_object_or_404(Party, pk=party_id)
     if request.method == 'POST':
         party.delete()
+        messages.success(request, 'Party successfully deleted.')
         return redirect('view_party')
-    return render(request, 'party/deleteParty.html', {'party': party})
+    else:
+        messages.error(request, 'Error deleting party.')
+        return redirect('view_party')
 
 # ---------------------------------------Voter views------------------------------------------------
 def singpass_login(request):
@@ -358,7 +403,7 @@ def singpass_login(request):
             return render(request, 'singpassLogin.html', {'error': 'Invalid username or password.'})
     else:
         return render(request, 'singpassLogin.html')
-    
+
 def voter_home(request):
     if isinstance(request.user, Voter):
         voter = request.user
@@ -462,7 +507,7 @@ def cast_vote(request):
         return redirect('ballot_paper')
     else:
         candidates = CandidateProfile.objects.select_related('candidate', 'candidate__party').all()
-        return render(request, 'voting/ballot_paper.html', {'candidates': candidates})
+        return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
 
 # ---------------------------------------Candidate views------------------------------------------------

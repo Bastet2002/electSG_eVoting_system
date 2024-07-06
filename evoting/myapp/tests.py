@@ -154,6 +154,29 @@ class UserAccountViewsTest(TestCase):
         self.assertEqual(response.status_code, 302) #HTTP_302_FOUND
         self.assertEqual(self.user.full_name, 'Test user updated')
 
+    def test_edit_account_view_post_empty(self):
+        form_data = {
+        }
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.user.refresh_from_db()
+        self.assertEqual(response.status_code, 302) #HTTP_302_FOUND
+        self.assertFormError(response, 'form', 'username', 'This field is required.')
+
+    def test_edit_account_view_post_duplicate(self):
+        form_data = {
+            'username': 'testuser1',  #duplicate username
+            'password': 'password',
+            'full_name': 'Test user 2',
+            'date_of_birth': '1999-01-01',
+            'role': self.candidate_profile.profile_id,
+            'district': self.district.district_id
+        }
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'username', 'User account with this Username already exists.')
+
+
+
     def test_delete_account_view_post(self):
         response = self.client.post(reverse('delete_user', args=[self.user.user_id]))
         self.assertEqual(response.status_code, 302) #HTTP_302_FOUND

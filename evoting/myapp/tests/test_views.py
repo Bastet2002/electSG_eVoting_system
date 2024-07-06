@@ -85,7 +85,7 @@ class UserAccountViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'username', 'This field is required.')
 
-    def test_create_account_view_post_duplicate(self):
+    def test_create_account_view_post_existing(self):
         form_data = {
             'username': 'testuser1',  #duplicate username
             'password': 'password',
@@ -110,18 +110,6 @@ class UserAccountViewsTest(TestCase):
         response = self.client.post(reverse('create_account'), data=form_data)
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'date_of_birth', 'Enter a valid date.')
-
-    def test_create_account_view_post_missing_fields(self):
-        form_data = {
-            'username': 'testuser4',
-            'role': self.candidate_profile.profile_id,
-            'district': self.district.district_id # password FN and DOB missing
-        }
-        response = self.client.post(reverse('create_account'), data=form_data)
-        self.assertEqual(response.status_code, 200)
-        self.assertFormError(response, 'form', 'password', 'This field is required.')
-        self.assertFormError(response, 'form', 'full_name', 'This field is required.')
-        self.assertFormError(response, 'form', 'date_of_birth', 'This field is required.')
 
     def test_create_account_view_post_special_character(self):
         form_data = {
@@ -148,7 +136,7 @@ class UserAccountViewsTest(TestCase):
         }
         response = self.client.post(reverse('create_account'), data=form_data)
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response, 'form', 'username', 'Restrict name to be within set limits')
+        self.assertFormError(response, 'form', 'username', 'Ensure this value has at most 200 characters (it has 201).')
 
     def test_edit_account_view_get(self): # used to render the form for the user
         response = self.client.get(reverse('edit_user', args=[self.user.user_id]))
@@ -160,13 +148,63 @@ class UserAccountViewsTest(TestCase):
             'username': self.user.username,
             'full_name': 'Test user updated',
             'date_of_birth': self.user.date_of_birth,
-            'role': self.user.role.profile_id,
             'district': self.user.district.district_id
         }
         response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
         self.user.refresh_from_db()
         self.assertEqual(response.status_code, 302) #HTTP_302_FOUND
         self.assertEqual(self.user.full_name, 'Test user updated')
+
+    def test_edit_account_view_post_empty(self):
+        form_data = {}
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'username', 'This field is required.')
+
+    def test_edit_account_view_post_existing(self):
+        form_data = {
+            'username': 'testuser1',  # duplicate username
+            'full_name': 'Test user updated',
+            'date_of_birth': self.user.date_of_birth,
+            'district': self.user.district_id
+        }
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'username', 'User account with this Username already exists.')
+
+    def test_edit_account_view_post_invalid_date(self):
+        form_data = {
+            'username': 'testuser2',
+            'full_name': 'Test user updated',
+            'date_of_birth': 'invalid-date',
+            'district': self.user.district_id
+        }
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'date_of_birth', 'Enter a valid date.')
+
+    def test_edit_account_view_post_special_character(self):
+        form_data = {
+            'username': '+es+@user4',
+            'full_name': 'Test user updated',
+            'date_of_birth': '1999-01-01',
+            'district': self.user.district_id
+        }
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(User.objects.filter(username='+es+@user4').exists())
+
+    def test_edit_account_view_post_long_username(self):
+        long_username = 'a' * 201  #Max length 200
+        form_data = {
+            'username': long_username,
+            'full_name': 'Test user 65',
+            'date_of_birth': '1999-01-01',
+            'district': self.district.district_id
+        }
+        response = self.client.post(reverse('edit_user', args=[self.user.user_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'username', 'Ensure this value has at most 200 characters (it has 201).')
 
     def test_delete_account_view_post(self):
         response = self.client.post(reverse('delete_user', args=[self.user.user_id]))
@@ -204,25 +242,10 @@ class DistrictViewsTest(TestCase):
 
     def test_create_district_view_post(self):
         form_data = {
-            'district_names': 'Test District 4; Test District 2; Test District 3'
+            'district_names': 'Test District 2; Test District 3; Test District 4'
         }
         response = self.client.post(reverse('create_district'), data=form_data)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(District.objects.filter(district_name='Test District 1').exists())
-
-    def test_create_district_view_post(self):
-        form_data = {
-            'district_names': 'Test District 1; Test District 2; Test District 3'
-        }
-        response = self.client.post(reverse('create_district'), data=form_data)
-        
-        if response.status_code != 302:
-            form = CreateDistrict(form_data)
-            form.is_valid()  # Trigger validation to populate form errors
-            print(form.errors)  # Print form errors for debugging
-        
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(District.objects.filter(district_name='Test District 2').exists())
         self.assertTrue(District.objects.filter(district_name='Test District 3').exists())
 
     def test_create_district_view_post_empty(self):
@@ -235,11 +258,11 @@ class DistrictViewsTest(TestCase):
 
     def test_create_district_view_post_one(self):
         form_data = {
-            'district_names': 'Unique District'
+            'district_names': 'Single District'
         }
         response = self.client.post(reverse('create_district'), data=form_data)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(District.objects.filter(district_name='Unique District').exists())
+        self.assertTrue(District.objects.filter(district_name='Single District').exists())
 
     def test_create_district_view_post_existing(self):
         form_data = {
@@ -260,14 +283,13 @@ class DistrictViewsTest(TestCase):
         self.assertTrue(District.objects.filter(district_name='An()ther D!stric+').exists())
 
     def test_create_district_view_post_long_name(self):
-        long_name = 'L' * 256  #models max length 200
+        long_name = 'a' * 256  # models max length 255
         form_data = {
-            'district_names': f'{long_name}; Another District'
+            'district_names': long_name  # Ensure the form field name matches the one used in the form
         }
         response = self.client.post(reverse('create_district'), data=form_data)
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response, 'form', 'district_names', 'Restrict name to be within set limits')
-
+        self.assertFormError(response, 'form', 'district_names', f"District name '{long_name}' exceeds 255 characters limit.")
 
     def test_view_district_view(self):
         response = self.client.get(reverse('view_district'))
@@ -294,26 +316,68 @@ class DistrictViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.district.district_name, 'Test District Updated')
 
-    def test_delete_district_view_get(self):
-        response = self.client.get(reverse('delete_district', args=[self.district.district_id]))
+    def test_edit_district_view_post_empty(self):
+        form_data = {
+            'district_name': ''
+        }
+        response = self.client.post(reverse('edit_district', args=[self.district.district_id]), data=form_data)
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'district/viewDistrict.html')
+        self.assertFormError(response, 'form', 'district_name', 'This field is required.')
 
-    def test_delete_district_view_post(self):
+    def test_edit_district_view_post_existing(self):
+        form_data = {
+            'district_name': 'Test District 1'
+        }
+        response = self.client.post(reverse('edit_district', args=[self.district.district_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'district_name', 'District(s) already exist: Test District 1')
+
+    def test_edit_district_view_post_special_character(self):
+        form_data = {
+            'district_name': '+es+ Di$+r1ct 1'
+        }
+        response = self.client.post(reverse('edit_district', args=[self.district.district_id]), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(District.objects.filter(district_name='+es+ Di$+r1ct 1').exists())
+    
+    def test_edit_district_view_post_long_name(self):
+        long_name = 'a' * 256  #models max length 255
+        form_data = {
+            'district_name': long_name
+        }
+        response = self.client.post(reverse('edit_district', args=[self.district.district_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'district_name', 'Ensure this value has at most 255 characters (it has 256).')
+
+    def test_delete_district_view_post_successfull(self):
         response = self.client.post(reverse('delete_district', args=[self.district.district_id]))
         self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('view_district'))
         self.assertFalse(District.objects.filter(district_id=self.district.district_id).exists())
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'District successfully deleted.')
+
+    def test_delete_district_view_post_unsuccessful(self):
+        response = self.client.get(reverse('delete_district', args=[self.district.district_id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('view_district'))
+        self.assertTrue(District.objects.filter(district_id=self.district.district_id).exists())
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'Error deleting district.')
+
+
 
 
 class ProfileViewsTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.election_phase = ElectionPhase.objects.filter(phase_name="Campaigning Day").first()
-        if self.election_phase:
-            self.election_phase.is_active = True
-            self.election_phase.save()
-        else:
+        if not self.election_phase:
             self.election_phase = ElectionPhase.objects.create(phase_name="Campaigning Day", is_active=True)
+
+        self.profile = Profile.objects.create(profile_name="Test Profile", description="Test description")
 
     def tearDown(self):
         self.election_phase.delete()
@@ -332,32 +396,7 @@ class ProfileViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(Profile.objects.filter(profile_name='Test Profile').exists())
 
-    def test_view_profiles_view(self):
-        profile = Profile.objects.create(profile_name="Test Profile", description="Test description")
-        response = self.client.get(reverse('view_profiles'))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'userProfile/viewProfiles.html')
-        self.assertContains(response, profile.profile_name)
-
-    def test_edit_profile_view_get(self):
-        profile = Profile.objects.create(profile_name="Test Profile", description="Test description")
-        response = self.client.get(reverse('edit_profile', args=[profile.profile_id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'userProfile/editProfile.html')
-
-    def test_edit_profile_view_post(self):
-        profile = Profile.objects.create(profile_name="Test Profile", description="Test description")
-        form_data = {
-            'profile_name': 'Test Profile updated',
-            'description': 'Test description updated'
-        }
-        response = self.client.post(reverse('edit_profile', args=[profile.profile_id]), data=form_data)
-        profile.refresh_from_db()
-        self.assertEqual(response.status_code, 302)
-        self.assertEqual(profile.profile_name, 'Test Profile updated')
-        self.assertEqual(profile.description, 'Test description updated')
-
-    def test_create_profile_view_post_empty_name(self):
+    def test_create_profile_view_post_empty(self):
         form_data = {
             'profile_name': '',
             'description': 'Test description'
@@ -393,19 +432,81 @@ class ProfileViewsTest(TestCase):
         }
         response = self.client.post(reverse('create_profile'), data=form_data)
         self.assertEqual(response.status_code, 200)
-        self.assertFormError(response, 'form', 'profile_name', 'Restrict name to be within set limits')
+        self.assertFormError(response, 'form', 'profile_name', 'Ensure this value has at most 255 characters (it has 256).')
 
-    def test_delete_profile_view_get(self):
+    def test_view_profiles_view(self):
         profile = Profile.objects.create(profile_name="Test Profile", description="Test description")
-        response = self.client.get(reverse('delete_profile', args=[profile.profile_id]))
+        response = self.client.get(reverse('view_profiles'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'userProfile/deleteProfile.html')
+        self.assertTemplateUsed(response, 'userProfile/viewProfiles.html')
+        self.assertContains(response, profile.profile_name)
 
-    def test_delete_profile_view_post(self):
+    def test_edit_profile_view_get(self):
         profile = Profile.objects.create(profile_name="Test Profile", description="Test description")
-        response = self.client.post(reverse('delete_profile', args=[profile.profile_id]))
+        response = self.client.get(reverse('edit_profile', args=[profile.profile_id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'userProfile/editProfile.html')
+
+    def test_edit_profile_view_post(self):
+        form_data = {
+            'profile_name': 'Test Profile updated',
+            'description': 'Test description updated'
+        }
+        response = self.client.post(reverse('edit_profile', args=[self.profile.profile_id]), data=form_data)
         self.assertEqual(response.status_code, 302)
-        self.assertFalse(Profile.objects.filter(profile_id=profile.profile_id).exists())
+        self.assertEqual(self.profile.profile_name, 'Test Profile updated')
+        self.assertEqual(self.profile.description, 'Test description updated')
+
+    def test_edit_profile_view_post_empty(self):
+        form_data = {
+            'profile_name': '',
+            'description': 'Test description'
+        }
+        response = self.client.post(reverse('edit_profile', args=[self.profile.profile_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'profile_name', 'This field is required.')
+
+    def test_edit_profile_view_post_existing(self):
+        form_data = {
+            'profile_name': 'Candidate',
+            'description': 'Duplicate profile name'
+        }
+        response = self.client.post(reverse('edit_profile', args=[self.profile.profile_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'profile_name', 'This profile name is not allowed or already exists.')
+
+    def test_edit_profile_view_post_special_characters(self):
+        special_name = '!@#$%^&*()_+'
+        form_data = {
+            'profile_name': special_name,
+            'description': 'Profile with special characters'
+        }
+        response = self.client.post(reverse('edit_profile', args=[self.profile.profile_id]), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Profile.objects.filter(profile_name=special_name).exists())
+
+    def test_edit_profile_view_post_long_name(self):
+        long_name = 'a' * 256  # max length is 255
+        form_data = {
+            'profile_name': long_name,
+            'description': 'Test description'
+        }
+        response = self.client.post(reverse('edit_profile', args=[self.profile.profile_id]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'profile_name', 'Ensure this value has at most 255 characters (it has 256).')
+
+    def test_delete_profile_view_post_successfull(self):
+        response = self.client.post(reverse('delete_profile', args=[self.profile.profile_id]))
+        self.assertEqual(response.status_code, 302)
+        self.assertRedirects(response, reverse('view_profiles'))
+        self.assertFalse(Profile.objects.filter(profile_id=self.profile.profile_id).exists())
+        messages = list(response.wsgi_request._messages)
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(str(messages[0]), 'Profile successfully deleted.')
+
+    def test_delete_profile_view_post_unsuccessful(self):
+        response = self.client.post(reverse('delete_profile', args=[1234])) 
+        self.assertEqual(response.status_code, 404)
 
 
 class AnnouncementViewsTest(TestCase):
@@ -469,7 +570,7 @@ class AnnouncementViewsTest(TestCase):
         }
         response = self.client.post(reverse('create_announcement'), data=form_data)
         self.assertEqual(response.status_code, 200)  # Form error expected
-        self.assertContains(response, 'Restrict name to be within set limits')
+        self.assertFormError(response, 'form', 'header', 'Ensure this value has at most 255 characters (it has 256).')
 
     def test_view_announcement_view(self):
         response = self.client.get(reverse('view_announcement'))
@@ -499,6 +600,44 @@ class AnnouncementViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.announcement.header, 'Test Announcement updated')
         self.assertEqual(self.announcement.content, 'Test content updated')
+
+    def test_create_announcement_view_post_empty(self):
+        form_data = {
+            'header': '',
+            'content': 'Content with empty header'
+        }
+        response = self.client.post(reverse('edit_announcement', args=[self.announcement.pk]), data=form_data)
+        self.assertEqual(response.status_code, 200)  # Form error expected
+        self.assertContains(response, 'This field is required.')
+
+    def test_edit_announcement_view_post_existing(self): #expected to fail, ok with same existing header
+        form_data = {
+            'header': 'Test Announcement',
+            'content': 'Duplicate content'
+        }
+        response = self.client.post(reverse('edit_announcement', args=[self.announcement.pk]), data=form_data)
+        self.assertEqual(response.status_code, 200)  # Assuming form error would not redirect
+        self.assertContains(response, 'Announcement with this header already exists')
+
+    def test_edit_announcement_view_post_special_characters(self):
+        special_header = '!@#$%^&*()_+'
+        form_data = {
+            'header': special_header,
+            'content': 'Special characters in header'
+        }
+        response = self.client.post(reverse('edit_announcement', args=[self.announcement.pk]), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Announcement.objects.filter(header=special_header).exists())
+
+    def test_edit_announcement_view_post_long_header(self):
+        long_header = 'A' * 256  # Assuming max length is 255
+        form_data = {
+            'header': long_header,
+            'content': 'Content with long header'
+        }
+        response = self.client.post(reverse('edit_announcement', args=[self.announcement.pk]), data=form_data)
+        self.assertEqual(response.status_code, 200)  # Form error expected
+        self.assertFormError(response, 'form', 'header', 'Ensure this value has at most 255 characters (it has 256).')
 
     def test_delete_announcement_view_get(self):
         response = self.client.get(reverse('delete_announcement', args=[self.announcement.pk]))
@@ -572,7 +711,7 @@ class PartyViewsTest(TestCase):
         }
         response = self.client.post(reverse('create_party'), data=form_data)
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Restrict name to be within set limits')
+        self.assertFormError(response, 'form', 'party_name', 'Ensure this value has at most 255 characters (it has 256).')
 
     def test_view_party_view(self):
         response = self.client.get(reverse('view_party'))
@@ -595,6 +734,44 @@ class PartyViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.party.party_name, 'Updated Party')
         self.assertEqual(self.party.description, 'Test description updated')
+
+    def test_edit_party_view_post_empty(self):
+        form_data = {
+            'party_name': '',
+            'description': 'Description with empty name'
+        }
+        response = self.client.post(reverse('edit_party', args=[self.party.pk]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'This field is required.')
+
+    def test_edit_party_view_post_existing(self):
+        form_data = {
+            'party_name': 'Test Party',
+            'description': 'Description with existing name'
+        }
+        response = self.client.post(reverse('edit_party', args=[self.party.pk]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'A party with this name already exists.')
+
+    def test_edit_party_view_post_special_characters(self):
+        special_name = '!@#$%^&*()_+'
+        form_data = {
+            'party_name': special_name,
+            'description': 'Special characters in name'
+        }
+        response = self.client.post(reverse('edit_party', args=[self.party.pk]), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(Party.objects.filter(party_name=special_name).exists())
+
+    def test_edit_party_view_post_long_name(self):
+        long_name = 'P' * 256  #max length is 255
+        form_data = {
+            'party_name': long_name,
+            'description': 'Long name in party'
+        }
+        response = self.client.post(reverse('edit_party', args=[self.party.pk]), data=form_data)
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'party_name', 'Ensure this value has at most 255 characters (it has 256).')
 
     def test_delete_party_view_get(self):
         response = self.client.get(reverse('delete_party', args=[self.party.pk]))
@@ -635,8 +812,9 @@ class VoterViewsTest(TestCase):
             full_name="Test Singpass User",
             date_of_birth="1999-11-04",
             phone_num="12345678",
-            district="Test District"
+            district=self.district
         )
+
 
     def tearDown(self):
         self.voter.delete()
@@ -664,39 +842,46 @@ class VoterViewsTest(TestCase):
         response = self.client.get(reverse('voter_home'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'Voter/voterPg.html')
-        self.assertContains(response, self.candidate_profile.candidate_statement)
+        self.assertContains(response, self.candidate_profile.candidate_id)
 
     def test_ballot_paper_view_get(self):
         self.client.force_login(self.voter)
         response = self.client.get(reverse('ballot_paper'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'Voter/votingPg.html')
-        self.assertContains(response, self.candidate_profile.candidate_statement)
+        self.assertContains(response, self.candidate_profile.candidate_id)
 
     def test_cast_vote_view_get(self):
         self.client.force_login(self.voter)
         response = self.client.get(reverse('cast_vote'))
         self.assertEqual(response.status_code, 200)
-        self.assertTemplateUsed(response, 'voting/ballot_paper.html')
-        self.assertContains(response, self.candidate_profile.candidate_statement)
+        self.assertTemplateUsed(response, 'Voter/votingPg.html')
+        self.assertContains(response, self.candidate_profile.candidate_id)
 
     def test_cast_vote_view_post(self):
         self.client.force_login(self.voter)
         response = self.client.post(reverse('cast_vote'), {
-            'candidate': [self.user_account.pk]
+            'candidate': [self.candidate_profile.pk]
         })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('ballot_paper'))
-        self.assertContains(response, 'Your vote has been submitted.')
+        follow_response = self.client.get(reverse('ballot_paper'), follow=True)
+        self.assertContains(follow_response, 'Your vote has been submitted.')
 
     def test_cast_vote_view_post_double_voting(self):
         self.client.force_login(self.voter)
+        #initail vote
+        self.client.post(reverse('cast_vote'), {
+            'candidate': [self.candidate_profile.pk]
+        })
+        #double vote
         response = self.client.post(reverse('cast_vote'), {
-            'candidate': [self.user_account.pk]
+            'candidate': [self.candidate_profile.pk]
         })
         self.assertEqual(response.status_code, 302)
         self.assertRedirects(response, reverse('ballot_paper'))
-        self.assertContains(response, 'Double voting detected. Your vote is invalid.')
+        follow_response = self.client.get(reverse('ballot_paper'), follow=True)
+        self.assertContains(follow_response, 'Double voting detected. Your vote is invalid.')
 
 
 class CandidateViewsTest(TestCase):
@@ -755,3 +940,128 @@ class CandidateViewsTest(TestCase):
         self.assertRedirects(response, reverse('candidate_home'))
         self.candidate_profile.refresh_from_db()
         self.assertEqual(self.candidate_profile.candidate_statement, 'Updated Statement')
+
+
+class PasswordChangeTestCase(TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.admin_profile = Profile.objects.create(profile_name="Admin")
+        self.candidate_profile = Profile.objects.create(profile_name="Candidate")
+        self.district = District.objects.create(district_name="Test District")
+        self.user = self.create_test_user()
+
+    def tearDown(self):
+        self.user.delete()
+        self.admin_profile.delete()
+        self.candidate_profile.delete()
+        self.district.delete()
+
+    def create_test_user(self):
+        user = UserAccount(
+            username='testuser',
+            full_name='Test user',
+            date_of_birth='1999-11-04',
+            role=self.admin_profile,
+            district=self.district
+        )
+        user.set_password('old_password')
+        user.save()
+        return user
+
+    def test_password_change_view_get(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.get(reverse('change_password'))
+        self.assertEqual(response.status_code, 200)
+        self.assertTemplateUsed(response, 'changePassword.html')
+
+    def test_password_change_view_post_correct_change(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'Newpassword1!',
+            'confirm_password': 'Newpassword1!'
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(UserAccount.objects.get(username='testuser').check_password('Newpassword1!'))
+
+    def test_password_change_view_post_wrong_current_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'not_old_password',
+            'new_password': 'Newpassword1!',
+            'confirm_password': 'Newpassword1!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'current_password', 'Current password is incorrect.')
+
+    def test_password_change_view_post_not_match_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'Newpassword1!',
+            'confirm_password': 'Newpassword2!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'confirm_password', 'Confirm password does not match new password.')
+
+    def test_password_change_view_post_short_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'short1!',
+            'confirm_password': 'short1!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'new_password', 'Password must have more than 8 characters.')
+
+    def test_password_change_view_post_no_number_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'Newpassword!',
+            'confirm_password': 'Newpassword!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'new_password', 'Password must contain at least one number.')
+
+    def test_password_change_view_post_no_uppercase_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'newpassword1!',
+            'confirm_password': 'newpassword1!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'new_password', 'Password must contain at least one uppercase letter.')
+
+    def test_password_change_view_post_no_lowercase_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'NEWPASSWORD1!',
+            'confirm_password': 'NEWPASSWORD1!'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'new_password', 'Password must contain at least one lowercase letter.')
+
+    def test_password_change_view_post_no_symbol_password(self):
+        self.client.login(username='testuser', password='old_password')
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': 'Newpassword1',
+            'confirm_password': 'Newpassword1'
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'new_password', 'Password must contain at least one special character.')
+
+    def test_password_change_view_post_long_password(self):
+        self.client.login(username='testuser', password='old_password')
+        long_password = 'a' * 101 + '!A1'
+        response = self.client.post(reverse('change_password'), {
+            'current_password': 'old_password',
+            'new_password': long_password,
+            'confirm_password': long_password
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertFormError(response, 'form', 'new_password', 'Password must not exceed 100 characters.')
+

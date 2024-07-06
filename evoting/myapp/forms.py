@@ -61,6 +61,10 @@ class CreateDistrict(forms.Form):
             raise ValidationError("This field is required.")
         
         district_list = [name.strip() for name in district_names.split(';') if name.strip()]
+        for name in district_list:
+            if len(name) > 255:
+                raise ValidationError(f"District name '{name}' exceeds 255 characters limit.")
+
         existing_districts = District.objects.filter(district_name__in=district_list).values_list('district_name', flat=True)
         if existing_districts:
             raise ValidationError(f"District(s) already exist: {', '.join(existing_districts)}")
@@ -92,6 +96,37 @@ class CreateParty(forms.ModelForm):
             if existing_party.exists():
                 raise ValidationError("A party with this name already exists.")
         return party_name
+
+class PasswordChangeForm(forms.Form):
+    current_password = forms.CharField(widget=forms.PasswordInput, label="Current Password")
+    new_password = forms.CharField(widget=forms.PasswordInput, label="New Password")
+    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm New Password")
+
+    def clean_new_password(self):
+        new_password = self.cleaned_data.get('new_password')
+        if len(new_password) < 8:
+            raise forms.ValidationError("Password must have more than 8 characters.")
+        if not any(char.isdigit() for char in new_password):
+            raise forms.ValidationError("Password must contain at least one number.")
+        if not any(char.isupper() for char in new_password):
+            raise forms.ValidationError("Password must contain at least one uppercase letter.")
+        if not any(char.islower() for char in new_password):
+            raise forms.ValidationError("Password must contain at least one lowercase letter.")
+        if not any(char in '!@#$%^&*()-_=+[]{}|;:,.<>?/~' for char in new_password):
+            raise forms.ValidationError("Password must contain at least one special character.")
+        if len(new_password) > 100:
+            raise forms.ValidationError("Password must not exceed 100 characters.")
+        return new_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if new_password and confirm_password and new_password != confirm_password:
+            self.add_error('confirm_password', "Confirm password does not match new password.")
+
+
 
 #--------------------------------Candidate Forms---------------------------------------- 
 
