@@ -97,7 +97,7 @@ void extract_scalar_from_sk(BYTE *scalar, const BYTE *seed)
     scalar[31] |= 64;
 }
 
-// aGbH, where a and b are scalar, and G is the base point and B is the point
+// aGbH, where a and b are scalar, and G is the base point and H is the point
 void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b,
              const BYTE *H)
 {
@@ -116,7 +116,7 @@ void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b,
         throw logic_error("Point addition aG + bH fail due to invalid points");
 }
 
-// aKbH, where a and b are scalar, and K and B are the points
+// aKbH, where a and b are scalar, and K and H are the points
 void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b,
              const BYTE *H)
 {
