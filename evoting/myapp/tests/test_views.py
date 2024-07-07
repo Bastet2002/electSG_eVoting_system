@@ -1,7 +1,10 @@
 from django.test import TestCase, Client
+from unittest.mock import patch, MagicMock
+from django.contrib.messages import get_messages
 from django.urls import reverse
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth import get_user_model
+from pygrpc import ringct_pb2
 from ..models import (
     SingpassUser,
     Profile,
@@ -66,18 +69,77 @@ class UserAccountViewsTest(TestCase):
         self.assertEqual(response.status_code, 200) #HTTP_200_OK
         self.assertTemplateUsed(response, 'userAccount/createUserAcc.html')
 
-    def test_create_account_view_post(self): # used to submit the data gathered to create the acc
+    @patch('myapp.views.grpc_generate_candidate_keys_run')
+    def test_create_account_view_post_candidate(self, mock_grpc):
+        # Create a mock response
+        mock_response = MagicMock()
+        mock_grpc.return_value = mock_response
+
         form_data = {
-            'username': 'testuser2',
+            'username': 'testcandidate',
             'password': 'password',
-            'full_name': 'Test user 2',
+            'full_name': 'Test Candidate',
             'date_of_birth': '1999-01-01',
             'role': self.candidate_profile.profile_id,
             'district': self.district.district_id
         }
         response = self.client.post(reverse('create_account'), data=form_data)
-        self.assertEqual(response.status_code, 302) # HTTP_302_FOUND
-        self.assertTrue(User.objects.filter(username='testuser2').exists())
+        
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect
+        self.assertTrue(User.objects.filter(username='testcandidate').exists())
+        
+        created_user = User.objects.get(username='testcandidate')
+        self.assertTrue(CandidateProfile.objects.filter(candidate=created_user).exists())
+        
+        # Assert that the gRPC function was called
+        mock_grpc.assert_called_once_with(candidate_id=created_user.user_id)
+        
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('Account successfully created.', [str(m) for m in messages])
+
+    @patch('myapp.views.grpc_generate_candidate_keys_run')
+    def test_create_account_view_post_candidate_grpc_error(self, mock_grpc):
+        # Simulate a gRPC error
+        mock_grpc.side_effect = GrpcError("Test Mock gRPC error in create account")
+
+        form_data = {
+            'username': 'testcandidate2',
+            'password': 'password',
+            'full_name': 'Test Candidate 2',
+            'date_of_birth': '1999-01-01',
+            'role': self.candidate_profile.profile_id,
+            'district': self.district.district_id
+        }
+        response = self.client.post(reverse('create_account'), data=form_data)
+        
+        self.assertEqual(response.status_code, 302)  # Still expecting a redirect
+        self.assertTrue(User.objects.filter(username='testcandidate2').exists())
+        
+        created_user = User.objects.get(username='testcandidate2')
+        self.assertTrue(CandidateProfile.objects.filter(candidate=created_user).exists())
+        
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('Error in creating candidate keys: Test Mock gRPC error in create account', [str(m) for m in messages])
+
+    def test_create_account_view_post_non_candidate(self):
+        form_data = {
+            'username': 'testuser',
+            'password': 'password',
+            'full_name': 'Test User',
+            'date_of_birth': '1999-01-01',
+            'role': self.admin_profile.profile_id,
+            'district': self.district.district_id
+        }
+        response = self.client.post(reverse('create_account'), data=form_data)
+        
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect
+        self.assertTrue(User.objects.filter(username='testuser').exists())
+        
+        created_user = User.objects.get(username='testuser')
+        self.assertFalse(CandidateProfile.objects.filter(candidate=created_user).exists())
+        
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('Account successfully created.', [str(m) for m in messages])
 
     def test_create_account_view_post_empty(self):
         form_data = {}
@@ -111,7 +173,11 @@ class UserAccountViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'date_of_birth', 'Enter a valid date.')
 
-    def test_create_account_view_post_special_character(self):
+    @patch('myapp.views.grpc_generate_candidate_keys_run')
+    def test_create_account_view_post_special_character(self, mock_grpc):
+        mock_response = MagicMock()
+        mock_grpc.return_value = mock_response
+
         form_data = {
             'username': '+es+@user!',  # Special characters
             'password': 'password',
@@ -121,8 +187,18 @@ class UserAccountViewsTest(TestCase):
             'district': self.district.district_id
         }
         response = self.client.post(reverse('create_account'), data=form_data)
-        self.assertEqual(response.status_code, 302)
+        
+        self.assertEqual(response.status_code, 302)  # Expecting a redirect
         self.assertTrue(User.objects.filter(username='+es+@user!').exists())
+        
+        created_user = User.objects.get(username='+es+@user!')
+        self.assertTrue(CandidateProfile.objects.filter(candidate=created_user).exists())
+        
+        # Assert that the gRPC function was called
+        mock_grpc.assert_called_once_with(candidate_id=created_user.user_id)
+        
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('Account successfully created.', [str(m) for m in messages])
 
     def test_create_account_view_post_long_username(self):
         long_username = 'a' * 201  #Max length 200
@@ -221,7 +297,7 @@ class UserAccountViewsTest(TestCase):
 class DistrictViewsTest(TestCase):
     def setUp(self):
         self.client = Client()
-        self.district = District.objects.create(district_name="Test District 1")
+        self.district = self.create_district("Test District 1")
 
         # Check if "Campaigning Day" phase exists and set it to active
         self.election_phase = ElectionPhase.objects.filter(phase_name="Campaigning Day").first()
@@ -235,18 +311,13 @@ class DistrictViewsTest(TestCase):
         self.district.delete()
         self.election_phase.delete()
 
+    def create_district(self, district_name):
+        return District.objects.create(district_name=district_name)
+        
     def test_create_district_view_get(self):
         response = self.client.get(reverse('create_district'))
         self.assertEqual(response.status_code, 200)
         self.assertTemplateUsed(response, 'district/createDistrict.html')
-
-    def test_create_district_view_post(self):
-        form_data = {
-            'district_names': 'Test District 2; Test District 3; Test District 4'
-        }
-        response = self.client.post(reverse('create_district'), data=form_data)
-        self.assertEqual(response.status_code, 302)
-        self.assertTrue(District.objects.filter(district_name='Test District 3').exists())
 
     def test_create_district_view_post_empty(self):
         form_data = {
@@ -256,13 +327,50 @@ class DistrictViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'district_names', 'This field is required.')
 
-    def test_create_district_view_post_one(self):
+    @patch('myapp.views.grpc_generate_user_and_votingcurr_run')
+    def test_create_district_view_post_one(self, mock_grpc):
+        mock_response = ringct_pb2.Gen_VoterCurr_Response()
+        mock_grpc.return_value = mock_response # a single mock response is created and set as the return value.
+        
         form_data = {
             'district_names': 'Single District'
         }
         response = self.client.post(reverse('create_district'), data=form_data)
         self.assertEqual(response.status_code, 302)
-        self.assertTrue(District.objects.filter(district_name='Single District').exists())
+        created_district = District.objects.get(district_name='Single District')
+        self.assertTrue(created_district)
+        mock_grpc.assert_called_once_with(district_id=created_district.district_id, voter_num=20) # uses the voter_num in create_district view
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('District(s) successfully created.', [str(m) for m in messages]) # check if the success message went thru
+
+    @patch('myapp.views.grpc_generate_user_and_votingcurr_run')
+    def test_create_district_view_post(self, mock_grpc):
+        def side_effect(district_id, voter_num): # a side effect function is used to create a new mock response for each call
+            mock_response = ringct_pb2.Gen_VoterCurr_Response()
+            mock_response.district_id = district_id
+            mock_response.voter_num = voter_num #
+            return mock_response
+        
+        mock_grpc.side_effect = side_effect
+
+        form_data = {
+            'district_names': 'Test District 2; Test District 3; Test District 4'
+        }
+        response = self.client.post(reverse('create_district'), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(District.objects.filter(district_name='Test District 2').exists())
+        self.assertTrue(District.objects.filter(district_name='Test District 3').exists())
+        self.assertTrue(District.objects.filter(district_name='Test District 4').exists())
+
+        self.assertEqual(mock_grpc.call_count, 3) #check if the grpc is called 3 times
+        
+        calls = mock_grpc.call_args_list
+        created_districts = District.objects.filter(district_name__in=['Test District 2', 'Test District 3', 'Test District 4']).order_by('district_id')
+        for i, call in enumerate(calls):
+            self.assertEqual(call[1], {'district_id': created_districts[i].district_id, 'voter_num': 20}) # uses the voter_num in create_district view and check if each call creates a districts
+
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('District(s) successfully created.', [str(m) for m in messages]) # check if the success message went thru
 
     def test_create_district_view_post_existing(self):
         form_data = {
@@ -272,8 +380,9 @@ class DistrictViewsTest(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'district_names', 'District(s) already exist: Test District 1')
 
-
-    def test_create_district_view_post_special_characters(self):
+    @patch('myapp.views.grpc_generate_user_and_votingcurr_run')
+    def test_create_district_view_post_special_characters(self, mock_grpc):
+        mock_grpc.return_value = None
         form_data = {
             'district_names': 'Test-Distric+#%; An()ther D!stric+'
         }
@@ -281,15 +390,28 @@ class DistrictViewsTest(TestCase):
         self.assertEqual(response.status_code, 302)
         self.assertTrue(District.objects.filter(district_name='Test-Distric+#%').exists())
         self.assertTrue(District.objects.filter(district_name='An()ther D!stric+').exists())
+        self.assertEqual(mock_grpc.call_count, 2)
 
     def test_create_district_view_post_long_name(self):
         long_name = 'a' * 256  # models max length 255
         form_data = {
-            'district_names': long_name  # Ensure the form field name matches the one used in the form
+            'district_names': long_name
         }
         response = self.client.post(reverse('create_district'), data=form_data)
         self.assertEqual(response.status_code, 200)
         self.assertFormError(response, 'form', 'district_names', f"District name '{long_name}' exceeds 255 characters limit.")
+
+    @patch('myapp.views.grpc_generate_user_and_votingcurr_run')
+    def test_create_district_view_post_grpc_error(self, mock_grpc):
+        mock_grpc.side_effect = GrpcError("Test Mock gRPC error in create district")
+        form_data = {
+            'district_names': 'Error District'
+        }
+        response = self.client.post(reverse('create_district'), data=form_data)
+        self.assertEqual(response.status_code, 302)
+        self.assertTrue(District.objects.filter(district_name='Error District').exists())
+        messages = list(get_messages(response.wsgi_request))
+        self.assertIn('Error in gRPC call: Test Mock gRPC error in create district', [str(m) for m in messages])
 
     def test_view_district_view(self):
         response = self.client.get(reverse('view_district'))
@@ -366,7 +488,6 @@ class DistrictViewsTest(TestCase):
         messages = list(response.wsgi_request._messages)
         self.assertEqual(len(messages), 1)
         self.assertEqual(str(messages[0]), 'Error deleting district.')
-
 
 
 
@@ -814,7 +935,6 @@ class VoterViewsTest(TestCase):
             phone_num="12345678",
             district=self.district
         )
-
 
     def tearDown(self):
         self.voter.delete()
