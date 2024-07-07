@@ -26,6 +26,6 @@ python manage.py create_election_phase
 python manage.py create_admin_acc
 python manage.py create_mock_singpass_data
 
-python ./pygrpc/test_init.py # this required the ringct database to be up
+# python ./pygrpc/test_init.py # this required the ringct database to be up
 
 exec $cmd
