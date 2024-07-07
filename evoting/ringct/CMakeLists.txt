@@ -109,6 +109,7 @@ add_executable(test_rct
     "rct/commitment.cpp"
     "test/test_hash.cpp"
     "test/test_util.cc"
+    "test/test_compute_stealth_address.cpp"
     "test/test_add_keys.cpp")
 
 target_link_libraries(test_rct
