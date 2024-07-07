@@ -107,6 +107,8 @@ add_executable(test_rct
     "util/custom_exception.cc"
     "rct/rctOps.cpp"
     "rct/commitment.cpp"
+    "test/test_hash.cpp"
+    "test/test_util.cc"
     "test/test_add_keys.cpp")
 
 target_link_libraries(test_rct

@@ -1,22 +1,11 @@
 #include "../rct/rctType.h"
 #include "../rct/rctOps.h"
-// #include "test_util.h"
+#include "test_util.h"
 #include <catch2/catch_all.hpp>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 
-vector<string> tokeniser(const string &aline, const char delimeter = ' ')
-{
-    vector<string> tokens;
-    string token;
-    istringstream input(aline);
-    while (getline(input, token, delimeter))
-    {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
 
 SCENARIO("Test the consistency of the add key function", "[aK+bH]")
 {
