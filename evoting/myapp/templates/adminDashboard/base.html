@@ -1,0 +1,78 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Home Page{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'adminDashboard/style.css' %}">
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+</head>
+<body>
+  <div class="header">
+    <div class="logo-container">
+        <img src="{% static 'images/logo.png' %}" alt="Logo">
+    </div>
+    <nav>
+        <ul class="navigation">
+            <li><a href="{% url 'admin_home' %}">Home</a></li>
+            <li><a href="#">About us</a></li>
+            <li><a href="{% url 'logout' %}">Log out</a></li>
+        </ul>
+    </nav>
+  </div>
+  <div class="sidenav">
+    {% block sidebar %}
+    <button class="dropdown-btn"><i class="fas fa-user"></i> User Account
+      <i class="fa fa-caret-down"></i>
+    </button>
+    <div class="dropdown-container">
+      <a href="/account/create"><i class="fas fa-user-plus"></i> Create User Account</a>
+      <a href="/account"><i class="fas fa-users"></i> View User Account</a>
+    </div>
+    <button class="dropdown-btn"><i class="fas fa-id-badge"></i> User Profile
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-container">
+        <a href="/create_profile"><i class="fas fa-user-edit"></i> Create User Profile</a>
+        <a href="/view_profiles"><i class="fas fa-address-book"></i> View User Profile</a>
+      </div>
+      <button class="dropdown-btn"><i class="fas fa-map-marked-alt"></i> District
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-container">
+        <a href="/district/create"><i class="fas fa-map-pin"></i> Create District</a>
+        <a href="/district"><i class="fas fa-map"></i> View District</a>
+      </div>
+      <button class="dropdown-btn"><i class="fas fa-poll"></i> Election Status
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-container">
+        <a href="/phases"><i class="fas fa-exchange-alt"></i> Change Status</a>
+      </div>
+      <button class="dropdown-btn"><i class="fas fa-bullhorn"></i> Announcement
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-container">
+        <a href="/announcement/create"><i class="fas fa-plus-square"></i> Create Announcement</a>
+        <a href="/announcement"><i class="fas fa-bullhorn"></i> View Announcement</a>
+      </div>
+      <button class="dropdown-btn"><i class="fas fa-flag"></i> Party
+        <i class="fa fa-caret-down"></i>
+      </button>
+      <div class="dropdown-container">
+        <a href="/party/create"><i class="fas fa-plus-square"></i> Create Party</a>
+        <a href="/party"><i class="fas fa-flag"></i> View Party</a>
+      </div>
+    {% endblock %}
+  </div>
+  <script src="{% static 'adminDashboard/script.js' %}"></script>
+  <!-- Bootstrap JS and dependencies -->
+  <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>

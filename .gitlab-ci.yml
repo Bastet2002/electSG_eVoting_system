@@ -1,0 +1,81 @@
+stages:
+  - build
+  - test
+
+variables:
+  # for build image
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
+  WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
+  RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
+
+.docker-build: &build_configuration
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
+
+django-build:
+  stage: build
+  <<: *build_configuration
+  script:
+    - echo "$GITLAB_USER_LOGIN is running django build"
+    - docker build -t $WEB_IMAGE_TAG -f ./evoting/Dockerfile ./evoting
+    - docker push $WEB_IMAGE_TAG
+  timeout: 60 minutes
+
+ringct-build:
+  stage: build
+  <<: *build_configuration
+  script:
+    - echo "$GITLAB_USER_LOGIN is running ringct build"
+    - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
+    - docker push $RINGCT_IMAGE_TAG
+  timeout: 90 minutes
+
+.wait_db: &db_config
+  before_script:
+    # official way to provide password to psql: http://www.postgresql.org/docs/9.3/static/libpq-envars.html
+    - export PGPASSWORD=$POSTGRES_PASSWORD
+    - psql -h "$POSTGRES_HOST" -U "$POSTGRES_USER" -d "$POSTGRES_DB" -c "SELECT 'OK' AS status;"
+    - >
+      until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT -U $POSTGRES_USER; do
+        echo "Waiting for PostgreSQL to be ready..."
+        sleep 1
+      done
+    - echo "username and password config done for db."
+
+django-test:
+  stage: test
+  image: $WEB_IMAGE_TAG
+  services:
+  - name: postgres:15
+    alias: djangodb
+  variables:
+    POSTGRES_DB: mydb
+    POSTGRES_USER: admin
+    POSTGRES_PASSWORD: password
+    POSTGRES_HOST: djangodb
+    POSTGRES_PORT: 5432
+    PYTHONPATH: /app:/app/pygrpc
+    DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
+  <<: *db_config
+  before_script:
+    - cd /app
+    - python manage.py makemigrations
+    - python manage.py migrate
+  script:
+    - echo "$GITLAB_USER_LOGIN running django unit test"
+    - python /app/manage.py test myapp.tests.test_models
+    - python /app/manage.py test myapp.tests.test_urls
+    - python /app/manage.py test myapp.tests.test_views
+  timeout: 10 minutes
+
+ringct-unittest:
+  stage: test
+  image: $RINGCT_IMAGE_TAG
+  script:
+    - echo "$GITLAB_USER_LOGIN running ringct unit test"
+    - /app/build/test_rct
+  timeout: 10 minutes

@@ -32,27 +32,23 @@ message Gen_VoterCurr_Response{
 }
 
 message Gen_Candidate_Request{
-    int32 district_id = 1;
-    int32 candidate_id = 2;
+    int32 candidate_id = 1;
 }
 
 message Gen_Candidate_Response{
-    int32 district_id = 1;
-    int32 candidate_id = 2;
-    string test_output = 3; // TODO temporary for printing
+    int32 candidate_id = 1;
+    string test_output = 2; // TODO temporary for printing
 }
 
 message Vote_Request{
-    int32 district_id = 1;
-    int32 candidate_id = 2;
-    int32 voter_id = 3;
+    int32 candidate_id = 1;
+    int32 voter_id = 2;
 }
 
 message Vote_Response{
     // for checking if the return and req are the same destination
-    int32 district_id = 1;
-    int32 candidate_id = 2;
-    int32 voter_id = 3;
-    string key_image = 4;
-    string test_output = 5; // TODO temporary for printing
+    int32 candidate_id = 1;
+    int32 voter_id = 2;
+    string key_image = 3;
+    string test_output = 4; // TODO temporary for printing
 }

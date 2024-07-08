@@ -1,0 +1,71 @@
+/* General body styles */
+body {
+  font-family: "Lato", sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Create New User Form */
+.create-new-user-form {
+margin: 0 auto; /* Center the form horizontally */
+width: 60%; /* Adjust form width as needed */
+padding: 20px; /* Add padding for spacing */
+background-color: #f9f9f9; /* Light background color */
+border-radius: 8px; /* Rounded corners */
+box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+margin-top: 80px; /* Ensure space from the fixed header */
+}
+
+.create-new-user-form label {
+font-weight: bold;
+margin-bottom: 5px;
+display: inline-block; /* Display labels inline */
+width: 30%; /* Adjust label width */
+text-align: right; /* Align label text to the right */
+margin-right: 20px; /* Add space between label and input */
+}
+
+.create-new-user-form input[type="text"],
+.create-new-user-form input[type="date"],
+.create-new-user-form select {
+border: 1px solid #ccc;
+padding: 5px;
+width: calc(70% - 60px); /* Adjust input width */
+display: inline-block; /* Display inputs inline */
+}
+
+.create-new-user-form button {  /* Target the submit button */
+background-color: #d76359;  /* Change button color */
+color: rgb(245, 243, 243);
+padding: 10px 20px;
+margin-top: 10px;
+border: none;
+cursor: pointer;
+border-radius: 5px;
+}
+
+/* Main content styles */
+.main {
+margin-left: 240px; /* Adjusted to accommodate the sidebar */
+padding: 20px;
+padding-top: 100px; /* Ensure there's space for the fixed header */
+}
+
+/* Popup Alert styles */
+.popup-alert {
+  position: fixed;
+  top: 70px; /* Adjust to be below the header */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: none;
+}
+
+.popup-alert.show {
+  display: block;
+}

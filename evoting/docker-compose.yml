@@ -6,29 +6,23 @@ services:
     volumes:
       - .:/app
     entrypoint: [ "/app/wait-for-postgres.sh" ]
-    command: [ "db", "python manage.py runserver 0.0.0.0:8000" ]
+    command: [ "djangodb", "python manage.py runserver 0.0.0.0:8000" ]
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      - djangodb
       - ring-ct
-    # develop:
-    #   #https://docs.docker.com/compose/file-watch/
-    #   watch:
-    #     - action: sync
-    #       # only watch the django changes
-    #       path: ./evoting
-    #       target: /app/evoting
     environment:
-      - DJANGO_DB_HOST=db
+      - DJANGO_DB_HOST=djangodb
       - DJANGO_DB_PORT=5432
       - DJANGO_DB_NAME=mydb
       - DJANGO_DB_USER=admin
       - DJANGO_DB_PASSWORD=password
+      - DATABASE_URL=postgres://admin:password@djangodb:5432/mydb
     links:
-      - db
+      - djangodb
 
-  db:
+  djangodb:
     image: postgres:15
     environment:
       POSTGRES_USER: admin
@@ -36,15 +30,39 @@ services:
       POSTGRES_DB: mydb
     ports:
       - "5432:5432"
+    volumes:
+      - ./dbinit:/dbinit
     # volumes:
     #   - pgdata:/var/lib/postgresql/data
+  
+  ringct-db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ringct
+    ports:
+      - "5433:5432"
 
   ring-ct:
     build:
       context: ./ringct
+    depends_on:
+      - djangodb
+      - ringct-db
     ports:
       - "50051:50051"
-
+    environment:
+      - DJANGO_DB_HOST=djangodb
+      - DJANGO_DB_PORT=5432
+      - DJANGO_DB_NAME=mydb
+      - DJANGO_DB_USER=admin
+      - DJANGO_DB_PASSWORD=password
+      - RINGCT_DB_HOST=ringct-db
+      - RINGCT_DB_PORT=5432
+      - RINGCT_DB_NAME=ringct
+      - RINGCT_DB_USER=admin
+      - RINGCT_DB_PASSWORD=password
       # volumes:
       #   pgdata:
       #     driver: local

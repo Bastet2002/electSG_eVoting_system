@@ -1,0 +1,85 @@
+body {
+    font-family: "Lato", sans-serif;
+    background: linear-gradient(to top, #c53e3e, #ffffff);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+}
+
+.main {
+    flex-grow: 1;
+    padding-top: 100px;
+    text-align: center;
+    position: relative;
+}
+
+.ballot-paper {
+    background-color: #f0f0f0;
+    padding: 30px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+    justify-content: center;
+    width: 80%;
+    max-width: 600px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.candidate-row {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.candidate {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+    width: 100%;
+    max-width: 500px;
+    justify-content: space-between;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 10px;
+    background-color: #fff;
+}
+
+.candidate img {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    margin-right: 20px;
+}
+
+.party-name {
+    font-weight: bold;
+    flex-grow: 1;
+    text-align: center;
+}
+
+.candidate input[type="checkbox"] {
+    width: 25px;
+    height: 25px;
+}
+
+.vote-button-container {
+    margin-top: 20px;
+}
+
+.vote-button-container button {
+    padding: 10px 20px;
+    background-color: #ffffff;
+    color: rgb(0, 0, 0);
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.vote-button-container button:hover {
+    background-color: #140a0a;
+    color :white;
+}

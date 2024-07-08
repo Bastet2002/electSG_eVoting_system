@@ -1,0 +1,33 @@
+{% extends "Voter/header.html" %}
+{% load static %}
+
+{% block title %}Voter Home{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'Voter/voterPg.css' %}"> 
+<div class="main">
+    <div class="status-container">
+        <div class="status">
+            Ongoing Result: <span>{{ voting_status }}</span>
+        </div>
+        <div class="district">
+            District: <span>{{ district.district_name }}</span>
+        </div>
+    </div>
+    <div class="candidates-container">
+        {% for candidate in candidates %}
+        
+        <div class="candidate">
+            {% if candidate.profile_picture %}
+            <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
+            {% else %}
+            <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
+            {% endif %}
+            <h3>{{ candidate.candidate.full_name }}</h3>
+            <p>Party: {{ candidate.candidate.party.party_name }}</p>
+        </div>
+        
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

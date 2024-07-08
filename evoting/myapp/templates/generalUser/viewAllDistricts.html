@@ -1,0 +1,31 @@
+{% extends "Voter/header.html" %}
+{% load static %}
+
+{% block title %}View All Districts{% endblock %}
+
+{% block content %}
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="{% static 'generalUser/viewAllDistricts.css' %}"> 
+
+<body>
+    <div class="container mt-5">
+        <div class="content">
+            <div class="districts">
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-4">
+                    {% for district in districts %}
+                    <div class="col mb-4">
+                        <div class="card h-100">
+                            <a href="{% url 'view_district_detail' district.district_id %}" class="text-decoration-none text-dark">
+                                <div class="card-body d-flex align-items-center justify-content-center">
+                                    <h5 class="card-title">{{ district.district_name }}</h5>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+{% endblock %}

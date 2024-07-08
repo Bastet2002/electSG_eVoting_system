@@ -1,0 +1,72 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}View Districts{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
+
+<div class="main">
+    <h1 style="text-align: center;">Districts</h1>
+    <div class="table-container">
+        <div class="search-bar">
+            <form action="" method="get">
+                <input type="text" name="search" id="search" placeholder="Search..." value="{{ request.GET.search }}">
+                <button type="submit" id="search-btn">Search</button>
+            </form>
+        </div>
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for district in districts %}
+                    <tr>
+                        <td>{{ district.district_name }}</td>
+                        <td>
+                            <a href="{% url 'edit_district' district.district_id %}"><button class="btn btn-danger">Update</button></a>
+                            <form method="post" action="{% url 'delete_district' district.district_id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger {% if disable_deletion %}btn-disabled{% endif %}" {% if disable_deletion %}disabled{% endif %}>Delete</button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="2">No districts found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+{% endif %}
+
+<script>
+    function confirmDelete() {
+        return confirm('Are you sure you want to delete this district?');
+    }
+</script>
+{% endblock %}

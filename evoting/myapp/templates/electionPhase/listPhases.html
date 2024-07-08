@@ -1,0 +1,31 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+{% block content %}
+<link rel="stylesheet" href="{% static 'electionPhase/listPhases.css' %}">
+
+<div class="main">
+    <h1 style="text-align: center;">Election Status</h1>
+    <div class="container">
+        <table class="center-table">
+            <tr>
+                <th>Phase</th>
+                <th>Status</th>
+                <th>Action</th>
+            </tr>
+            {% for phase in phases %}
+            <tr>
+                <td>{{ phase.phase_name }}</td>
+                <td class="{{ phase.is_active|yesno:'status-active,status-inactive' }}">
+                    {{ phase.is_active|yesno:"Active,Inactive" }}
+                </td>
+                <td>
+                    {% if not phase.is_active %}
+                    <a href="{% url 'activate_election_phase' phase.phase_id %}">Activate</a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+</div>
+{% endblock %}

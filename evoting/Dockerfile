@@ -14,11 +14,17 @@ RUN git clone -b v1.64.0 --depth 1 --shallow-submodules https://github.com/grpc/
 # Set the working directory in the container
 WORKDIR /app
 
+# it looks like the path is messed up
+ENV PYTHONPATH=/app
+
 RUN apt-get update && apt-get install -y postgresql-client libpq-dev
 
 # Install dependencies
 COPY requirements.txt /app/
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Install Pillow
+RUN pip install Pillow
 
 # Copy the current directory contents into the container at /app/
 COPY . /app/
@@ -32,4 +38,4 @@ RUN chmod +x ./wait-for-postgres.sh
 
 EXPOSE 8000
 
-CMD ["./wait-for-postgres.sh", "db", "python", "manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["./wait-for-postgres.sh", "djangodb", "python", "manage.py", "runserver", "0.0.0.0:8000"]

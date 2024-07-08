@@ -1,6 +1,7 @@
 import grpc
-import ringct_pb2_grpc
-import ringct_pb2
+# import ringct_pb2_grpc
+# import ringct_pb2
+from pygrpc import ringct_pb2_grpc, ringct_pb2
 
 import logging
 
@@ -24,16 +25,14 @@ def grpc_construct_gen_votercurr_request(district_id, voter_num):
     gen_usercurr_request.voter_num = voter_num
     return gen_usercurr_request
 
-def grpc_construct_vote_request(district_id, candidate_id, voter_id):
+def grpc_construct_vote_request(candidate_id, voter_id):
     vote_request = ringct_pb2.Vote_Request()
-    vote_request.district_id = district_id
     vote_request.candidate_id = candidate_id
     vote_request.voter_id = voter_id
     return vote_request
 
-def grpc_construct_gen_candidate_request(district_id, candidate_id):
+def grpc_construct_gen_candidate_request(candidate_id):
     gen_candidate_request = ringct_pb2.Gen_Candidate_Request()
-    gen_candidate_request.district_id = district_id
     gen_candidate_request.candidate_id = candidate_id
     return gen_candidate_request
 
@@ -41,6 +40,7 @@ def grpc_construct_calculate_total_vote_request(district_ids):
     calculate_total_vote_request = ringct_pb2.Calculate_Total_Vote_Request()
     for district_id in district_ids:
         calculate_total_vote_request.district_ids.append(district_id)
+    return calculate_total_vote_request
 
 # ----------------- grpc client functions -----------------
 # assume the django backend only need to call these functions
@@ -48,11 +48,11 @@ def grpc_construct_calculate_total_vote_request(district_ids):
 # this will throw normal exception if the input is not correct
 # this will throw grpc error if there is error in grpc server processing
 
-def grpc_compute_vote_run(district_id, candidate_id, voter_id):
-    if not district_id or not candidate_id or not voter_id:
+def grpc_compute_vote_run(candidate_id, voter_id):
+    if not candidate_id or not voter_id:
         raise ValueError("Input error: district_id, candidate_id, voter_id cannot be empty")
     
-    vote_request = grpc_construct_vote_request(district_id, candidate_id, voter_id)
+    vote_request = grpc_construct_vote_request(candidate_id, voter_id)
 
     try:
         print("-------------- ComputeVote --------------")
@@ -61,12 +61,14 @@ def grpc_compute_vote_run(district_id, candidate_id, voter_id):
         print("Vote Request: ", vote_request)
         print("Vote Response: ", vote_response)
 
-        if vote_response.district_id != vote_request.district_id or vote_response.candidate_id != vote_request.candidate_id or vote_response.voter_id != vote_request.voter_id:
-            raise ValueError("Instance variable error: district_id, candidate_id, voter_id not matching in grpc_compute_vote_run")
+        if vote_response.candidate_id != vote_request.candidate_id or vote_response.voter_id != vote_request.voter_id:
+            raise grpc.RpcError("Input Output Mismatch: candidate_id, voter_id not matching after grpc_compute_vote_run")
         if not vote_response.key_image:
-            raise ValueError("Instance variable error: Key image not found in grpc_compute_vote")
+            raise grpc.RpcError("Output Error: Key image not found in grpc_compute_vote")
 
     except grpc.RpcError as e:
+        print(e)
+        print(e.code())
         raise GrpcError(f"Grpc error: {e.details()}")
 
     return vote_response
@@ -85,18 +87,18 @@ def grpc_generate_user_and_votingcurr_run(district_id, voter_num):
         print("Gen UserCurr Response: ", gen_usercurr_response)
 
         if gen_usercurr_response.district_id != gen_usercurr_request.district_id or gen_usercurr_response.voter_num != gen_usercurr_request.voter_num:
-            raise ValueError("Instance variable error: district_id, voter_num not matching in grpc_generate_user_and_votingcurr_run")
+            raise grpc.RpcError("Input output mismatch: district_id, voter_num not matching in grpc_generate_user_and_votingcurr_run")
 
     except grpc.RpcError as e:
         raise GrpcError(f"Grpc error: {e.details()}")
 
     return gen_usercurr_response
 
-def grpc_generate_candidate_keys_run(district_id, candidate_id):
-    if not district_id or not candidate_id:
+def grpc_generate_candidate_keys_run(candidate_id):
+    if not candidate_id:
         raise ValueError("Input error: district_id, candidate_id cannot be empty")
     
-    gen_candidate_request = grpc_construct_gen_candidate_request(district_id, candidate_id)
+    gen_candidate_request = grpc_construct_gen_candidate_request(candidate_id)
 
     try:
         print("-------------- GenerateCandidateKeys --------------")
@@ -105,8 +107,9 @@ def grpc_generate_candidate_keys_run(district_id, candidate_id):
         print("Gen Candidate Request: ", gen_candidate_request)
         print("Gen Candidate Response: ", gen_candidate_response)
 
-        if gen_candidate_response.district_id != gen_candidate_request.district_id or gen_candidate_response.candidate_id != gen_candidate_request.candidate_id:
-            raise ValueError("Instance variable error: district_id, candidate_id not matching in grpc_generate_candidate_keys_run")
+        if gen_candidate_response.candidate_id != gen_candidate_request.candidate_id:
+            print(gen_candidate_response.candidate_id, gen_candidate_request.candidate_id)
+            raise grpc.RpcError("Input output mismatch: candidate_id not matching in grpc_generate_candidate_keys_run")
 
     except grpc.RpcError as e:
         raise GrpcError(f"Grpc error: {e.details()}")
@@ -119,6 +122,8 @@ def grpc_calculate_total_vote_run(district_ids):
     
     calculate_total_vote_request = grpc_construct_calculate_total_vote_request(district_ids)
 
+    print('calculate_total_vote_request', calculate_total_vote_request)
+
     try:
         print("-------------- CalculateTotalVote --------------")
         calculate_total_vote_response = stub.Calculate_Total_Vote(calculate_total_vote_request)
@@ -127,11 +132,11 @@ def grpc_calculate_total_vote_run(district_ids):
         print("Calculate Total Vote Response: ", calculate_total_vote_response)
 
         if len(calculate_total_vote_response.district_ids) != len(calculate_total_vote_request.district_ids):
-            raise ValueError("Instance variable error: district_ids not matching in grpc_calculate_total_vote_run")
+            raise grpc.RpcError("Input output mismatch: district_ids not matching in grpc_calculate_total_vote_run")
 
         for id in calculate_total_vote_response.district_ids:
             if id not in calculate_total_vote_request.district_ids:
-                raise ValueError("Instance variable error: district_ids not matching in grpc_calculate_total_vote_run")
+                raise grpc.RpcError("Input output mismatch: district_ids not matching in grpc_calculate_total_vote_run")
 
     except grpc.RpcError as e:
         raise GrpcError(f"Grpc error: {e.details()}")
@@ -142,11 +147,3 @@ def grpc_calculate_total_vote_run(district_ids):
 
 if __name__ == "__main__":
     logging.basicConfig()
-
-    try :
-        # grpc_compute_vote_run(district_id=1, candidate_id=1, voter_id=1)
-        grpc_generate_user_and_votingcurr_run(district_id=1, voter_num=10)
-        grpc_generate_candidate_keys_run(district_id=1, candidate_id=199)
-    except Exception as e:
-        print(e)
-        print("Error in grpc client test run")

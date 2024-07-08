@@ -1,0 +1,28 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="{% static 'test.css' %}">
+</head>
+<body>
+    <div class="wrapper">
+        <div class="sidebar">
+            <div class="logo">Logo</div>
+            <ul>
+                <li><a href="" onclick="loadPage('dashboard')" class="active">Dashboard</a></li>
+                <li><a href="#" onclick="loadPage('users')" id="user-link">Users</a></li>
+                <li><a href="#" onclick="loadPage('settings')">Settings</a></li>
+            </ul>
+        </div>
+        <div id="main-content" class="main-content">
+            <h1>Welcome, Admin!</h1>
+        </div>
+        
+    </div>
+    <script src="{% static 'test.js' %}"></script>
+</body>
+</html>

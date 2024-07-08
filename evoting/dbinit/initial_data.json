@@ -1,0 +1,97 @@
+[
+    {
+        "model": "myapp.district",
+        "pk": 1,
+        "fields": {
+            "district_name": "Clementi"
+        }
+    },
+    {
+        "model": "myapp.district",
+        "pk": 2,
+        "fields": {
+            "district_name": "Jurong East"
+        }
+    },
+    {
+        "model": "myapp.profile",
+        "pk": 1,
+        "fields": {
+            "profile_name": "Candidate",
+            "description": "Candidate for general election"
+        }
+    },
+    {
+        "model": "myapp.profile",
+        "pk": 2,
+        "fields": {
+            "profile_name": "Admin",
+            "description": "Admin for the election system"
+        }
+    },
+    {
+        "model": "myapp.party",
+        "pk": 1,
+        "fields": {
+            "party_name": "PAP",
+            "description": "PAP is a political party in Singapore."
+        }
+    },
+    {
+        "model": "myapp.party",
+        "pk": 2,
+        "fields": {
+            "party_name": "DAP",
+            "description": "DAP is a political party in Singapore."
+        }
+    },
+    {
+        "model": "myapp.useraccount",
+        "pk": 2,
+        "fields": {
+            "username": "candidate1",
+            "full_name": "Jane Smith",
+            "date_of_birth": "1985-05-15",
+            "password": "pbkdf2_sha256$600000$noJ7TTLVlQpeFDueDBXI8z$uypWGtc2mN0i6I5fT/vAIu40bhIZ8sQYmMpOdtpvZSI=",  
+            "party": 1,
+            "district": 1,
+            "role": 1
+        }
+    },
+    {
+        "model": "myapp.candidateprofile",
+        "pk": 2,
+        "fields": {
+            "election_poster": "",
+            "profile_picture": "images/candidate1.jpg",
+            "candidate_statement": "I promise to serve you well."
+        }
+    },
+    {
+        "model": "myapp.announcement",
+        "pk": 1,
+        "fields": {
+            "header": "Election Starts",
+            "content": "The election has officially started.",
+            "date": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "myapp.announcement",
+        "pk": 2,
+        "fields": {
+            "header": "Cooling Day",
+            "content": "Cooling Day has officially started.",
+            "date": "2024-01-01T00:00:00Z"
+        }
+    },
+    {
+        "model": "myapp.announcement",
+        "pk": 3,
+        "fields": {
+            "header": "Polling Starts",
+            "content": "The polling has officially started.",
+            "date": "2024-01-01T00:00:00Z"
+        }
+    }
+]

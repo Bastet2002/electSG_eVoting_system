@@ -1,0 +1,62 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Website</title>
+    <link rel="stylesheet" href="{% static 'css/login.css' %}">
+</head>
+<body>
+    <div class="header">
+        <div class="logo-container">
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+        </div>
+        <nav>
+            <ul class="navigation">
+                <li><a href="{% url 'general_user_home' %}">Home</a></li>
+                <li><a href="#">About us</a></li>
+                <li><a href="#">Services</a></li>
+                <li><a href="#">Contact</a></li>
+            </ul>
+        </nav>
+    </div>
+    
+    <div class="main-content">
+        <div class="login-container">
+            <h2>Login</h2>
+            <div class="singpass-login">
+                <button type="button" onclick="window.location.href='/singpass_login'">Login with Singpass</button>
+            </div>
+            <p class="or-text">Or</p>
+            <form method="POST" action="{% url 'login' %}">
+                {% csrf_token %}
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <button type="submit">Login</button>
+                <a href="/change_password">Change password</a>
+            </form>
+        </div>
+    </div>
+
+    <footer>
+        <div class="logo-container">
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+        </div>
+        <div class="contact-support-container">
+            <div class="contact-info">
+                <h3>Contact Us</h3>
+                <p>Email: info@example.com</p>
+                <p>Phone: +1234567890</p>
+            </div>
+            <div class="support-info">
+                <h3>Support</h3>
+                <p>Email: support@example.com</p>
+                <p>Phone: +1234567890</p>
+            </div>
+        </div>
+    </footer>
+</body>
+</html>

@@ -28,6 +28,8 @@ void insertAtIndex(vector<T> &v, int index, const T &t)
     }
 }
 
+void hex_to_bytearray(BYTE *output, const string &input);
+
 // Could change to something else, take note to change the length as well, and copy output to H_point
 #define H_String \
     ((const BYTE \
@@ -58,6 +60,30 @@ struct User
         crypto_sign_keypair(pkV, skV);
         crypto_sign_keypair(pkS, skS);
     }
+
+    // for voter from db
+    User(string r_pkV, string r_skV, string r_pkS, string r_skS)
+    {
+        sodium_memzero(skV, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkV, crypto_sign_PUBLICKEYBYTES);
+        sodium_memzero(skS, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkS, crypto_sign_PUBLICKEYBYTES);
+        hex_to_bytearray(this->pkV, r_pkV);
+        hex_to_bytearray(this->skV, r_skV);
+        hex_to_bytearray(this->pkS, r_pkS);
+        hex_to_bytearray(this->skS, r_skS);
+    }
+
+    // for candidate from db
+    User(string r_pkV, string r_pkS)
+    {
+        sodium_memzero(skV, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkV, crypto_sign_PUBLICKEYBYTES);
+        sodium_memzero(skS, crypto_sign_SECRETKEYBYTES);
+        sodium_memzero(pkS, crypto_sign_PUBLICKEYBYTES);
+        hex_to_bytearray(this->pkV, r_pkV);
+        hex_to_bytearray(this->pkS, r_pkS);
+    }
 };
 
 struct StealthAddress
@@ -75,6 +101,17 @@ struct StealthAddress
         sodium_memzero(sk, crypto_core_ed25519_SCALARBYTES);
         sodium_memzero(r, crypto_core_ed25519_SCALARBYTES);
     }
+
+    StealthAddress(const string &r_pk, const string &r_rG)
+    {
+        sodium_memzero(pk, crypto_core_ed25519_BYTES);
+        sodium_memzero(rG, crypto_core_ed25519_BYTES);
+        sodium_memzero(sk, crypto_core_ed25519_SCALARBYTES);
+        sodium_memzero(r, crypto_core_ed25519_SCALARBYTES);
+        hex_to_bytearray(this->pk, r_pk);
+        hex_to_bytearray(this->rG, r_rG);
+    }
+
     void set_stealth_address(const BYTE *scanned_stealth_address)
     {
         memcpy(sk, scanned_stealth_address, crypto_core_ed25519_BYTES);
@@ -104,8 +141,9 @@ struct blsagSig
     blsagSig()
     {
         sodium_memzero(c, 32);
-        r.resize(0);
+        sodium_memzero(m, 32);
         sodium_memzero(key_image, 32);
+        r.resize(0);
     }
 };
 
@@ -116,7 +154,7 @@ struct Commitment{
 
     vector<array<BYTE,32>> pseudoouts_blindingfactor_masks;
     vector<array<BYTE,32>> outputs_blindingfactor_masks;
-    vector<array<BYTE,32>> amount_masks;
+    vector<array<BYTE,8>> amount_masks;
 
     Commitment(){
         pseudoouts_commitments.resize(0);
@@ -127,46 +165,5 @@ struct Commitment{
         amount_masks.resize(0);
     }
 };
-
-// things to store in db
-// struct VoteRecord{
-//     blsagSig blsagSig;
-//     Commitment commitment;
-//     BYTE m[32];
-//     VoteRecord(){
-//         sodium_memzero(m, 32);
-//     }
-// };
-
-
-// util functions
-void to_string(string &output, const BYTE *BYTE, const size_t n);
-void hex_to_bytearray(BYTE *output, const string &input);
-void compare_BYTE(const BYTE *a, const BYTE *b, const size_t n);
-void int_to_scalar_BYTE(BYTE *out, const long long input);
-void print_bytearray(const BYTE *key, const size_t n);
-void print_hex(const BYTE *key, const size_t n);
-
-// core functions
-void generate_H(BYTE *H);
-void hash_to_scalar(BYTE *scalar, const BYTE *key, const size_t key_size);
-void hash_to_point(BYTE *point, const BYTE *BYTE, const size_t key_size);
-void add_key(BYTE *aGbH, const BYTE *a, const BYTE *b, const BYTE *H);
-void add_key(BYTE *aKbH, const BYTE *a, const BYTE *K, const BYTE *b, const BYTE *H);
-void compute_stealth_address(StealthAddress &stealth_address, const User &receiver);
-void CA_generate_address(vector<StealthAddress> &address_list, const vector<User> &users);
-bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &receiver);
-void public_network_stealth_address_communication(vector<StealthAddress> &address_list, const vector<User> &users);
-void mix_address(vector<StealthAddress> &vec);
-int secret_index_gen(size_t n);
-void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA);
-void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy);
-bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m);
-
-void verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
-
-void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index);
-void generatePseudoBfs(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
-bool compareBlindingFactors(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
 
 #endif

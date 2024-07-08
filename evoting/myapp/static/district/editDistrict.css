@@ -1,0 +1,65 @@
+/* Set styles for the entire form */
+.edit-district-form {
+    margin: 0 auto; /* Center the form horizontally */
+    width: 60%; /* Adjust form width as needed */
+    padding: 20px; /* Add padding for spacing */
+    background-color: #f9f9f9; /* Light background color */
+    border-radius: 8px; /* Rounded corners */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    margin-top: 80px; /* Ensure space from the fixed header */
+}
+
+/* Set styles for form labels */
+.edit-district-form label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: inline-block; /* Display labels inline */
+    width: 30%; /* Adjust label width */
+    text-align: right; /* Align label text to the right */
+    margin-right: 20px; /* Add space between label and input */
+}
+
+/* Set styles for text and textarea input fields */
+.edit-district-form input[type="text"],
+.edit-district-form textarea {
+    border: 1px solid #ccc;
+    padding: 5px;
+    width: calc(70% - 60px); /* Adjust input width */
+    display: inline-block; /* Display inputs inline */
+}
+
+/* Set styles for the submit button */
+.edit-district-form button {
+    background-color: #d76359; /* Change button color */
+    color: #fff; /* Set button text color */
+    padding: 10px 20px; /* Adjust button padding */
+    border: none; /* Remove button border */
+    border-radius: 5px; /* Add border radius */
+    cursor: pointer; /* Change cursor to pointer on hover */
+    margin-top: 10px; /* Add space above the button */
+}
+
+/* Main content styles */
+.main {
+    margin-left: 240px; /* Adjusted to accommodate the sidebar */
+    padding: 20px;
+    padding-top: 100px; /* Ensure there's space for the fixed header */
+}
+
+.popup-alert {
+  position: fixed;
+  top: 70px; /* Adjust to be below the header */
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px 30px;
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  z-index: 1000;
+  display: none;
+}
+
+.popup-alert.show {
+  display: block;
+}

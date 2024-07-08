@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.10)
 
 project(RingCTServer C CXX)
 
 include(./common.cmake)
+
+# libpqxx 7 requires at least C++17
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF) # ensure code adheres to the C++17 standard without non-standard extensions
 
 # for libsodium
 find_library(sodium_library NAMES sodium)
@@ -16,6 +21,33 @@ else()
 endif()
 
 include_directories(${sodium_include_dir})
+
+# for git repo download on the /libpqxx
+add_subdirectory(/libpqxx build-pqxx)
+target_link_libraries(pqxx)
+
+# fmt using fetch to avoid long rebuilding time in docker
+include(FetchContent)
+
+FetchContent_Declare(
+    fmt
+    GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+    GIT_TAG 10.2.1 
+)
+FetchContent_MakeAvailable(fmt)
+
+# include nlohmann/json for json parsing
+FetchContent_Declare(json URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz)
+FetchContent_MakeAvailable(json)
+
+# catch 2 for cpp unit, integration test
+FetchContent_Declare(
+  Catch2
+  GIT_REPOSITORY https://github.com/catchorg/Catch2.git
+  GIT_TAG        v3.4.0 # or a later release
+)
+FetchContent_MakeAvailable(Catch2)
+
 
 # proto file
 get_filename_component(rct_proto "./proto/ringct.proto" ABSOLUTE)
@@ -55,14 +87,34 @@ target_link_libraries(rct_grpc_proto
 # 
 add_executable(rct_server
     "src/rct_server.cc"
-    "src/vote.cc"
     "util/db_util.cc"
+    "util/custom_exception.cc"
     "src/core.cc"
-    "rct/lsag.cpp")
+    "rct/rctOps.cpp"
+    "rct/commitment.cpp")
 
 target_link_libraries(rct_server
     rct_grpc_proto
     ${_REFLECTION}
     ${_GRPC_GRPCPP}
-    ${_PROTOBUF_LIBPROTOBUF}
-    sodium)
+    sodium
+    fmt::fmt
+    nlohmann_json::nlohmann_json
+    Catch2::Catch2WithMain
+    pqxx)
+
+add_executable(test_rct
+    "util/custom_exception.cc"
+    "rct/rctOps.cpp"
+    "rct/commitment.cpp"
+    "test/test_hash.cpp"
+    "test/test_util.cc"
+    "test/test_compute_stealth_address.cpp"
+    "test/test_add_keys.cpp")
+
+target_link_libraries(test_rct
+    sodium
+    fmt::fmt
+    nlohmann_json::nlohmann_json
+    Catch2::Catch2WithMain
+    )

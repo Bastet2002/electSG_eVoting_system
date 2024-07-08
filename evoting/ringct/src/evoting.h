@@ -4,7 +4,6 @@
 
 struct Vote
 {
-    int32_t district_id;
     int32_t candidate_id;
     int32_t voter_id;
     string key_image;
@@ -19,7 +18,6 @@ struct Gen_VoterCurr{
 
 struct Gen_Candidate{
     int32_t candidate_id;
-    int32_t district_id;
     string test_output; // TODO temporary for testing
 };
 

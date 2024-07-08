@@ -1,0 +1,38 @@
+{% extends "Voter/header.html" %}
+{% load static %}
+
+{% block title %}View All Announcements{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'adminDashboard/home.css' %}"> 
+<style>
+    body{
+        background: url('/static/images/image.jpeg');
+        background-size: 1440px; /* Ensures the image covers the entire background */
+        background-position: center; /* Centers the image */
+        background-repeat: no-repeat; /* Prevents the image from repeating */
+        background-attachment: fixed; /* Makes the background image fixed */
+    }
+
+    h2{
+        color:white;
+    }
+    
+
+    
+</style>
+<div class="container_general">
+    {% if announcements %}
+    <h2>All Announcements</h2>
+    {% for announcement in announcements %}
+    <div class="announcement-box">
+        <h3>{{ announcement.header }}</h3>
+        <p>{{ announcement.content }}</p>
+        <p><strong>Date:</strong> {{ announcement.date }}</p> 
+    </div>
+    {% endfor %}
+    {% else %}
+    <p style="text-align: center;">No announcements found.</p>
+    {% endif %}
+</div>
+{% endblock %}

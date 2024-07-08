@@ -38,43 +38,35 @@ class Gen_VoterCurr_Response(_message.Message):
     def __init__(self, district_id: _Optional[int] = ..., voter_num: _Optional[int] = ..., test_output: _Optional[str] = ...) -> None: ...
 
 class Gen_Candidate_Request(_message.Message):
-    __slots__ = ("district_id", "candidate_id")
-    DISTRICT_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("candidate_id",)
     CANDIDATE_ID_FIELD_NUMBER: _ClassVar[int]
-    district_id: int
     candidate_id: int
-    def __init__(self, district_id: _Optional[int] = ..., candidate_id: _Optional[int] = ...) -> None: ...
+    def __init__(self, candidate_id: _Optional[int] = ...) -> None: ...
 
 class Gen_Candidate_Response(_message.Message):
-    __slots__ = ("district_id", "candidate_id", "test_output")
-    DISTRICT_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("candidate_id", "test_output")
     CANDIDATE_ID_FIELD_NUMBER: _ClassVar[int]
     TEST_OUTPUT_FIELD_NUMBER: _ClassVar[int]
-    district_id: int
     candidate_id: int
     test_output: str
-    def __init__(self, district_id: _Optional[int] = ..., candidate_id: _Optional[int] = ..., test_output: _Optional[str] = ...) -> None: ...
+    def __init__(self, candidate_id: _Optional[int] = ..., test_output: _Optional[str] = ...) -> None: ...
 
 class Vote_Request(_message.Message):
-    __slots__ = ("district_id", "candidate_id", "voter_id")
-    DISTRICT_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("candidate_id", "voter_id")
     CANDIDATE_ID_FIELD_NUMBER: _ClassVar[int]
     VOTER_ID_FIELD_NUMBER: _ClassVar[int]
-    district_id: int
     candidate_id: int
     voter_id: int
-    def __init__(self, district_id: _Optional[int] = ..., candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ...) -> None: ...
+    def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ...) -> None: ...
 
 class Vote_Response(_message.Message):
-    __slots__ = ("district_id", "candidate_id", "voter_id", "key_image", "test_output")
-    DISTRICT_ID_FIELD_NUMBER: _ClassVar[int]
+    __slots__ = ("candidate_id", "voter_id", "key_image", "test_output")
     CANDIDATE_ID_FIELD_NUMBER: _ClassVar[int]
     VOTER_ID_FIELD_NUMBER: _ClassVar[int]
     KEY_IMAGE_FIELD_NUMBER: _ClassVar[int]
     TEST_OUTPUT_FIELD_NUMBER: _ClassVar[int]
-    district_id: int
     candidate_id: int
     voter_id: int
     key_image: str
     test_output: str
-    def __init__(self, district_id: _Optional[int] = ..., candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ..., key_image: _Optional[str] = ..., test_output: _Optional[str] = ...) -> None: ...
+    def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ..., key_image: _Optional[str] = ..., test_output: _Optional[str] = ...) -> None: ...

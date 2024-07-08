@@ -1,0 +1,68 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}View User Profiles{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
+
+<div class="main">
+    <h1 style="text-align: center;">User Profiles</h1>
+    <div class="table-container">
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Profile Name</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for profile in profiles %}
+                    <tr>
+                        <td>{{ profile.profile_name }}</td>
+                        <td>
+                            {% if profile.profile_name not in disable_edit_list %}
+                                <a href="{% url 'edit_profile' profile.profile_id %}" class="btn btn-primary">Update</a>
+                                <form method="post" action="{% url 'delete_profile' profile.profile_id %}" style="display:inline;" onsubmit="return confirmDelete()">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-danger" {% if disable_deletion %}disabled{% endif %}>Delete</button>
+                                </form>
+                            {% else %}
+                                <span>Permanent Profile</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3">No profiles found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+{% endif %}
+<script>
+    function confirmDelete() {
+        return confirm('Are you sure you want to delete this profile?');
+    }
+</script>
+{% endblock %}

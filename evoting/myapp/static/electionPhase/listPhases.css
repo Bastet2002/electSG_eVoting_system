@@ -1,0 +1,60 @@
+/* static/css/electionPhases.css */
+body, html {
+    height: 100%;
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.main {
+    margin-left: 240px; /* Adjusted to accommodate the sidebar */
+    padding: 20px;
+    padding-top: 100px; /* Ensure there's space for the fixed header */
+}
+.container {
+    position: relative;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100%;
+}
+h1 {
+    margin-bottom: 20px;
+}
+table {
+    width: 50%; /* Adjust table width as needed */
+    border-collapse: collapse;
+}
+th, td {
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
+}
+th {
+    background-color: #f2f2f2;
+}
+.center-table {
+    margin: 0 auto; /* Center the table horizontally */
+}
+
+.main a {
+    padding: 5px 10px;
+    margin-left: 10px;
+    cursor: pointer;
+    background-color: #e0624f;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+
+}
+
+/* Add styles for the phase statuses */
+.status-active {
+    background-color: rgb(131, 206, 131);
+    font-weight: bold;
+}
+
+.status-inactive {
+    background-color: rgb(179, 182, 179);
+    color: black; /* Default color */
+}

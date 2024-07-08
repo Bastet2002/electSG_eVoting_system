@@ -1,0 +1,146 @@
+body {
+  font-family: "Lato", sans-serif;
+  
+}
+
+/* Header styles */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  width: 100%;
+  top: 0;
+  z-index: 2;
+}
+
+.logo-container img {
+  height: 60px;
+}
+
+.navigation {
+  display: flex;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.navigation li {
+  margin-right: 3rem;
+}
+
+.navigation a {
+  text-decoration: none;
+  color: black;
+  font-weight: bold;
+  transition: color 0.3s ease;
+  padding: 8px 12px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.navigation a:hover {
+  background-color: #575757;
+  color: #f1f1f1;
+}
+
+/* Sidebar styles */
+.sidenav {
+  margin-top: 90px;
+  height: 100%;
+  width: 220px;
+  position: fixed;
+  z-index: 1;
+  left: 0;
+  background-color: #c53e3e;
+  overflow-x: hidden;
+  padding-top: 20px;
+ 
+  top: 0;
+}
+
+.sidenav h1 {
+  text-align: center;
+  margin-top: 1px;
+}
+
+.sidenav a, .dropdown-btn {
+  padding: 15px;
+  text-decoration: none;
+  font-size: 15px;
+  color: #ffffff;
+  display: block;
+  text-align: left;
+  background: none;
+  width: 100%;
+  cursor: pointer;
+  outline: none;
+  border-bottom: 1px solid rgb(14, 14, 14);
+  font-weight: bold;
+  border: none; /* Remove any borders */
+  background-color: transparent; /* Ensure background is transparent */
+  margin: 0; /* Reset margins */
+}
+
+.sidenav a:hover, .dropdown-btn:hover {
+  color: #060303;
+}
+
+.dropdown-container {
+  display: none;
+  background-color: #a66f6f;
+  padding-left: 16px;
+}
+
+.fa-caret-down {
+  float: right;
+  padding-right: 8px;
+}
+
+/* Main content styles */
+.content {
+  margin-left: 240px;
+  padding: 20px;
+  padding-top: 80px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .header {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+
+  .navigation {
+      flex-direction: column;
+      align-items: flex-start;
+      width: 100%;
+  }
+
+  .navigation li {
+      margin-right: 0;
+      width: 100%;
+  }
+
+  .navigation a {
+      width: 100%;
+      text-align: left;
+  }
+
+  .sidenav {
+      width: 100%;
+      height: auto;
+      position: relative;
+  }
+
+  .sidenav .dropdown-container {
+      padding-left: 0;
+  }
+
+  .content {
+      margin-left: 0;
+  }
+}

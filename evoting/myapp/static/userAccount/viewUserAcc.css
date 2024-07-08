@@ -1,0 +1,102 @@
+/* Static/userAccount/viewUserAcc.css */
+.main {
+    margin-left: 240px; /* Adjusted to accommodate the sidebar */
+    padding: 20px;
+    padding-top: 100px; /* Ensure there's space for the fixed header */
+}
+
+.table-container {
+    width: 80%;
+    margin: 20px auto;
+    overflow-x: auto; /* Add horizontal scrollbar */
+}
+
+.search-bar {
+    display: flex;
+    align-items: center;
+}
+
+#search {
+    width: 50%; /* Adjusted width */
+    padding: 10px 20px;
+    margin-bottom: 10px;
+    box-sizing: border-box;
+}
+
+#search-btn {
+    padding: 10px 20px;
+    margin-left: 10px;
+    margin-bottom: 10px;
+    cursor: pointer;
+    background-color: #e0624f;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+}
+
+.table-wrapper {
+    overflow-y: auto; /* Add vertical scrollbar */
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+}
+
+th {
+    background-color: #f2f2f2;
+    text-align: left;
+}
+
+.btn,
+.btn.btn-primary {
+    display: inline-block;
+    padding: 8px 12px;
+    background-color: #e0624f;
+    color: #fff;
+    font-size: 14px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: background-color 0.3s;
+    height: 20px; /* Set a fixed height for consistency */
+    line-height: 20px; /* Adjust line height for vertical alignment */
+}
+
+.btn.btn-primary {
+    text-decoration: none; /* Ensure consistency with anchor tag */
+}
+
+/* Adjust button height to match anchor tag */
+.btn.btn-danger {
+    height: auto;
+}
+
+.btn:hover {
+    background-color: #0056b3;
+}
+
+  /* Popup Alert styles */
+  .popup-alert {
+    position: fixed;
+    top: 70px; /* Adjust to be below the header */
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #4CAF50;
+    color: white;
+    padding: 15px 30px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    display: none;
+  }
+  
+  .popup-alert.show {
+    display: block;
+  }

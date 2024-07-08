@@ -1,0 +1,17 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}Edit Party{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'district/editDistrict.css' %}">
+    
+    <div class="main">
+        <h1 style="text-align: center;">Edit Party</h1>
+        <form method="post" class="edit-district-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" name="save-changes">Save changes</button>
+        </form>
+    </div>
+{% endblock %}

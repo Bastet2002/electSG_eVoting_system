@@ -1,0 +1,35 @@
+{% extends 'adminDashboard/base.html' %}
+{% load static %}
+
+{% block title %}Create User Profile{% endblock %}
+
+{% block content %}
+    <link rel="stylesheet" href="{% static 'userProfile/createUserProfile.css' %}">
+    
+    <div class="main">
+        <h1 style="text-align: center;">Create User Profile</h1>
+        <form method="post" action="/create_profile/" class="create-profile-form">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" name="create_profile">Create</button>
+        </form>
+    </div>
+
+    {% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+        
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+    {% endif %}
+{% endblock %}
