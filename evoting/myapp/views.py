@@ -10,9 +10,9 @@ from django.contrib.messages import get_messages
 from django.db.models import Q
 from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter
-# from evoting.pygrpc.ringct_client import grpc_generate_user_and_votingcurr_run, grpc_compute_vote_run, grpc_generate_candidate_keys_run, grpc_calculate_total_vote_run 
-from django.contrib.auth.hashers import check_password # for temp voter
-from .auth_backends import SingpassBackend
+from django.contrib.auth.hashers import check_password
+from .decorators import flexible_access
+from django.core.exceptions import ValidationError
 
 from pygrpc.ringct_client import (
     grpc_generate_user_and_votingcurr_run,
@@ -24,7 +24,7 @@ from pygrpc.ringct_client import (
     GrpcError,
 )
 
-
+@flexible_access('public')
 def user_login(request):
     if request.method == 'POST':
         username = request.POST['username']
@@ -37,11 +37,11 @@ def user_login(request):
                 return redirect('admin_home')
             elif user.role.profile_name == 'Candidate':
                 return redirect('candidate_home')
-            return render(request, 'login.html', {'error': 'Invalid username or password.'})
-    else:
-        return render(request, 'login.html')
+        else:
+            messages.error(request, "Invalid username or password.")
+ 
+    return render(request, 'login.html')
 
-@login_required
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.POST)
@@ -61,8 +61,8 @@ def change_password(request):
         form = PasswordChangeForm()
 
     return render(request, 'changePassword.html', {'form': form})
-    
-@login_required
+
+@flexible_access('admin', 'candidate', 'voter')
 def user_logout(request):
     if request.method == 'GET':
         user_sessions = Session.objects.filter(session_key=request.session.session_key)
@@ -74,18 +74,17 @@ def user_logout(request):
 def index(response):
     return HttpResponse("<h1>Hello World!</h1>")
 
-
 def base(response):
     return render(response, "adminDashboard/base.html", {})
 
-
+@flexible_access('admin')
 def admin_home(request):
     active_phase = ElectionPhase.objects.filter(is_active=True).first()
     announcements = Announcement.objects.all().order_by('-date')  # Order by date in descending order
     return render(request, 'adminDashboard/home.html', {'active_phase': active_phase, 'announcements': announcements})
 
-
 # ---------------------------------------UserAccount views------------------------------------------------
+@flexible_access('admin')
 def create_account(request):
     if request.method == 'POST':
         form = CreateNewUser(request.POST)
@@ -122,16 +121,16 @@ def create_account(request):
 
     return render(request, 'userAccount/createUserAcc.html', {'form': form})
 
-
+@flexible_access('admin')
 def view_accounts(request):
     query = request.GET.get('search', '')  # Retrieves the search keyword from the GET request
     if query:
         # Filter users where the search query matches any of the desired fields
         users = UserAccount.objects.filter(
-            Q(name__icontains=query) |
+            Q(full_name__icontains=query) |
             Q(username__icontains=query) |
-            Q(district__name__icontains=query) |
-            Q(party__party__icontains=query) |  # Assuming 'party' field references a related Party model
+            Q(district__district_name__icontains=query) |
+            Q(party__party_name__icontains=query) |  # Assuming 'party' field references a related Party model
             Q(role__profile_name__icontains=query) #### add this to search
         )
     else:
@@ -139,7 +138,7 @@ def view_accounts(request):
 
     return render(request, 'userAccount/viewUserAcc.html', {'users': users})
 
-
+@flexible_access('admin')
 def edit_account(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
@@ -155,7 +154,7 @@ def edit_account(request, user_id):
         form = EditUser(instance=user)
     return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase, 'user': user})
 
-
+@flexible_access('admin')
 def delete_account(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
     if request.method == 'POST':
@@ -164,6 +163,7 @@ def delete_account(request, user_id):
     return HttpResponse(status=405)
 
 # ---------------------------------------Election phase views------------------------------------------------
+@flexible_access('admin')
 def activate_election_phase(request, phase_id):
     ElectionPhase.objects.update(is_active=False)  # Set all phases to inactive
     phase = ElectionPhase.objects.get(pk=phase_id)
@@ -171,19 +171,19 @@ def activate_election_phase(request, phase_id):
     phase.save()
     return redirect('list_election_phases')
 
-
+@flexible_access('admin')
 def list_election_phases(request):
     phases = ElectionPhase.objects.all()
     return render(request, 'electionPhase/listPhases.html', {'phases': phases})
 
-
 # ---------------------------------------District views-----------------------------------------------------
+@flexible_access('admin')
 def create_district(request):
     if request.method == 'POST':
         form = CreateDistrict(request.POST)
         if form.is_valid():
             district_names = form.cleaned_data['district_names']
-            district_list = [name.strip() for name in district_names.split(';') if name.strip()]
+            district_list = [name.strip().upper() for name in district_names.split(';') if name.strip()]
 
             for name in district_list:
                 district, created = District.objects.get_or_create(district_name=name)
@@ -208,11 +208,12 @@ def create_district(request):
 
     return render(request, 'district/createDistrict.html', {'form': form})
 
+@flexible_access('public', 'admin')
 def view_district(request):
     query = request.GET.get('search', '')
     if query:
         # Filter districts where the search query matches the name field
-        district = District.objects.filter(district_name__icontains=query)
+        districts = District.objects.filter(district_name__icontains=query)
     else:
         districts = District.objects.all()
     
@@ -225,7 +226,7 @@ def view_district(request):
 
     return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
 
-
+@flexible_access('admin')
 def edit_district(request, district_id):
     district = get_object_or_404(District, pk=district_id)
     if request.method == 'POST':
@@ -241,7 +242,7 @@ def edit_district(request, district_id):
 
     return render(request, 'district/editDistrict.html', {'form': form, 'district': district})
 
-
+@flexible_access('admin')
 def delete_district(request, district_id):
     district = get_object_or_404(District, pk=district_id)
     if request.method == 'POST':
@@ -252,8 +253,8 @@ def delete_district(request, district_id):
         messages.error(request, 'Error deleting district.')
         return redirect('view_district')
 
-
 # ---------------------------------------Profile view-----------------------------------------------------
+@flexible_access('admin')
 def create_profile(request):
     if request.method == 'POST':
         form = CreateProfileForm(request.POST)
@@ -267,6 +268,7 @@ def create_profile(request):
         form = CreateProfileForm()
     return render(request, 'userProfile/createProfile.html', {'form': form})
 
+@flexible_access('admin')
 def view_profiles(request):
     profiles = Profile.objects.all()
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
@@ -275,6 +277,7 @@ def view_profiles(request):
 
     return render(request, 'userProfile/viewProfiles.html', {'profiles': profiles, 'disable_deletion': disable_deletion, "disable_edit_list": not_allow})
 
+@flexible_access('admin')
 def edit_profile(request, profile_id):
     profile = get_object_or_404(Profile, pk=profile_id)
     if request.method == 'POST':
@@ -289,6 +292,7 @@ def edit_profile(request, profile_id):
         form = CreateProfileForm(instance=profile)
     return render(request, 'userProfile/editProfile.html', {'form': form, 'profile': profile})
 
+@flexible_access('admin')
 def delete_profile(request, profile_id):
     profile = get_object_or_404(Profile, pk=profile_id)
     if request.method == 'POST':
@@ -299,8 +303,8 @@ def delete_profile(request, profile_id):
         messages.error(request, 'Error deleting profile.')
         return redirect('view_profiles')
 
-
 # ---------------------------------------Announcement views------------------------------------------------
+@flexible_access('admin')
 def create_announcement(request):
     if request.method == 'POST':
         form = CreateAnnouncement(request.POST)
@@ -312,7 +316,7 @@ def create_announcement(request):
         form = CreateAnnouncement()
     return render(request, 'announcement/createAnnouncement.html', {'form': form})
 
-
+@flexible_access('public', 'admin')
 def view_announcement(request):
     announcements = Announcement.objects.all()
     if not request.user.is_authenticated:
@@ -320,12 +324,12 @@ def view_announcement(request):
     else:
         return render(request, 'announcement/viewAnnouncement.html', {'announcements': announcements})
 
-
+@flexible_access('admin')
 def view_announcement_detail(request, announcement_id):
     announcement = get_object_or_404(Announcement, pk=announcement_id)
     return render(request, 'announcement/viewAnnouncementDetail.html', {'announcement': announcement})
 
-
+@flexible_access('admin')
 def edit_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, pk=announcement_id)
     if request.method == 'POST':
@@ -338,7 +342,7 @@ def edit_announcement(request, announcement_id):
         form = CreateAnnouncement(instance=announcement)
     return render(request, 'announcement/editAnnouncement.html', {'form': form, 'announcement': announcement})
 
-
+@flexible_access('admin')
 def delete_announcement(request, announcement_id):
     announcement = get_object_or_404(Announcement, pk=announcement_id)
     if request.method == 'POST':
@@ -349,8 +353,8 @@ def delete_announcement(request, announcement_id):
         messages.error(request, 'Error deleting announcement.')
         return redirect('view_announcement')
 
-
 # ---------------------------------------Party views------------------------------------------------
+@flexible_access('admin')
 def create_party(request):
     if request.method == 'POST':
         form = CreateParty(request.POST)
@@ -364,12 +368,12 @@ def create_party(request):
         form = CreateParty()
     return render(request, 'party/createParty.html', {'form': form})
 
-
+@flexible_access('admin')
 def view_party(request):
     parties = Party.objects.all()
     return render(request, 'party/viewParty.html', {'parties': parties})
 
-
+@flexible_access('admin')
 def edit_party(request, party_id):
     party = get_object_or_404(Party, pk=party_id)
     if request.method == 'POST':
@@ -384,7 +388,7 @@ def edit_party(request, party_id):
         form = CreateParty(instance=party)
     return render(request, 'party/editParty.html', {'form': form})
 
-
+@flexible_access('admin')
 def delete_party(request, party_id):
     party = get_object_or_404(Party, pk=party_id)
     if request.method == 'POST':
@@ -396,6 +400,7 @@ def delete_party(request, party_id):
         return redirect('view_party')
 
 # ---------------------------------------Voter views------------------------------------------------
+@flexible_access('public')
 def singpass_login(request):
     if request.method == 'POST':
         # auth_backend = SingpassBackend()
@@ -411,6 +416,7 @@ def singpass_login(request):
     else:
         return render(request, 'singpassLogin.html')
 
+@flexible_access('voter')
 def voter_home(request):
     if isinstance(request.user, Voter):
         voter = request.user
@@ -433,6 +439,7 @@ def voter_home(request):
         #'voting_status':...
     })
 
+@flexible_access('voter')
 def ballot_paper(request):
     list(messages.get_messages(request))
     if not isinstance(request.user, Voter):
@@ -448,7 +455,6 @@ def ballot_paper(request):
 
     candidates = CandidateProfile.objects.filter(candidate__district_id=district_id).select_related('candidate', 'candidate__party')
     
-    
     # Also ensure session messages are cleared
     if 'messages' in request.session:
         del request.session['messages']
@@ -456,6 +462,7 @@ def ballot_paper(request):
 
     return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
+@flexible_access('voter')
 def cast_vote(request):
     if request.method == 'POST':
         selected_candidates = request.POST.getlist('candidate')
@@ -498,11 +505,11 @@ def cast_vote(request):
         candidates = CandidateProfile.objects.select_related('candidate', 'candidate__party').all()
         return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
-
 # ---------------------------------------Candidate views------------------------------------------------
 
 from .forms import ElectionPosterForm, ProfilePictureForm, CandidateStatementForm
 
+@flexible_access('public', 'voter', 'candidate')
 def candidate_home(request, candidate_id=None):
     candidate_profile = None
     if candidate_id:
@@ -525,44 +532,98 @@ def candidate_home(request, candidate_id=None):
         'is_owner': is_owner
     })
 
+@flexible_access('candidate')
 def upload_election_poster(request):
     if request.method == 'POST':
         form = ElectionPosterForm(request.POST, request.FILES)
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.election_poster = form.cleaned_data['election_poster']
-            candidate_profile.save()
-            return redirect('candidate_home')  # Redirect to candidate home page after successful upload
-    # else:
-    #     form = ElectionPosterForm()
-    # return render(request, 'upload_election_poster.html', {'form': form})
+            try:
+                candidate_profile.save()
+                messages.success(request, 'Election poster successfully uploaded.')
+            except ValidationError as e:
+                messages.error(request, "File size should not exceed the limit.")
+        else:
+            messages.error(request, "File size should not exceed the limit.")
 
+        return redirect('candidate_home')
+    
+@flexible_access('candidate')
+def delete_election_poster(request, candidate_id):
+    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+
+    if candidate_profile.election_poster:
+        candidate_profile.election_poster.delete(save=False)
+        candidate_profile.save()
+        messages.success(request, 'Election poster deleted successfully.')
+    else:
+        messages.error(request, 'No election poster to delete.')
+
+    return redirect('candidate_home')
+
+@flexible_access('candidate')
 def upload_profile_picture(request):
     if request.method == 'POST':
         form = ProfilePictureForm(request.POST, request.FILES)
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.profile_picture = form.cleaned_data['profile_picture']
-            candidate_profile.save()
-            return redirect('candidate_home')  # Redirect to candidate home page after successful upload
-    # else:
-    #     form = ProfilePictureForm()
-    # return render(request, 'upload_profile_picture.html', {'form': form})
+            try:
+                candidate_profile.save()
+                messages.success(request, 'Profile picture successfully uploaded.')
+            except ValidationError as e:
+                messages.error(request, "File size should not exceed the limit.")
+        else:
+            messages.error(request, "File size should not exceed the limit.")
+    
+        return redirect('candidate_home')
 
+@flexible_access('candidate')
+def delete_profile_picture(request, candidate_id):
+    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+
+    if candidate_profile.profile_picture:
+        candidate_profile.profile_picture.delete(save=False)
+        candidate_profile.save()
+        messages.success(request, 'Profile picture deleted successfully.')
+    else:
+        messages.error(request, 'No profile picture to delete.')
+
+    return redirect('candidate_home')
+
+@flexible_access('candidate')
 def upload_candidate_statement(request):
     if request.method == 'POST':
         form = CandidateStatementForm(request.POST)
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.candidate_statement = form.cleaned_data['candidate_statement']
-            candidate_profile.save()
-            return redirect('candidate_home')  # Redirect to candidate home page after successful upload
-    # else:
-    #     form = CandidateStatementForm()
-    # return render(request, 'upload_candidate_statement.html', {'form': form})
+            try:
+                candidate_profile.save()
+                messages.success(request, 'Candidate statement successfully updated.')
+            except ValidationError as e:
+                messages.error(request, "Invalid submission.")
+        else:
+            messages.error(request, "Invalid submission.")
+    
+        return redirect('candidate_home')
 
+@flexible_access('candidate')
+def delete_candidate_statement(request, candidate_id):
+    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+
+    if candidate_profile.candidate_statement:
+        candidate_profile.candidate_statement.delete(save=False)
+        candidate_profile.save()
+        messages.success(request, 'Candidate statement deleted successfully.')
+    else:
+        messages.error(request, 'No candidate statement to delete.')
+
+    return redirect('candidate_home')
 
 # ---------------------------------------Genereal user views------------------------------------------------
+@flexible_access('public')
 def general_user_home(request):
     announcements = Announcement.objects.all()[:2]  # only get latest 2 announcements
     districts = District.objects.all()
@@ -573,10 +634,7 @@ def general_user_home(request):
         'active_phase': active_phase,
     })
 
-# def view_all_districts(request):
-#     districts = District.objects.all()
-#     return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
-
+@flexible_access('public')
 def view_district_detail(request, district_id):
     district = get_object_or_404(District, pk=district_id)
     candidates = CandidateProfile.objects.filter(candidate__district=district)

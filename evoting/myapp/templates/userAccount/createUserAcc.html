@@ -5,7 +5,11 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'userAccount/createUserAcc.css' %}">
-
+<style>
+    .errorlist {
+        color: red;
+    }
+</style>
 <div class="main">
     <h1 style="text-align: center;">Create New User Account</h1>
     <form method="post" action="{% url 'create_account' %}" class="create-new-user-form">
