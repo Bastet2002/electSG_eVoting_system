@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth import get_user_model
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete
@@ -242,3 +243,16 @@ class Voter(models.Model):
     @property
     def is_authenticated(self):
         return True
+
+
+# WebAuthn register
+class WebauthnRegistration(models.Model):
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
+    challenge = models.CharField(max_length=9000, blank=True, null=True)
+
+# WebAuthn credentials
+class WebauthnCredentials(models.Model):
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="webauthn_credentials")
+    credential_id = models.CharField(max_length=9000, blank=True, null=True)
+    credential_public_key = models.CharField(max_length=9000, blank=True, null=True)
+    current_sign_count = models.IntegerField(default=0)

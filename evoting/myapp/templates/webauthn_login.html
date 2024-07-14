@@ -1,0 +1,36 @@
+<!-- templates/webauthn_login.html -->
+<!DOCTYPE html>
+<html>
+<head>
+    <title>WebAuthn Login</title>
+    <script>
+        async function login() {
+            const response = await fetch('/webauthn/login/options/');
+            const options = await response.json();
+            options.allowCredentials.forEach(cred => {
+                cred.id = Uint8Array.from(cred.id, c => c.charCodeAt(0));  // Convert credential_id to byte array
+            });
+            const assertion = await navigator.credentials.get({ publicKey: options });
+            const assertionData = {
+                id: assertion.id,
+                rawId: Array.from(new Uint8Array(assertion.rawId)),
+                type: assertion.type,
+                response: {
+                    authenticatorData: Array.from(new Uint8Array(assertion.response.authenticatorData)),
+                    clientDataJSON: Array.from(new Uint8Array(assertion.response.clientDataJSON)),
+                    signature: Array.from(new Uint8Array(assertion.response.signature)),
+                    userHandle: Array.from(new Uint8Array(assertion.response.userHandle))
+                }
+            };
+            await fetch('/myapp/webauthn/login/verify/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(assertionData)
+            });
+        }
+    </script>
+</head>
+<body>
+    <button onclick="login()">Login</button>
+</body>
+</html>

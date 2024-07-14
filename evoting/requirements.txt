@@ -3,3 +3,5 @@ asgiref==3.7.2
 psycopg2-binary==2.9.3
 django_extensions
 dj-database-url
+webauthn
+django-sslserver

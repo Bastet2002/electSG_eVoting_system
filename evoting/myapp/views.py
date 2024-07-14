@@ -633,3 +633,127 @@ def view_district_detail(request, district_id):
         'district': district,
         'candidates': candidates,
     })
+
+
+#------------------------------------------------- WebAuthn------------------------------------------------------
+from django.http import JsonResponse
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from webauthn import ( generate_registration_options, verify_registration_response, generate_authentication_options, verify_authentication_response, options_to_json)
+from .models import WebauthnRegistration, WebauthnCredentials
+import json
+from django.http import HttpResponse
+from django.contrib.auth.decorators import login_required
+from webauthn import (generate_registration_options, verify_registration_response,options_to_json)
+from django.views.decorators.http import require_http_methods
+
+@login_required
+@require_http_methods(["GET"])
+def webauthn_register_options(request):
+    try:
+        print(f"User ID: {request.user.user_id}")
+        print(f"Username: {request.user.username}")
+        print(f"Full Name: {request.user.full_name}")
+        
+        options = generate_registration_options(
+            rp_id='localhost',
+            rp_name='myapp',
+            user_id=str(request.user.user_id).encode('utf-8'),
+            user_name=request.user.username,
+            user_display_name=request.user.full_name
+        )
+        
+        print("Options generated successfully")
+        
+        WebauthnRegistration.objects.update_or_create(
+            user=request.user,
+            defaults={'challenge': options.challenge}
+        )
+        
+        print("WebauthnRegistration updated/created successfully")
+        
+        json_options = options_to_json(options)
+        print("JSON Options:", json_options)
+        print("JSON Options type:", type(json_options))
+        
+        # Ensure json_options is a dictionary, not a string
+        if isinstance(json_options, str):
+            json_options = json.loads(json_options)
+        
+        return JsonResponse(json_options, safe=False)
+    except Exception as e:
+        print(f"Error in webauthn_register_options: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def webauthn_register_verify(request):
+    try:
+        registration = WebauthnRegistration.objects.get(user=request.user)
+        data = json.loads(request.body)
+        verification = verify_registration_response(
+            credential=data,
+            expected_challenge=registration.challenge,
+            expected_origin='https://localhost:8000',
+            expected_rp_id='localhost'
+        )
+        if verification.success:
+            WebauthnCredentials.objects.create(
+                user=request.user,
+                credential_id=verification.credential_id,
+                credential_public_key=verification.credential_public_key,
+                current_sign_count=verification.sign_count
+            )
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Verification failed'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+@login_required
+@require_http_methods(["GET"])
+def webauthn_login_options(request):
+    options = generate_authentication_options(
+        rp_id='localhost',
+        allow_credentials=[
+            {
+                'id': base64url_to_bytes(cred.credential_id),
+                'type': 'public-key'
+            } for cred in request.user.webauthn_credentials.all()
+        ]
+    )
+    request.user.webauthnregistration.challenge = options.challenge
+    request.user.webauthnregistration.save()
+    return JsonResponse(options_to_json(options), safe=False)
+
+@login_required
+@require_http_methods(["POST"])
+def webauthn_login_verify(request):
+    try:
+        registration = WebauthnRegistration.objects.get(user=request.user)
+        data = json.loads(request.body)
+        verification = verify_authentication_response(
+            credential=data,
+            expected_challenge=registration.challenge,
+            expected_origin='https://localhost:8000',
+            expected_rp_id='localhost',
+            credential_public_key=request.user.webauthn_credentials.get(credential_id=data['id']).credential_public_key,
+            credential_current_sign_count=request.user.webauthn_credentials.get(credential_id=data['id']).current_sign_count
+        )
+        if verification.success:
+            credential = request.user.webauthn_credentials.get(credential_id=data['id'])
+            credential.current_sign_count = verification.sign_count
+            credential.save()
+            return JsonResponse({'status': 'success'})
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Verification failed'}, status=400)
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+def webauthn_register_view(request):
+    return render(request, 'webauthn_register.html')
+
+def webauthn_login_view(request):
+    return render(request, 'webauthn_login.html')
