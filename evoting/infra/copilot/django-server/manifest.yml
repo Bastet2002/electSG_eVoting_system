@@ -1,47 +1,50 @@
-# The manifest for the "django-server" service.
-# Read the full specification for the "Load Balanced Web Service" type at:
-#  https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/
-
-# Your service name will be used in naming your resources like log groups, ECS services, etc.
 name: django-server
 type: Load Balanced Web Service
 
-# Distribute traffic to your service.
 http:
-  # Requests to this path will be forwarded to your service.
-  # To match all requests you can use the "/" path.
   path: '/'
-  # You can specify a custom health check path. The default is "/".
-  # healthcheck: '/'
+  alias: elect-sg.cookndrum.com
+  # hosted_zone: Z07917493347CDKRNQS1F
+  redirect_to_https: true
+  healthcheck:
+    path: /health/  
+    success_codes: "200"
+    healthy_threshold: 2
+    interval: 15s
+    timeout: 10s
+    grace_period: 120s
+    deregistration_delay: 0s
 
-# Configuration for your containers and service.
+
 image:
-  # Docker build arguments. For additional overrides: https://aws.github.io/copilot-cli/docs/manifest/lb-web-service/#image-build
   build: ../Dockerfile
-  # Port exposed through your container to route traffic to it.
   port: 8000
 
-cpu: 256       # Number of CPU units for the task.
-memory: 512    # Amount of memory in MiB used by the task.
-count: 1       # Number of tasks that should be running in your service.
-exec: true     # Enable running commands in your container.
+cpu: 256
+memory: 512
+platform: linux/x86_64
+
+# count:
+#   spot: 1
+count: 1
+
+exec: true
 network:
-  connect: true # Enable Service Connect for intra-environment traffic between services.
+  connect: true
 
-# storage:
-  # readonly_fs: true       # Limit to read-only access to mounted root filesystems.
-
-# Optional fields for more advanced use-cases.
-#
-#variables:                    # Pass environment variables as key value pairs.
-#  LOG_LEVEL: info
-
-#secrets:                      # Pass secrets from AWS Systems Manager (SSM) Parameter Store.
-#  GITHUB_TOKEN: GITHUB_TOKEN  # The key is the name of the environment variable, the value is the name of the SSM parameter.
-
-# You can override any of the values defined above by environment.
-#environments:
-#  test:
-#    count: 2               # Number of tasks to run for the "test" environment.
-#    deployment:            # The deployment strategy for the "test" environment.
-#       rolling: 'recreate' # Stops existing tasks before new ones are started for faster deployments.
+environments:
+  dev:
+    variables:
+      DJANGO_DB_NAME: mydb
+      DJANGO_DB_USER: postgres
+      DJANGO_DB_HOST: djangodb.cj8ug0qq88oo.ap-southeast-1.rds.amazonaws.com
+      DJANGO_ALLOWED_HOSTS: ".cookndrum.com elects-Publi-d6EMd60hLUg0-972429885.ap-southeast-1.elb.amazonaws.com"
+      # DJANGO_ALLOWED_HOSTS: "*"
+      PYTHONPATH: "/app:/app/pygrpc"
+      DEBUG: "False"
+      RINGCT_URL: "ringct-service:50051"
+      ENVIRONMENT: "dev"
+    secrets:
+      DATABASE_URL: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DATABASE_URL::"'  
+      DJANGO_DB_PASSWORD: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_DB_PASSWORD::"'
+      DJANGO_SECRET_KEY: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_SECRET_KEY::"'

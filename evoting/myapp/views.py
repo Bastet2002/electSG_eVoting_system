@@ -30,6 +30,9 @@ from pygrpc.ringct_client import (
 
 User = get_user_model()
 
+def health_check(request):
+    return HttpResponse("OK", status=200)
+
 @flexible_access('public')
 def user_login(request):
     if request.method == 'POST':
