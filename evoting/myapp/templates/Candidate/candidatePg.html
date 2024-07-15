@@ -65,6 +65,23 @@
         </div>
     </section>
 </main>
+{% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p>{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+        
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000);
+    </script>
+{% endif %}
 
 <div id="editPopup" class="popup">
     <div class="popup-content">
@@ -72,9 +89,12 @@
         <form id="editInformation" method="post" action="{% url 'upload_candidate_statement' %}">
             {% csrf_token %}
             {{ candidate_statement_form.as_p }}
-            <button type="submit" {% if not is_owner %}disabled{% endif %}>Update</button>
+            <button type="submit">Update</button>
         </form>
-        <button onclick="deleteInformation()" {% if not is_owner %}disabled{% endif %}>Delete</button>
+        <form id="deleteStatementForm" method="post" action="{% url 'delete_candidate_statement' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Statement')">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+        </form>
         <button onclick="closeEditPopup()">Close</button>
     </div>
 </div>
@@ -86,9 +106,12 @@
         <form id="profilePicForm" method="post" enctype="multipart/form-data" action="{% url 'upload_profile_picture' %}">
             {% csrf_token %}
             {{ profile_picture_form.as_p }}
-            <button type="submit" {% if not is_owner %}disabled{% endif %}>Upload</button>
+            <button type="submit">Upload</button>
         </form>
-        <button onclick="deleteProfilePicture()" {% if not is_owner %}disabled{% endif %}>Delete</button>
+        <form id="deleteProfilePicForm" method="post" action="{% url 'delete_profile_picture' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Profile Picture')">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+        </form>
         <button onclick="closeProfilePopup()">Close</button>
     </div>
 </div>
@@ -100,15 +123,27 @@
         <form id="electionPosterForm" method="post" enctype="multipart/form-data" action="{% url 'upload_election_poster' %}">
             {% csrf_token %}
             {{ election_poster_form.as_p }}
-            <button type="submit" {% if not is_owner %}disabled{% endif %}>Upload</button>
+            <button type="submit">Upload</button>
         </form>
-        <button onclick="deletePosterPicture()" {% if not is_owner %}disabled{% endif %}>Delete</button>
+        <form id="deleteElectionPosterForm" method="post" action="{% url 'delete_election_poster' candidate_profile.candidate_id %}" onsubmit="return confirmDelete(candidate_profile.election_poster, 'Election Poster')">
+            {% csrf_token %}
+            <button type="submit">Delete</button>
+        </form>
         <button onclick="closePosterPopup()">Close</button>
     </div>
 </div>
+
+<script>
+    function confirmDelete(item, item_name) {
+        if (item) {
+            confirm('Are you sure you want to delete this ${item_name}?');
+        }
+    }
+</script>
 
 <script src="{% static 'Candidate/candidatePg.js' %}"></script>
 <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
 <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
 {% endblock %}

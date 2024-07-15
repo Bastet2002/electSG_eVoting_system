@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install Pillow
 RUN pip install Pillow
 
+# Install dateutil
+RUN pip install python-dateutil
+
 # Copy the current directory contents into the container at /app/
 COPY . /app/
 

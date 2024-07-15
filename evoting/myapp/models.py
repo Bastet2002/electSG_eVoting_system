@@ -69,7 +69,7 @@ class CandidatePublicKey(models.Model):
 # CANDIDATE_PROFILE Model
 class CandidateProfile(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
-    profile_picture = models.ImageField(upload_to='candidate_pictures/')
+    profile_picture = models.ImageField(upload_to='profile_pictures/')
     election_poster = models.ImageField(upload_to='election_posters/')
     candidate_statement = models.TextField()
 
@@ -86,7 +86,6 @@ class CandidateProfile(models.Model):
             if self.election_poster.size > max_size_mb * 1024 * 1024:
                 raise ValidationError(f"Election poster size should not exceed {max_size_mb} MB")
             
-    
     def save(self, *args, **kwargs):
         self.clean()
         super().save(*args, **kwargs)
