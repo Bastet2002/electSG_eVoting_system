@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{% static 'Voter/votingPg.css' %}">
 <div class="main">
     <h2>Digital Ballot Paper</h2>
-    <form method="post" action="{% url 'cast_vote' %}" id="ballotForm">
+    <form method="post" action="{% url 'cast_vote' %}" id="ballotForm" onsubmit="return validateForm()">
         {% csrf_token %}
         <div class="ballot-paper">
             {% for candidate in candidates %}
@@ -62,6 +62,27 @@
             });
         });
     });
+
+    function validateForm() {
+        // Get all checkboxes with name "candidate"
+        var checkboxes = document.querySelectorAll('input[name="candidate"]');
+        var checked = false;
+
+        // Loop through checkboxes to see if at least one is checked
+        checkboxes.forEach(function(checkbox) {
+            if (checkbox.checked) {
+                checked = true;
+            }
+        });
+
+        // If no checkbox is checked, show alert and prevent form submission
+        if (!checked) {
+            alert("Please select at least one candidate.");
+            return false; // Prevent form submission
+        }
+
+        return true; // Allow form submission
+    }
 </script>
 
 {% endblock %}

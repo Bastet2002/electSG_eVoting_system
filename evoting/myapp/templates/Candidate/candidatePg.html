@@ -91,7 +91,7 @@
             {{ candidate_statement_form.as_p }}
             <button type="submit">Update</button>
         </form>
-        <form id="deleteStatementForm" method="post" action="{% url 'delete_candidate_statement' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Statement')">
+        <form id="deleteStatementForm" method="post" action="{% url 'delete_candidate_statement' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Statement', {{ candidate_profile.candidate_statement|yesno:'true,false' }})">
             {% csrf_token %}
             <button type="submit">Delete</button>
         </form>
@@ -108,7 +108,7 @@
             {{ profile_picture_form.as_p }}
             <button type="submit">Upload</button>
         </form>
-        <form id="deleteProfilePicForm" method="post" action="{% url 'delete_profile_picture' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Profile Picture')">
+        <form id="deleteProfilePicForm" method="post" action="{% url 'delete_profile_picture' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Profile Picture', {{ candidate_profile.profile_picture|yesno:'true,false' }})">
             {% csrf_token %}
             <button type="submit">Delete</button>
         </form>
@@ -125,7 +125,7 @@
             {{ election_poster_form.as_p }}
             <button type="submit">Upload</button>
         </form>
-        <form id="deleteElectionPosterForm" method="post" action="{% url 'delete_election_poster' candidate_profile.candidate_id %}" onsubmit="return confirmDelete(candidate_profile.election_poster, 'Election Poster')">
+        <form id="deleteElectionPosterForm" method="post" action="{% url 'delete_election_poster' candidate_profile.candidate_id %}" onsubmit="return confirmDelete('Election Poster', {{ candidate_profile.election_poster|yesno:'true,false' }})">
             {% csrf_token %}
             <button type="submit">Delete</button>
         </form>
@@ -134,9 +134,13 @@
 </div>
 
 <script>
-    function confirmDelete(item, item_name) {
-        if (item) {
-            confirm('Are you sure you want to delete this ${item_name}?');
+    function confirmDelete(item_name, exists) {
+        if (exists) {
+            return confirm(`Are you sure you want to delete this ${item_name}?`);
+        }
+        else {
+            alert("No image to delete.");
+            return false;
         }
     }
 </script>

@@ -3,7 +3,9 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager
 from django.dispatch import receiver
 from django.db.models.signals import post_delete
 from django.core.exceptions import ValidationError
-import json
+from datetime import date
+from dateutil.relativedelta import relativedelta
+import json, os
 
 # SINGPASS_USER Model
 class SingpassUser(models.Model):
@@ -17,8 +19,23 @@ class SingpassUser(models.Model):
 # PROFILE Model
 class Profile(models.Model):
     profile_id = models.AutoField(primary_key=True)
-    profile_name = models.CharField(max_length=255)
+    profile_name = models.CharField(max_length=255, unique=True)
     description = models.TextField()
+
+    def clean(self):
+        if len(self.profile_name) > 20:
+            raise ValidationError({"profile_name":"Profile name cannot exceed 20 characters."})
+        
+        # Get all existing profile names, excluding the current instance
+        existing_profiles = Profile.objects.exclude(pk=self.pk).values_list('profile_name', flat=True)
+        # Check if the new profile name contains or is contained by any existing name
+        for existing_name in existing_profiles:
+            if ((existing_name.lower() in self.profile_name.lower() or self.profile_name.lower() in existing_name.lower())):
+                raise ValidationError({"profile_name":f"Profile name '{self.profile_name}' is too similar to existing profile '{existing_name}'."})
+                
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.profile_name
@@ -27,6 +44,17 @@ class Profile(models.Model):
 class District(models.Model):
     district_id = models.AutoField(primary_key=True)
     district_name = models.CharField(max_length=255)
+
+    def clean(self):
+        if len(self.district_name) > 30:
+            raise ValidationError({"district_name":"District name cannot exceed 30 characters."})
+        
+        if District.objects.filter(district_name__iexact=self.district_name).exclude(pk=self.pk).exists():
+            raise ValidationError({"district_name":"District with this name already exist."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.district_name
@@ -47,9 +75,33 @@ class UserAccount(AbstractBaseUser):
     party = models.ForeignKey('Party', on_delete=models.SET_NULL, null=True, blank=True)
     
     USERNAME_FIELD = 'username'  # Use username as the unique identifier
-    REQUIRED_FIELDS = ['full_name', 'date_of_birth', 'password']
+    REQUIRED_FIELDS = ['full_name', 'date_of_birth', 'password', 'role']
 
     objects = UserAccountManager()
+
+    def clean(self):
+        super().clean()
+        if self.role.profile_name.lower() == 'candidate':
+            if self.date_of_birth > date.today() - relativedelta(years=45):
+                raise ValidationError({"date_of_birth": "Candidate must be at least 45 years old."})
+
+    def clean_username(self):
+        if len(self.username) > 15:
+            raise ValidationError({"username": "Username cannot exceed 15 characters."})
+        if UserAccount.objects.filter(username=self.username).exclude(pk=self.pk).exists():
+            raise ValidationError({"username": "User account with this Username already exists."})
+
+    def clean_password(self):
+        if len(self.password) < 8 or not any(char.isdigit() for char in self.password) or not any(char.islower() for char in self.password) or not any(char.isupper() for char in self.password):
+            raise ValidationError({"password": "Password must be at least 8 characters long and contain at least one number, one lower case letter, and one upper case letter."})
+
+    def clean_role(self):
+        if self.role is None:
+            raise ValidationError({"role": "This field is required."})
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.username
@@ -59,19 +111,13 @@ class CandidatePublicKey(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
     pkv = models.CharField(max_length=64)
     pks = models.CharField(max_length=64)
-
-# # Define the validation function
-# def validate_file_size(file):
-#     max_size_mb = 5  # Set maximum file size to 5 MB
-#     if file.size > max_size_mb * 1024 * 1024:
-#         raise ValidationError(f"File size should not exceed {max_size_mb} MB")
     
 # CANDIDATE_PROFILE Model
 class CandidateProfile(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/')
-    election_poster = models.ImageField(upload_to='election_posters/')
-    candidate_statement = models.TextField()
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    election_poster = models.ImageField(upload_to='election_posters/', blank=True, null=True)
+    candidate_statement = models.TextField(blank=True, null=True)
 
     def clean(self):
         max_size_mb = 5  # Set maximum file size to 5 MB
@@ -87,7 +133,19 @@ class CandidateProfile(models.Model):
                 raise ValidationError(f"Election poster size should not exceed {max_size_mb} MB")
             
     def save(self, *args, **kwargs):
-        self.clean()
+        # Check if this is an update (object already exists in DB)
+        if self.pk:
+            # Get the old instance from the database
+            old_instance = CandidateProfile.objects.get(pk=self.pk)
+            
+            # If there's a new profile picture and it's different from the old one
+            if self.profile_picture and old_instance.profile_picture != self.profile_picture:
+                # Delete the old picture file
+                if old_instance.profile_picture:
+                    if os.path.isfile(old_instance.profile_picture.path):
+                        os.remove(old_instance.profile_picture.path)
+
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):

@@ -12,29 +12,10 @@ class CreateNewUser(forms.ModelForm):
             'password': forms.PasswordInput(),
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
         }
-
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        if len(username) > 15:
-            raise ValidationError("Username cannot exceed 15 characters.")
-        if UserAccount.objects.filter(username=username).exists():
-            raise ValidationError("User account with this Username already exists.")
-        return username
-
-    def clean_password(self):
-        password = self.cleaned_data.get('password')
-        if len(password) < 8 or not any(char.isdigit() for char in password) or not any(char.islower() for char in password) or not any(char.isupper() for char in password):
-            raise ValidationError(f"Password must be at least 8 characters long. Contain at least one number, one lower and upper case.")
-        return password
-
-    def clean(self):
-        cleaned_data = super().clean()
-        date_of_birth = cleaned_data.get('date_of_birth')
-        role = cleaned_data.get('role')
-        if role and role.profile_name.lower() == 'candidate':
-            if date_of_birth > date.today() - relativedelta(years=45):
-                self.add_error('date_of_birth', "Candidate must be at least 45 years old.")
-        return cleaned_data
+    
+    def __init__(self, *args, **kwargs):
+        super(CreateNewUser, self).__init__(*args, **kwargs)
+        self.fields['role'].required = True
 
 class EditUser(forms.ModelForm):
     class Meta:
@@ -51,26 +32,25 @@ class EditUser(forms.ModelForm):
             self.fields['district'].disabled = True
             self.fields['party'].disabled = True
 
-    def clean_username(self):
-        username = self.cleaned_data.get('username')
-        instance = getattr(self, 'instance', None)
-        if instance and instance.pk:
-            # Check if the username is being updated and if it's already taken by another user
-            if username and username != instance.username and UserAccount.objects.filter(username=username).exists():
-                raise ValidationError("User account with this Username already exists.")
-        if len(username) > 15:
-            raise ValidationError("Username cannot exceed 15 characters.")
-        return username
+    # def clean_username(self):
+    #     username = self.cleaned_data.get('username')
+    #     instance = getattr(self, 'instance', None)
+    #     if instance and instance.pk:
+    #         # Check if the username is being updated and if it's already taken by another user
+    #         if username and username != instance.username and UserAccount.objects.filter(username=username).exists():
+    #             raise ValidationError("User account with this Username already exists.")
+    #     if len(username) > 15:
+    #         raise ValidationError("Username cannot exceed 15 characters.")
+    #     return username
 
-    def clean(self):
-        cleaned_data = super().clean()
-        date_of_birth = cleaned_data.get('date_of_birth')
-        role = cleaned_data.get('role')
-        print(role)
-        if role and role.profile_name.lower() == 'candidate':
-            if date_of_birth > date.today() - relativedelta(years=45):
-                self.add_error('date_of_birth', "Candidate must be at least 45 years old.")
-        return cleaned_data
+    # def clean(self):
+    #     cleaned_data = super().clean()
+    #     date_of_birth = cleaned_data.get('date_of_birth')
+    #     role = cleaned_data.get('role')
+    #     if role and role.profile_name.lower() == 'candidate':
+    #         if date_of_birth > date.today() - relativedelta(years=45):
+    #             self.add_error('date_of_birth', "Candidate must be at least 45 years old.")
+    #     return cleaned_data
 
 class CreateProfileForm(forms.ModelForm):
     class Meta:
@@ -82,15 +62,6 @@ class CreateProfileForm(forms.ModelForm):
         if self.instance.profile_name in ['Candidate', 'Admin']:
             self.fields['profile_name'].disabled = True
             self.fields['description'].disabled = True
-
-    def clean_profile_name(self):
-        profile_name = self.cleaned_data.get('profile_name')
-        forbidden_names = ['candidate', 'admin']
-        if profile_name.lower() in forbidden_names:
-            raise ValidationError("This profile name is not allowed or already exists.")
-        if len(profile_name) > 20:
-            raise ValidationError("Profile name cannot exceed 20 characters.")
-        return profile_name
 
 class CreateDistrict(forms.Form):
     district_names = forms.CharField(
@@ -118,17 +89,6 @@ class EditDistrict(forms.ModelForm):
     class Meta:
         model = District
         fields = ['district_name']
-
-    def clean_district_name(self):
-        district_name = self.cleaned_data.get('district_name')
-
-        if len(district_name) > 30:
-            raise ValidationError("District name cannot exceed 30 characters.")
-
-        if District.objects.filter(district_name__iexact=district_name).exists():
-            raise ValidationError(f"District with this name already exist.")
-        
-        return district_name
 
 class CreateAnnouncement(forms.ModelForm):
     class Meta:
@@ -191,14 +151,9 @@ class ElectionPosterForm(forms.ModelForm):
             'election_poster': forms.FileInput(attrs={'accept': 'image/*'}),
         }
 
-    def clean_election_poster(self):
-        election_poster = self.cleaned_data.get('election_poster')
-        max_size_mb = 5  # Set maximum file size to 5 MB
-
-        # Validate election_poster size
-        if election_poster.size > max_size_mb * 1024 * 1024:
-            raise ValidationError(f"Election poster size should not exceed {max_size_mb} MB")
-        return election_poster
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['election_poster'].required = True
 
 class ProfilePictureForm(forms.ModelForm):
     class Meta:
@@ -207,15 +162,10 @@ class ProfilePictureForm(forms.ModelForm):
         widgets = {
             'profile_picture': forms.FileInput(attrs={'accept': 'image/*'}),
         }
-
-    def clean_profile_picture(self):
-        profile_picture = self.cleaned_data.get('profile_picture')
-        max_size_mb = 5  # Set maximum file size to 5 MB
-
-        # Validate profile_picture size
-        if profile_picture.size > max_size_mb * 1024 * 1024:
-            raise ValidationError(f"Profile picture size should not exceed {max_size_mb} MB")
-        return profile_picture
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['profile_picture'].required = True
 
 class CandidateStatementForm(forms.ModelForm):
     class Meta:
@@ -230,3 +180,4 @@ class CandidateStatementForm(forms.ModelForm):
         if 'instance' in kwargs:
             instance = kwargs.pop('instance')
             self.fields['candidate_statement'].initial = instance.candidate_statement
+        self.fields['candidate_statement'].required = True

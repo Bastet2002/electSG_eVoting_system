@@ -539,13 +539,10 @@ def upload_election_poster(request):
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.election_poster = form.cleaned_data['election_poster']
-            try:
-                candidate_profile.save()
-                messages.success(request, 'Election poster successfully uploaded.')
-            except ValidationError as e:
-                messages.error(request, "File size should not exceed the limit.")
+            candidate_profile.save()
+            messages.success(request, 'Election poster successfully uploaded.')
         else:
-            messages.error(request, "File size should not exceed the limit.")
+            messages.error(request, "File size should not exceed 5MB.")
 
         return redirect('candidate_home')
     
@@ -569,13 +566,10 @@ def upload_profile_picture(request):
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.profile_picture = form.cleaned_data['profile_picture']
-            try:
-                candidate_profile.save()
-                messages.success(request, 'Profile picture successfully uploaded.')
-            except ValidationError as e:
-                messages.error(request, "File size should not exceed the limit.")
+            candidate_profile.save()
+            messages.success(request, 'Profile picture successfully uploaded.')
         else:
-            messages.error(request, "File size should not exceed the limit.")
+            messages.error(request, "File size should not exceed 5MB.")
     
         return redirect('candidate_home')
 
@@ -599,14 +593,11 @@ def upload_candidate_statement(request):
         if form.is_valid():
             candidate_profile = get_object_or_404(CandidateProfile, candidate=request.user)
             candidate_profile.candidate_statement = form.cleaned_data['candidate_statement']
-            try:
-                candidate_profile.save()
-                messages.success(request, 'Candidate statement successfully updated.')
-            except ValidationError as e:
-                messages.error(request, "Invalid submission.")
+            candidate_profile.save()
+            messages.success(request, 'Candidate statement successfully updated.')
         else:
             messages.error(request, "Invalid submission.")
-    
+
         return redirect('candidate_home')
 
 @flexible_access('candidate')
@@ -614,7 +605,7 @@ def delete_candidate_statement(request, candidate_id):
     candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
 
     if candidate_profile.candidate_statement:
-        candidate_profile.candidate_statement.delete(save=False)
+        candidate_profile.candidate_statement = None
         candidate_profile.save()
         messages.success(request, 'Candidate statement deleted successfully.')
     else:
