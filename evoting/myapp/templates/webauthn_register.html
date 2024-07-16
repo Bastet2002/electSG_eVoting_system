@@ -22,37 +22,30 @@
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 
-                const optionsText = await response.text();
-                console.log('Received options (text):', optionsText);
-                
-                const options = JSON.parse(optionsText);
-                console.log('Parsed options:', options);
-
+                const options = await response.json();
+                console.log('Received options:', options);
+        
                 // Validate the structure and types of the options object
                 if (typeof options !== 'object' || !options) {
                     throw new Error('Invalid options received: not an object');
                 }
-
+        
                 if (typeof options.challenge !== 'string') {
                     throw new Error('Challenge is not a string');
                 }
-
+        
                 if (!options.user || typeof options.user.id !== 'string') {
                     throw new Error('User ID is not a string or user object is undefined');
                 }
-
+        
                 if (!Array.isArray(options.pubKeyCredParams) || options.pubKeyCredParams.length === 0) {
                     throw new Error('pubKeyCredParams is not an array or is empty');
                 }
-
+        
                 // Convert challenge and user.id from base64url to Uint8Array
                 const challengeBuffer = base64urlToUint8Array(options.challenge);
                 const userIdBuffer = base64urlToUint8Array(options.user.id);
-
-                // Log the transformed values
-                console.log('Challenge buffer:', challengeBuffer);
-                console.log('User ID buffer:', userIdBuffer);
-
+        
                 // Create a new object with the converted values
                 const publicKeyCredentialCreationOptions = {
                     ...options,
@@ -62,7 +55,7 @@
                         id: userIdBuffer,
                     },
                 };
-
+        
                 console.log('Modified options:', publicKeyCredentialCreationOptions);
                 
                 console.log('Calling navigator.credentials.create');
@@ -92,6 +85,11 @@
                     body: JSON.stringify(credentialData)
                 });
                 console.log('Verification response:', verificationResponse);
+        
+                if (!verificationResponse.ok) {
+                    const errorData = await verificationResponse.json();
+                    throw new Error(errorData.message || 'Verification failed');
+                }
         
                 const verificationResult = await verificationResponse.json();
                 console.log('Verification result:', verificationResult);
