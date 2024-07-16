@@ -13,7 +13,6 @@ body {
   background-color: #f9f9f9; /* Light background color */
   border-radius: 8px; /* Rounded corners */
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Subtle shadow */
-  margin-top: 80px; /* Ensure space from the fixed header */
   }
   
   .create-new-user-form label {
@@ -48,7 +47,6 @@ body {
   .main {
   margin-left: 240px; /* Adjusted to accommodate the sidebar */
   padding: 20px;
-  padding-top: 100px; /* Ensure there's space for the fixed header */
   }
 
   /* Popup Alert styles */

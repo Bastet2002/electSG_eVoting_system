@@ -7,12 +7,12 @@
 <link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">Add District</h1>
+    <h1 style="text-align: center; margin: 100px 0px 50px 0px">Add District</h1>
     <form method="post" action="{% url 'create_district' %}" class="add-district-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <p>Enter multiple district names separated by semicolons (;)</p>
-        <button type="submit" name="create-district">Add District</button>
+        <p style="text-align: center;">Enter multiple district names separated by semicolons (;)</p>
+        <button type="submit" name="create-district" style="margin-left: 280px">Add District</button>
     </form>
 </div>
 

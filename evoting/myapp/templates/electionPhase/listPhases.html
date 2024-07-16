@@ -4,21 +4,21 @@
 <link rel="stylesheet" href="{% static 'electionPhase/listPhases.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">Election Status</h1>
+    <h1 style="text-align: center; margin: 30px 0px" >Election Status</h1>
     <div class="container">
-        <table class="center-table">
-            <tr>
-                <th>Phase</th>
-                <th>Status</th>
-                <th>Action</th>
+        <table class="center-table" style="text-align: center; width: 70%">
+            <tr >
+                <th style="text-align: center; vertical-align: middle">Phase</th>
+                <th style="text-align: center; vertical-align: middle">Status</th>
+                <th style="text-align: center; vertical-align: middle">Action</th>
             </tr>
             {% for phase in phases %}
             <tr>
-                <td>{{ phase.phase_name }}</td>
-                <td class="{{ phase.is_active|yesno:'status-active,status-inactive' }}">
+                <td style="text-align: center; vertical-align: middle">{{ phase.phase_name }}</td>
+                <td class="{{ phase.is_active|yesno:'status-active,status-inactive' }}" style="text-align: center; vertical-align: middle">
                     {{ phase.is_active|yesno:"Active,Inactive" }}
                 </td>
-                <td>
+                <td style="text-align: center; vertical-align: middle">
                     {% if not phase.is_active %}
                     <a href="{% url 'activate_election_phase' phase.phase_id %}">Activate</a>
                     {% endif %}

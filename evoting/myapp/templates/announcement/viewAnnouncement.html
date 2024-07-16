@@ -7,21 +7,21 @@
 <link rel="stylesheet" href="{% static 'announcement/viewAnnouncement.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">Announcements</h1>
+    <h1 style="text-align: center; margin: 30px 0px;">Announcements</h1>
     <div class="table-container">
         <div class="table-wrapper">
-            <table>
+            <table style="text-align: center; width: 100%">
                 <thead>
                     <tr>
-                        <th>Header</th>
-                        <th>Actions</th>
+                        <th style="text-align: center; vertical-align: middle">Header</th>
+                        <th style="text-align: center; vertical-align: middle">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for announcement in announcements %}
                     <tr>
-                        <td>{{ announcement.header }}</td>
-                        <td>
+                        <td style="text-align: center; vertical-align: middle">{{ announcement.header }}</td>
+                        <td style="text-align: center; vertical-align: middle">
                             <a href="{% url 'view_announcement_detail' announcement.announcement_id %}"><button class="btn btn-danger">View</button></a>
                             <a href="{% url 'edit_announcement' announcement.announcement_id %}"><button class="btn btn-danger">Update</button></a>
                             <form method="post" action="{% url 'delete_announcement' announcement.announcement_id %}" style="display:inline;" onsubmit="return confirmDelete()">
