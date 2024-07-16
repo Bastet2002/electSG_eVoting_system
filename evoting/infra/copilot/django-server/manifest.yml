@@ -8,7 +8,7 @@ http:
   redirect_to_https: true
   healthcheck:
     path: /health/  
-    success_codes: "200"
+    success_codes: "200-499"
     healthy_threshold: 2
     interval: 15s
     timeout: 10s
@@ -43,8 +43,13 @@ environments:
       PYTHONPATH: "/app:/app/pygrpc"
       DEBUG: "False"
       RINGCT_URL: "ringct-service:50051"
+      AWS_STORAGE_BUCKET_NAME: elect-sg-bucket
+      AWS_S3_REGION_NAME: ap-southeast-1
+      USE_S3: "TRUE"
       ENVIRONMENT: "dev"
     secrets:
       DATABASE_URL: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DATABASE_URL::"'  
       DJANGO_DB_PASSWORD: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_DB_PASSWORD::"'
       DJANGO_SECRET_KEY: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_SECRET_KEY::"'
+      AWS_ACCESS_KEY_ID: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:AWS_ACCESS_KEY_ID::"'
+      AWS_SECRET_ACCESS_KEY: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:AWS_SECRET_ACCESS_KEY::"'

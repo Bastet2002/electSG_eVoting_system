@@ -7,6 +7,8 @@ from django.core.exceptions import ValidationError
 from datetime import date
 from dateutil.relativedelta import relativedelta
 import json, os
+from .media_storage import select_storage
+from django.core.validators import FileExtensionValidator, validate_image_file_extension
 
 # SINGPASS_USER Model
 class SingpassUser(models.Model):
@@ -159,8 +161,8 @@ class CandidatePublicKey(models.Model):
 # CANDIDATE_PROFILE Model
 class CandidateProfile(models.Model):
     candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
-    election_poster = models.ImageField(upload_to='election_posters/', blank=True, null=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True, storage=select_storage())
+    election_poster = models.ImageField(upload_to='election_posters/', blank=True, null=True, storage=select_storage())
     candidate_statement = models.TextField(blank=True, null=True)
 
     def clean(self):
