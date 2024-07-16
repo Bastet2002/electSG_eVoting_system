@@ -135,15 +135,23 @@ class CandidateProfile(models.Model):
     def save(self, *args, **kwargs):
         # Check if this is an update (object already exists in DB)
         if self.pk:
+            try:
             # Get the old instance from the database
-            old_instance = CandidateProfile.objects.get(pk=self.pk)
+                old_instance = CandidateProfile.objects.get(pk=self.pk)
             
             # If there's a new profile picture and it's different from the old one
-            if self.profile_picture and old_instance.profile_picture != self.profile_picture:
-                # Delete the old picture file
-                if old_instance.profile_picture:
-                    if os.path.isfile(old_instance.profile_picture.path):
-                        os.remove(old_instance.profile_picture.path)
+            # if self.profile_picture and old_instance.profile_picture != self.profile_picture:
+            #     # Delete the old picture file
+            #     if old_instance.profile_picture:
+            #         if os.path.isfile(old_instance.profile_picture.path):
+            #             os.remove(old_instance.profile_picture.path)
+                if old_instance.profile_picture and self.profile_picture and old_instance.profile_picture != self.profile_picture:
+                    old_instance.profile_picture.delete(save=False)
+                # Check if the election_poster field is updated
+                if old_instance.election_poster and self.election_poster and old_instance.election_poster != self.election_poster:
+                    old_instance.election_poster.delete(save=False)
+            except CandidateProfile.DoesNotExist:
+                pass
 
         self.full_clean()
         super().save(*args, **kwargs)
