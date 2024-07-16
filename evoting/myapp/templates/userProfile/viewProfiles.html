@@ -7,21 +7,21 @@
 <link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">User Profiles</h1>
+    <h1 style="text-align: center; width: 100%; margin: 40px 0px;">User Profiles</h1>
     <div class="table-container">
         <div class="table-wrapper">
             <table>
                 <thead>
                     <tr>
-                        <th>Profile Name</th>
-                        <th>Actions</th>
+                        <th style="text-align: center; vertical-align: middle">Profile Name</th>
+                        <th style="text-align: center; vertical-align: middle">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for profile in profiles %}
                     <tr>
-                        <td>{{ profile.profile_name }}</td>
-                        <td>
+                        <td style="text-align: center; vertical-align: middle">{{ profile.profile_name }}</td>
+                        <td style="text-align: center; vertical-align: middle; display: flex; justify-content: center; align-items: center">
                             {% if profile.profile_name not in disable_edit_list %}
                                 <a href="{% url 'edit_profile' profile.profile_id %}" class="btn btn-primary">Update</a>
                                 <form method="post" action="{% url 'delete_profile' profile.profile_id %}" style="display:inline;" onsubmit="return confirmDelete()">
@@ -29,7 +29,7 @@
                                     <button type="submit" class="btn btn-danger" {% if disable_deletion %}disabled{% endif %}>Delete</button>
                                 </form>
                             {% else %}
-                                <span>Permanent Profile</span>
+                                <span style="text-align: center;">Permanent Profile</span>
                             {% endif %}
                         </td>
                     </tr>

@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="{% static 'userAccount/updateUserAcc.css' %}">
 
     <div class="main">
-        <h1 style="text-align: center;">Update User Account</h1>
+        <h1 style="text-align: center; margin: 120px 0px 50px 0px">Update User Account</h1>
         <form method="post" class="create-new-user-form">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" name="create_new">Save Changes</button>
+            <button type="submit" name="create_new" style="margin-left: 40%">Save Changes</button>
         </form>
     </div>
 {% endblock %}

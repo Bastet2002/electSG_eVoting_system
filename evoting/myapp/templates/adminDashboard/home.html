@@ -5,19 +5,19 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'adminDashboard/home.css' %}">
-<div class="container">
+<div class="container" style="text-align: center;">
     <!-- Display the active election phase -->
     {% if active_phase %}
-    <h1>Election Status : {{ active_phase.phase_name }}</h1>
+    <h1 style="margin-bottom: 20px; margin-left: 10%;">Election Status : {{ active_phase.phase_name }}</h1>
     {% else %}
     <p style="text-align: center;">No active election phase found.</p>
     {% endif %}
 
     <!-- Display announcements -->
     {% if announcements %}
-    <h2>Announcements</h2>
+    <h2 style="margin: 0px 0px 30px 10%">Announcements</h2>
     {% for announcement in announcements %}
-    <div class="announcement-box">
+    <div class="announcement-box" style="text-align: center; width: 80%; margin-left: 15%;" >
         <h3>{{ announcement.header }}</h3>
         <p>{{ announcement.content }}</p>
         <p><strong>Date:</strong> {{ announcement.date }}</p> 
