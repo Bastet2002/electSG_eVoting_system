@@ -7,21 +7,21 @@
 <link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">Parties</h1>
+    <h1 style="text-align: center; margin: 30px 0px">Parties</h1>
     <div class="table-container">
         <div class="table-wrapper">
-            <table>
+            <table style="text-align: center; width: 100%">
                 <thead>
                     <tr>
-                        <th>Party</th>
-                        <th>Actions</th>
+                        <th style="text-align: center; vertical-align: middle">Party</th>
+                        <th style="text-align: center; vertical-align: middle">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for party in parties %}
                     <tr>
-                        <td>{{ party.party_name }}</td>
-                        <td>
+                        <td style="text-align: center; vertical-align: middle">{{ party.party_name }}</td>
+                        <td style="text-align: center; vertical-align: middle">
                             <a href="{% url 'edit_party' party.party_id %}"><button class="btn btn-danger">Update</button></a>
                             <form method="post" action="{% url 'delete_party' party.party_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}

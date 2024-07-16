@@ -8,18 +8,21 @@
     .content {
         margin-left: 240px; /* Adjust to accommodate the sidebar */
         padding: 20px;
-        padding-top: 80px; /* Ensure there's space for the fixed header */
+        padding-top: 100px; /* Ensure there's space for the fixed header */
     }
 
     .content h1 {
    
         margin-bottom: 20px;
+        margin-top: 40px;
+        text-align: center;
     }
 
     .content p {
         font-size: 16px;
         line-height: 1.5;
         margin-bottom: 30px;
+        text-align: center;
     }
 
     .btn,
@@ -55,7 +58,7 @@
 <div class="content">
     <h1>{{ announcement.header }}</h1>
     <p>{{ announcement.content }}</p>
-    <a href="{% url 'edit_announcement' announcement.announcement_id %}" class="btn btn-primary">Update</a>
+    <a href="{% url 'edit_announcement' announcement.announcement_id %}" class="btn btn-primary" style="margin-left: 45%; display: inline;">Update</a>
     <form method="post" action="{% url 'delete_announcement' announcement.announcement_id %}" style="display:inline;" onsubmit="return confirmDelete()">
         {% csrf_token %}
         <button type="submit" class="btn btn-danger">Delete</button>

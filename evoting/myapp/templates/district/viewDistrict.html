@@ -7,28 +7,28 @@
 <link rel="stylesheet" href="{% static 'district/viewDistrict.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center;">Districts</h1>
+    <h1 style="text-align: center; margin: 30px 0px">Districts</h1>
     <div class="table-container">
-        <div class="search-bar">
+        <div class="search-bar" style="margin-bottom: 30px;">
             <form action="" method="get">
                 <input type="text" name="search" id="search" placeholder="Search..." value="{{ request.GET.search }}">
                 <button type="submit" id="search-btn">Search</button>
             </form>
         </div>
         <div class="table-wrapper">
-            <table>
+            <table style="text-align: center; width: 100%;">
                 <thead>
                     <tr>
-                        <th>Name</th>
-                        <th>Actions</th>
+                        <th style="text-align: center; vertical-align: middle">Name</th>
+                        <th style="text-align: center; vertical-align: middle">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for district in districts %}
                     <tr>
-                        <td>{{ district.district_name }}</td>
-                        <td>
-                            <a href="{% url 'edit_district' district.district_id %}"><button class="btn btn-danger">Update</button></a>
+                        <td style="text-align: center; vertical-align: middle">{{ district.district_name }}</td>
+                        <td style="text-align: center; vertical-align: middle; display: flex; justify-content: center; align-items: center" >
+                            <a href="{% url 'edit_district' district.district_id %}"><button class="btn btn-danger" style="margin-right: 10px;">Update</button></a>
                             <form method="post" action="{% url 'delete_district' district.district_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
                                 <button type="submit" class="btn btn-danger {% if disable_deletion %}btn-disabled{% endif %}"{% if disable_deletion %}disabled{% endif %}>Delete</button>

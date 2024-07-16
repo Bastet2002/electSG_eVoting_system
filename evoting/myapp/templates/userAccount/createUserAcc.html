@@ -11,11 +11,17 @@
     }
 </style>
 <div class="main">
-    <h1 style="text-align: center;">Create New User Account</h1>
+    <h1 style="text-align: center; margin: 120px 0px 20px 0px">Create New User Account</h1>
     <form method="post" action="{% url 'create_account' 'normal_upload' %}" class="create-new-user-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" name="create_new">Create New Account</button>
+        <button type="submit" name="create_new" style="margin-left: 270px;">Create New Account</button>
+    </form>
+
+    <form method="post" enctype="multipart/form-data" action="{% url 'create_account' 'csv_upload' %}" class="create-new-user-form">
+        {% csrf_token %}
+        {{ csv_form.as_p }}
+        <button type="submit" name="create_new">Create New Accounts</button>
     </form>
 
     <form method="post" enctype="multipart/form-data" action="{% url 'create_account' 'csv_upload' %}" class="create-new-user-form">
