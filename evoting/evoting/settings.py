@@ -27,8 +27,10 @@ SECRET_KEY = 'django-insecure-2+=j!omdg4iyeyxss5$p8y9vrib+madac5dq6nc3__*+hxxfcl
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['0.0.0.0']
+# ALLOWED_HOSTS = ['0.0.0.0']
 # ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
+
 
 
 # Application definition
@@ -41,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapp',
-    # 'django_extensions',
+    'django_extensions',
+    'sslserver',
 ]
 
 AUTH_USER_MODEL = 'myapp.UserAccount'
@@ -145,3 +148,8 @@ MEDIA_URL = '/media/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+SECURE_SSL_REDIRECT = True
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
+

@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, login, logout, get_backends
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.sessions.models import Session
@@ -633,3 +633,257 @@ def view_district_detail(request, district_id):
         'district': district,
         'candidates': candidates,
     })
+
+
+#------------------------------------------------- WebAuthn------------------------------------------------------
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_http_methods
+from webauthn import (generate_registration_options, verify_registration_response, 
+                      generate_authentication_options, verify_authentication_response, 
+                      options_to_json)
+from webauthn.helpers import base64url_to_bytes, bytes_to_base64url, structs
+from webauthn.helpers.structs import (RegistrationCredential, AuthenticatorAssertionResponse, 
+                                      AuthenticatorAttestationResponse, AuthenticationCredential, 
+                                      PublicKeyCredentialDescriptor)
+from .models import WebauthnRegistration, WebauthnCredentials
+from django.utils.module_loading import import_string
+import base64
+import os
+import json
+
+
+@login_required
+@require_http_methods(["GET"])
+def webauthn_register_options(request):
+    try:
+        print(f"User ID: {request.user.user_id}")
+        print(f"Username: {request.user.username}")
+        print(f"Full Name: {request.user.full_name}")
+        
+        options = generate_registration_options(
+            rp_id='localhost',
+            rp_name='myapp',
+            user_id=str(request.user.user_id).encode('utf-8'),
+            user_name=request.user.username,
+            user_display_name=request.user.full_name
+        )
+        
+        print("Options generated successfully")
+
+        challenge_b64 = base64.urlsafe_b64encode(options.challenge).rstrip(b'=').decode('ascii')
+        
+        WebauthnRegistration.objects.update_or_create(
+            user=request.user,
+            defaults={'challenge': challenge_b64}
+        )
+        print(f"Stored challenge: {options.challenge}")
+        print("WebauthnRegistration updated/created successfully")
+        
+        json_options = options_to_json(options)
+        json_options = json.loads(json_options)
+        json_options['challenge'] = challenge_b64  # Replace with properly encoded challenge
+      
+        return JsonResponse(json_options, safe=False)
+    except Exception as e:
+        print(f"Error in webauthn_register_options: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
+
+@login_required
+@require_http_methods(["POST"])
+def webauthn_register_verify(request):
+    try:
+        registration = WebauthnRegistration.objects.get(user=request.user)
+        data = json.loads(request.body)
+        
+        print(f"Received registration data: {data}")  # Debug: Print received data
+        
+        # Create the RegistrationCredential object
+        credential = RegistrationCredential(
+            id=data['id'],
+            raw_id=base64.urlsafe_b64decode(data['rawId'] + '=='),
+            response=AuthenticatorAttestationResponse(
+                client_data_json=base64.urlsafe_b64decode(data['response']['clientDataJSON'] + '=='),
+                attestation_object=base64.urlsafe_b64decode(data['response']['attestationObject'] + '==')
+            ),
+            type=data['type']
+        )
+        
+        try:
+            verification = verify_registration_response(
+                credential=credential,
+                expected_challenge=base64.urlsafe_b64decode(registration.challenge + '=='),
+                expected_origin='https://localhost:8000',
+                expected_rp_id='localhost'
+            )
+            print(f"Verification successful: {verification}")  # Debug: Print verification result
+        except Exception as e:
+            print(f"Verification failed: {str(e)}")  # Debug: Print verification error
+            return JsonResponse({'status': 'error', 'message': f'Verification failed: {str(e)}'}, status=400)
+        
+        # If no exception is raised, the verification is successful
+        credential_id = base64.urlsafe_b64encode(verification.credential_id).rstrip(b'=').decode('ascii')
+        credential_public_key = base64.urlsafe_b64encode(verification.credential_public_key).rstrip(b'=').decode('ascii')
+        
+        new_credential = WebauthnCredentials.objects.create(
+            user=request.user,
+            credential_id=credential_id,
+            credential_public_key=credential_public_key,
+            current_sign_count=verification.sign_count
+        )
+        print(f"New credential created: {new_credential}")  # Debug: Print new credential object
+        
+        # Verify the credential was stored
+        stored_credential = WebauthnCredentials.objects.filter(user=request.user, credential_id=credential_id).first()
+        if stored_credential:
+            print(f"Credential successfully stored in DB: {stored_credential}")  # Debug: Print stored credential
+        else:
+            print("Error: Credential not found in DB after creation")  # Debug: Print error if not found
+        
+        # Print all credentials for this user
+        all_credentials = WebauthnCredentials.objects.filter(user=request.user)
+        print(f"All credentials for user {request.user.username}: {list(all_credentials.values())}")  # Debug: Print all user credentials
+        
+        return JsonResponse({'status': 'success'})
+    except WebauthnRegistration.DoesNotExist:
+        print("Error: WebauthnRegistration not found")  # Debug: Print error if registration not found
+        return JsonResponse({'status': 'error', 'message': 'Registration not found'}, status=400)
+    except json.JSONDecodeError:
+        print("Error: Invalid JSON data")  # Debug: Print error if JSON is invalid
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")  # Debug: Print unexpected errors
+        return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
+
+
+@require_http_methods(["GET"])
+def webauthn_login_options(request):
+    try:
+        user = request.user if request.user.is_authenticated else None
+        
+        allow_credentials = []
+        if user:
+            for cred in user.webauthn_credentials.all():
+                try:
+                    decoded_id = base64.urlsafe_b64decode(cred.credential_id + '==')
+                    allow_credentials.append({
+                        'type': 'public-key',
+                        'id': decoded_id
+                    })
+                except Exception as e:
+                    print(f"Error processing credential {cred.credential_id}: {str(e)}")
+        
+        options = generate_authentication_options(
+            rp_id='localhost',
+            challenge=os.urandom(32),
+            allow_credentials=allow_credentials
+        )
+        
+        # Store the challenge in the session
+        request.session['webauthn_challenge'] = base64.urlsafe_b64encode(options.challenge).decode('ascii')
+        
+        # Manually create the JSON response
+        json_options = {
+            'challenge': base64.urlsafe_b64encode(options.challenge).decode('ascii'),
+            'timeout': options.timeout,
+            'rpId': options.rp_id,
+            'allowCredentials': [
+                {
+                    'type': 'public-key',
+                    'id': base64.urlsafe_b64encode(cred['id']).decode('ascii')
+                }
+                for cred in options.allow_credentials
+            ],
+            'userVerification': options.user_verification
+        }
+        
+        return JsonResponse(json_options)
+    except Exception as e:
+        print(f"Error in webauthn_login_options: {str(e)}")
+        import traceback
+        print(traceback.format_exc())
+        return JsonResponse({'error': str(e)}, status=500)
+
+
+@require_http_methods(["POST"])
+def webauthn_login_verify(request):
+    try:
+        data = json.loads(request.body)
+        print(f"Received data: {data}")  # Debug: Print received data
+        
+        # Create the AuthenticationCredential object
+        credential = AuthenticationCredential(
+            id=data['id'],
+            raw_id=base64url_to_bytes(data['rawId']),
+            response=AuthenticatorAssertionResponse(
+                client_data_json=base64url_to_bytes(data['response']['clientDataJSON']),
+                authenticator_data=base64url_to_bytes(data['response']['authenticatorData']),
+                signature=base64url_to_bytes(data['response']['signature']),
+                user_handle=base64url_to_bytes(data['response']['userHandle']) if data['response'].get('userHandle') else None
+            ),
+            type=data['type']
+        )
+        
+        # Retrieve the stored challenge
+        stored_challenge = base64.urlsafe_b64decode(request.session.get('webauthn_challenge', '') + '==')
+        
+        # Find the user based on the credential ID
+        credential_id = data['id']
+        try:
+            user_credential = WebauthnCredentials.objects.get(credential_id=credential_id)
+        except WebauthnCredentials.DoesNotExist:
+            print(f"Credential not found: {credential_id}")
+            print(f"Available credentials: {list(WebauthnCredentials.objects.values_list('credential_id', flat=True))}")
+            return JsonResponse({'status': 'error', 'message': 'Credential not found'}, status=400)
+        
+        user = user_credential.user
+        
+        # TODO reminder to add in manifest file
+        origin = os.environ.get("EXPECTED_ORIGIN", 'https://localhost:8000')
+        rp_id =os.environ.get("EXPECTED_RP_ID", 'localhost')
+
+        try:
+            verification = verify_authentication_response(
+                credential=credential,
+                expected_challenge=stored_challenge,
+                expected_origin=origin,
+                expected_rp_id=rp_id,
+                credential_public_key=base64.urlsafe_b64decode(user_credential.credential_public_key + '=='),
+                credential_current_sign_count=user_credential.current_sign_count,
+                require_user_verification=True
+            )
+            
+            # Update the sign count
+            user_credential.current_sign_count = verification.new_sign_count
+            user_credential.save()
+            
+            # Get the first authentication backend
+            backend = get_backends()[0]
+            
+            # Get the dotted path string for the backend
+            backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
+            
+            # Log the user in with the specified backend
+            login(request, user, backend=backend_path)
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(f"Verification failed: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': f'Verification failed: {str(e)}'}, status=400)
+    except json.JSONDecodeError:
+        return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
+    except Exception as e:
+        print(f"Unexpected error: {str(e)}")
+        return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
+
+def webauthn_register_view(request):
+    return render(request, 'webauthn_register.html')
+
+def webauthn_login_view(request):
+    return render(request, 'webauthn_login.html')
+
+def user_has_webauthn_credential(user):
+    return WebauthnCredentials.objects.filter(user=user).exists()

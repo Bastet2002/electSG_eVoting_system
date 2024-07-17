@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/app
     entrypoint: [ "/app/wait-for-postgres.sh" ]
-    command: [ "djangodb", "python manage.py runserver 0.0.0.0:8000" ]
+    command: [ "djangodb", "python manage.py runsslserver 0.0.0.0:8000 --certificate /app/localhost.crt --key /app/localhost.key" ]
     ports:
       - "8000:8000"
     depends_on:
@@ -19,6 +19,7 @@ services:
       - DJANGO_DB_USER=admin
       - DJANGO_DB_PASSWORD=password
       - DATABASE_URL=postgres://admin:password@djangodb:5432/mydb
+      - DJANGO_ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0
     links:
       - djangodb
 

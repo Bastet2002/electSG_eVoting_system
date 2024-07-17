@@ -47,4 +47,10 @@ urlpatterns = [
     path('announcements/', views.view_announcement, name='view_all_announcements'),
     path('districts/', views.view_district, name='view_all_districts'),
     path('districts/<int:district_id>/', views.view_district_detail, name='view_district_detail'),
+    path('webauthn/register/', views.webauthn_register_view, name='webauthn_register_view'),
+    path('webauthn/register/options/', views.webauthn_register_options, name='webauthn_register_options'),
+    path('webauthn/register/verify/', views.webauthn_register_verify, name='webauthn_register_verify'),
+    path('webauthn/login/', views.webauthn_login_view, name='webauthn_login_view'),
+    path('webauthn/login/options/', views.webauthn_login_options, name='webauthn_login_options'),
+    path('webauthn/login/verify/', views.webauthn_login_verify, name='webauthn_login_verify'),
 ]
