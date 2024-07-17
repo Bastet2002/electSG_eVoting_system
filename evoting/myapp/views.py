@@ -841,12 +841,16 @@ def webauthn_login_verify(request):
         
         user = user_credential.user
         
+        # TODO reminder to add in manifest file
+        origin = os.environ.get("EXPECTED_ORIGIN", 'https://localhost:8000')
+        rp_id =os.environ.get("EXPECTED_RP_ID", 'localhost')
+
         try:
             verification = verify_authentication_response(
                 credential=credential,
                 expected_challenge=stored_challenge,
-                expected_origin='https://localhost:8000',
-                expected_rp_id='localhost',
+                expected_origin=origin,
+                expected_rp_id=rp_id,
                 credential_public_key=base64.urlsafe_b64decode(user_credential.credential_public_key + '=='),
                 credential_current_sign_count=user_credential.current_sign_count,
                 require_user_verification=True
