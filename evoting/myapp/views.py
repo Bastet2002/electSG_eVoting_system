@@ -195,6 +195,11 @@ def edit_account(request, user_id):
 
 @flexible_access('admin')
 def delete_account(request, user_id):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        messages.error(request, 'You do not have permission to delete the account at this time.')
+        return redirect('view_user_accounts')
+    
     user = get_object_or_404(UserAccount, pk=user_id)
     if request.method == 'POST':
         user.delete()
@@ -255,16 +260,17 @@ def view_district(request):
         districts = District.objects.filter(district_name__icontains=query)
     else:
         districts = District.objects.all()
-    
+
+    if isinstance(request.user, UserAccount):
+        if request.user.role.profile_name.lower() == 'admin':
+            current_phase = ElectionPhase.objects.filter(is_active=True).first()
+            disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
+
+            return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
     # for general user
-    if not request.user.is_authenticated:
-        return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
+    # if not request.user.is_authenticated:
+    return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
     
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
-
-    return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
-
 @flexible_access('admin')
 def edit_district(request, district_id):
     district = get_object_or_404(District, pk=district_id)
@@ -283,6 +289,11 @@ def edit_district(request, district_id):
 
 @flexible_access('admin')
 def delete_district(request, district_id):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        messages.error(request, 'You do not have permission to delete the district at this time.')
+        return redirect('candidate_home')
+    
     district = get_object_or_404(District, pk=district_id)
     if request.method == 'POST':
         district.delete()
@@ -333,6 +344,11 @@ def edit_profile(request, profile_id):
 
 @flexible_access('admin')
 def delete_profile(request, profile_id):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        messages.error(request, 'You do not have permission to delete the profile at this time.')
+        return redirect('view_profiles')
+    
     profile = get_object_or_404(Profile, pk=profile_id)
     if request.method == 'POST':
         profile.delete()
@@ -471,10 +487,13 @@ def voter_home(request):
 
     candidates = CandidateProfile.objects.filter(candidate__district_id=district_id).select_related('candidate', 'candidate__party')
     user_district = voter.district.district_name if voter.district else "No District"
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    disable_vote = current_phase and current_phase.phase_name not in ['Polling Day']
     list(messages.get_messages(request))
     return render(request, 'Voter/voterPg.html', {
         'candidates': candidates,
         'user_district': user_district,
+        'disable_vote': disable_vote
         #'voting_status':...
     })
 
@@ -563,16 +582,25 @@ def candidate_home(request, candidate_id=None):
     candidate_statement_form = CandidateStatementForm()
     candidate_statement_form.fields['candidate_statement'].initial = candidate_profile.candidate_statement
 
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
+
     return render(request, 'Candidate/candidatePg.html', {
         'profile_picture_form': profile_picture_form,
         'election_poster_form': election_poster_form,
         'candidate_statement_form': candidate_statement_form,
         'candidate_profile': candidate_profile,
-        'is_owner': is_owner
+        'is_owner': is_owner,
+        'disable_deletion': disable_deletion
     })
 
 @flexible_access('candidate')
 def upload_election_poster(request):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        messages.error(request, 'You do not have permission to upload the election poster this time.')
+        return redirect('candidate_home')
+    
     if request.method == 'POST':
         form = ElectionPosterForm(request.POST, request.FILES)
         if form.is_valid():
@@ -600,6 +628,11 @@ def delete_election_poster(request, candidate_id):
 
 @flexible_access('candidate')
 def upload_profile_picture(request):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        messages.error(request, 'You do not have permission to upload the profile picture at this time.')
+        return redirect('candidate_home')
+    
     if request.method == 'POST':
         form = ProfilePictureForm(request.POST, request.FILES)
         if form.is_valid():
@@ -627,6 +660,11 @@ def delete_profile_picture(request, candidate_id):
 
 @flexible_access('candidate')
 def upload_candidate_statement(request):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        messages.error(request, 'You do not have permission to upload the candidate statement at this time.')
+        return redirect('candidate_home')
+    
     if request.method == 'POST':
         form = CandidateStatementForm(request.POST)
         if form.is_valid():

@@ -18,7 +18,7 @@
                     <img id="profilePictureDisplay" src="{% static 'images/profile.png' %}" alt="Profile Picture" class="profile-preview">
                     {% endif %}
                     
-                    {% if is_owner %}
+                    {% if is_owner and not disable_deletion %}
                     <button class="edit-icon btn btn-secondary position-absolute" onclick="openProfilePopup()"> 
                         <i class="fas fa-pencil-alt"></i> <!-- Font Awesome edit icon -->
                     </button>
@@ -39,7 +39,7 @@
                 {% else %}
                 <img id="posterPictureDisplay" src="{% static 'images/poster.png' %}" alt="Poster Picture" class="poster-preview">
                 {% endif %}
-                {% if is_owner %}
+                {% if is_owner and not disable_deletion %}
                 <button class="edit-icon btn btn-secondary position-absolute" onclick="openPosterPopup()">
                     <i class="fas fa-pencil-alt"></i> <!-- Font Awesome edit icon -->
                 </button>
@@ -56,7 +56,7 @@
                 <p id="informationDisplay">Type your statement here...</p>
                 {% endif %}
                 
-                {% if is_owner %}
+                {% if is_owner and not disable_deletion %}
                 <button class="edit-icon btn btn-secondary position-absolute" onclick="openEditPopup()">
                     <i class="fas fa-pencil-alt"></i>
                 </button>
