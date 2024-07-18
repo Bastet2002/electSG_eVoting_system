@@ -29,7 +29,7 @@ if not SECRET_KEY:
 
 DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS",'localhost 127.0.0.1').split() 
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS",'localhost 127.0.0.1 0.0.0.0').split() 
 ALLOWED_CIDR_NETS = ['10.0.0.0/16']  # This covers all 10.0.x.x IP addresses, 2^16 addresses, is the range of the VPC
 
 # Application definition
@@ -207,7 +207,7 @@ else:
     }
 
 # security
-if not DEBUG:
-    SECURE_SSL_REDIRECT=True
-    SESSION_COOKIE_SECURE=True
-    CSRF_COOKIE_SECURE=True
+# if not DEBUG:
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True

@@ -48,10 +48,10 @@ command python manage.py create_mock_singpass_data
 python ./pygrpc/test_init.py # this required the ringct database to be up
 
 # production grade deployment 
-if ["$ENVIRONMENT" = "dev"]; then 
+if [ "$ENVIRONMENT" = "dev" ]; then 
   echo "Running in aws development"
   command python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 evoting.wsgi:application 
 else
   echo "Running in local development"
-  command python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 --certfile /app/localhost.crt --keyfile /app/localhost.key evoting.wsgi:application 
+  command python manage.py collectstatic --noinput && python manage.py runsslserver 0.0.0.0:8000 --certificate /app/ssl/localhost.crt --key /app/ssl/localhost.key
 fi

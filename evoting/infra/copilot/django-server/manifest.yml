@@ -47,6 +47,8 @@ environments:
       AWS_S3_REGION_NAME: ap-southeast-1
       USE_S3: "TRUE"
       ENVIRONMENT: "dev"
+      EXPECTED_ORIGIN: "https://elect-sg.cookndrum.com"
+      EXPECTED_RP_ID: "elect-sg.cookndrum.com"
     secrets:
       DATABASE_URL: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DATABASE_URL::"'  
       DJANGO_DB_PASSWORD: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_DB_PASSWORD::"'
