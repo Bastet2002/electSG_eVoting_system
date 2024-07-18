@@ -2,3 +2,6 @@ myvenv/
 **/__pycache__/
 .vscode/
 evoting/media/
+staticfiles/
+*.gz
+*:Zone.Identifier
