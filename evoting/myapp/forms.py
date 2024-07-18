@@ -100,18 +100,18 @@ class CreateParty(forms.ModelForm):
         model = Party
         fields = ['party_name']
 
-    def clean_party_name(self):
-        party_name = self.cleaned_data.get('party_name')
-        if len(party_name) > 50:
-            raise ValidationError("Party name cannot exceed 50 characters.")
-        if not self.instance.pk:
-            if Party.objects.filter(party_name=party_name).exists():
-                raise ValidationError("A party with this name already exists.")
-        else:
-            existing_party = Party.objects.filter(party_name=party_name).exclude(pk=self.instance.pk)
-            if existing_party.exists():
-                raise ValidationError("A party with this name already exists.")
-        return party_name
+    # def clean_party_name(self):
+    #     party_name = self.cleaned_data.get('party_name')
+    #     if len(party_name) > 50:
+    #         raise ValidationError("Party name cannot exceed 50 characters.")
+    #     if not self.instance.pk:
+    #         if Party.objects.filter(party_name=party_name).exists():
+    #             raise ValidationError("A party with this name already exists.")
+    #     else:
+    #         existing_party = Party.objects.filter(party_name=party_name).exclude(pk=self.instance.pk)
+    #         if existing_party.exists():
+    #             raise ValidationError("A party with this name already exists.")
+    #     return party_name
 
 class PasswordChangeForm(forms.Form):
     current_password = forms.CharField(widget=forms.PasswordInput, label="Current Password")

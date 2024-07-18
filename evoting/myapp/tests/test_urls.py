@@ -150,4 +150,4 @@ class TestUrls(SimpleTestCase):
 
     def test_view_all_announcements_url(self):
         url = reverse('view_all_announcements')
-        self.assertEquals(resolve(url).func, views.view_all_announcements)
+        self.assertEquals(resolve(url).func, views.view_announcement)

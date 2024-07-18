@@ -80,6 +80,23 @@ class UserAccount(AbstractBaseUser):
 
     objects = UserAccountManager()
 
+    # def clean(self):
+    #     super().clean()
+    #     if len(self.username) > 15:
+    #         raise ValidationError({"username": "Username cannot exceed 15 characters."})
+    #     if UserAccount.objects.filter(username=self.username).exclude(pk=self.pk).exists():
+    #         raise ValidationError({"username": "User account with this Username already exists."})
+        
+    #     if len(self.password) < 8 or not any(char.isdigit() for char in self.password) or not any(char.islower() for char in self.password) or not any(char.isupper() for char in self.password):
+    #         raise ValidationError({"password": "Password must be at least 8 characters long and contain at least one number, one lower case letter, and one upper case letter."})
+        
+    #     if self.role.profile_name.lower() == 'candidate':
+    #         if self.date_of_birth > date.today() - relativedelta(years=45):
+    #             raise ValidationError({"date_of_birth": "Candidate must be at least 45 years old."})
+            
+    #     if self.role is None:
+    #         raise ValidationError({"role": "This field is required."})
+
     def clean(self):
         super().clean()
         if self.role.profile_name.lower() == 'candidate':
@@ -99,6 +116,24 @@ class UserAccount(AbstractBaseUser):
     def clean_role(self):
         if self.role is None:
             raise ValidationError({"role": "This field is required."})
+
+    def full_clean(self, *args, **kwargs):
+        errors = {}
+        try:
+            super().full_clean(*args, **kwargs)
+        except ValidationError as e:
+            errors = e.error_dict
+
+        for field in self._meta.fields:
+            clean_method = getattr(self, f'clean_{field.name}', None)
+            if clean_method:
+                try:
+                    clean_method()
+                except ValidationError as e:
+                    errors[field.name] = e.messages
+
+        if errors:
+            raise ValidationError(errors)
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -189,9 +224,19 @@ class Party(models.Model):
     party_name = models.CharField(max_length=255)
     description = models.TextField()
 
+    def clean(self):
+        if len(self.party_name) > 50:
+            raise ValidationError({"party_name": "Party name cannot exceed 50 characters."})
+        if Party.objects.filter(party_name=self.party_name).exclude(pk=self.pk).exists():
+            raise ValidationError({"party_name": "Party with this name already exists."})
+        
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+        
     def __str__(self):
         return self.party_name
-
+    
 # ANNOUNCEMENT Model
 class Announcement(models.Model):
     announcement_id = models.AutoField(primary_key=True)

@@ -26,6 +26,9 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Install Pillow
 RUN pip install Pillow
 
+# Install Faker
+RUN pip install faker
+
 # Install dateutil
 RUN pip install python-dateutil
 
