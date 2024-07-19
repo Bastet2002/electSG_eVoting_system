@@ -148,11 +148,8 @@ void voter_cast_vote(Vote &vote)
     CA_generate_address(blsagSA, users_blsag); // when storing in db, only store the stealthAddress.pk of the decoy and signer
 
     // blsag
-    // BYTE m[32];
     compute_message(blsagSig, candidateSA, candidateCmt);
 
-    // TODO need to move the key image out from blsag simple gen.
-    // The reason is to compare double voting, and move it to earlier step for efficiency
     blsag_simple_gen(blsagSig, blsagSig.m, secret_index, receivedSA, blsagSA);
     bool is_verified = blsag_simple_verify(blsagSig, blsagSig.m);
     if (!is_verified)
@@ -182,6 +179,9 @@ void voter_cast_vote(Vote &vote)
 
     // assign the string keyimage and test_output here
     to_string(vote.key_image, blsagSig.key_image, 32);
+
+    // live count
+    update_live_count(district_id, vote.candidate_id);
 
     string msg = fmt::format("TEST OUTPUT:: Voter {} has casted vote in district {}", vote.voter_id, district_id);
     cout << msg << endl;

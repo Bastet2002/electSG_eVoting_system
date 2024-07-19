@@ -21,4 +21,5 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
 vector<int32_t> get_district_ids();
 vector<int32_t> get_candidate_ids(const int32_t &district_id);
 void count_write_vote(const int32_t district_id, const int32_t candidate_id, const User &candidate);
+void update_live_count(const int32_t district_id, const int32_t candidate_id);
 #endif

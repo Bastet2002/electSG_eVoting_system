@@ -183,6 +183,20 @@ class VoteResults(models.Model):
         self.clean()
         super().save(*args, **kwargs)
 
+class VoteLiveCount(models.Model):
+    candidate = models.OneToOneField('UserAccount', on_delete=models.CASCADE, primary_key=True)
+    current_count = models.IntegerField()
+    def clean(self):
+        if self.total_vote < 0:
+            raise ValidationError("Total vote cannot be negative.")
+        if self.total_vote > 1000000:  # Example threshold for a very large vote count
+            raise ValidationError("Total vote is unrealistically large.")
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+
 # PARTY Model
 class Party(models.Model):
     party_id = models.AutoField(primary_key=True)

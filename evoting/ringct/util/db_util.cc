@@ -390,6 +390,26 @@ void verify_vote_record()
 {
 }
 
+void update_live_count(const int32_t district_id, const int32_t candidate_id){
+    pqxx::connection C(cnt_django);
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::work W(C);
+
+    pqxx::result r = W.exec("select * from myapp_votelivecount where candidate_id=" + to_string(candidate_id)+";");
+    if (r.size() == 0) {
+        C.prepare("insert live count", "insert into myapp_votelivecount (candidate_id, current_count) values ($1, $2);");
+        W.exec_prepared("insert live count", candidate_id, 1);
+    } else {
+        int current_vote = r[0]["current_count"].as<int>();
+        current_vote += 1;
+        C.prepare("update live count", "update myapp_votelivecount set current_count=$1 where candidate_id=$2;");
+        W.exec_prepared("update live count", current_vote, candidate_id);
+    }
+    W.commit();
+}
 
 void count_write_vote(const int32_t district_id, const int32_t candidate_id, const User &candidate)
 {
@@ -418,6 +438,16 @@ void count_write_vote(const int32_t district_id, const int32_t candidate_id, con
             byte_to_int(amount, amount_byte, 8);
             if (amount == 30) 
                 total_vote += 1;
+        }
+    }
+
+    // compare with vote_livecount
+    pqxx::result r_live = W.exec("select current_count from myapp_votelivecount where candidate_id=" + to_string(candidate_id) + ";");
+    if (r_live.size() != 0) {
+        int current_count = r_live[0]["current_count"].as<int>();
+        if (current_count != total_vote) {
+            // TODO not doing anything for now
+            cerr << "Total vote for candidate in district " << " is " << total_vote << " but the live count is " << current_count << endl;
         }
     }
 
