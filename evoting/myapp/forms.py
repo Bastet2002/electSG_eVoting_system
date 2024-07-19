@@ -118,6 +118,16 @@ class PasswordChangeForm(forms.Form):
     new_password = forms.CharField(widget=forms.PasswordInput, label="New Password")
     confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm New Password")
 
+    def __init__(self, user, *args, **kwargs):
+        self.user = user
+        super().__init__(*args, **kwargs)
+
+    def clean_current_password(self):
+        current_password = self.cleaned_data.get('current_password')
+        if not self.user.check_password(current_password):
+            raise forms.ValidationError("Current password is incorrect.")
+        return current_password
+
     def clean_new_password(self):
         new_password = self.cleaned_data.get('new_password')
         if len(new_password) < 8:
@@ -141,6 +151,44 @@ class PasswordChangeForm(forms.Form):
 
         if new_password and confirm_password and new_password != confirm_password:
             self.add_error('confirm_password', "Confirm password does not match new password.")
+
+        return cleaned_data
+
+class FirstLoginPasswordChangeForm(forms.Form):
+    new_password = forms.CharField(widget=forms.PasswordInput, label="New Password")
+    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm New Password")
+
+    def clean_new_password(self):
+        new_password = self.cleaned_data.get('new_password')
+        if new_password:
+            if len(new_password) < 8:
+                raise forms.ValidationError("Password must have more than 8 characters.")
+            if not any(char.isdigit() for char in new_password):
+                raise forms.ValidationError("Password must contain at least one number.")
+            if not any(char.isupper() for char in new_password):
+                raise forms.ValidationError("Password must contain at least one uppercase letter.")
+            if not any(char.islower() for char in new_password):
+                raise forms.ValidationError("Password must contain at least one lowercase letter.")
+            if not any(char in '!@#$%^&*()-_=+[]{}|;:,.<>?/~' for char in new_password):
+                raise forms.ValidationError("Password must contain at least one special character.")
+            if len(new_password) > 100:
+                raise forms.ValidationError("Password must not exceed 100 characters.")
+        return new_password
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data is None:
+            return {}
+        
+        new_password = cleaned_data.get("new_password")
+        confirm_password = cleaned_data.get("confirm_password")
+
+        if new_password and confirm_password and new_password != confirm_password:
+            self.add_error('confirm_password', "Confirm password does not match new password.")
+
+        return cleaned_data
+
+
 
 #--------------------------------Candidate Forms---------------------------------------- 
 class ElectionPosterForm(forms.ModelForm):

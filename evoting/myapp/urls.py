@@ -25,6 +25,7 @@ urlpatterns = [
     path('login/', views.user_login, name='login'),
     path('logout/', views.user_logout, name='logout'),
     path('change_password/', views.change_password, name='change_password'),
+    path('first_login/', views.first_login_password_change, name='first_login_password_change'),
     path('account/', views.view_accounts, name='view_user_accounts'),
     path('account/edit/<int:user_id>/', views.edit_account, name='edit_user'),
     path('account/delete/<int:user_id>/', views.delete_account, name='delete_user'),
@@ -53,4 +54,6 @@ urlpatterns = [
     path('webauthn/login/', views.webauthn_login_view, name='webauthn_login_view'),
     path('webauthn/login/options/', views.webauthn_login_options, name='webauthn_login_options'),
     path('webauthn/login/verify/', views.webauthn_login_verify, name='webauthn_login_verify'),
+    path('webauthn/verify/', views.webauthn_verify_view, name='webauthn_verify'),
+    path('delete-all-credentials/<int:user_id>/', views.delete_all_credentials, name='delete_all_credentials'),
 ]
