@@ -5,11 +5,15 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'generalUser/generalUserPg.css' %}"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+
 <div class="wrapper">
     <div class="container">
         <div class="status">
             <h1>Election Status: {{ active_phase.phase_name }}</h1>
         </div>
+        
         <div class="content">
             <div class="announcements">
                 {% for announcement in announcements %}
@@ -27,7 +31,8 @@
                     <img src="{% static 'images/district_image.png' %}" alt="Districts">
                     <div class="hover-text">Click here to see all districts</div>
                 </a>
-            </div>
+               
+            </div>   
         </div>
     </div>
     <footer>

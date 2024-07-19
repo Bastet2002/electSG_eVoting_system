@@ -2,14 +2,28 @@ body {
     font-family: 'Arial', sans-serif;
     margin: 0;
     padding: 0;
-    background: url('/static/images/bg.png');
-    background-size: cover; /* Ensures the image covers the entire background */
-    background-position: center; /* Centers the image */
-    background-repeat: no-repeat; /* Prevents the image from repeating */
-    background-attachment: fixed; /* Makes the background image fixed */
+    background: url('/static/images/redFlag.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
 }
-.content{
-    padding: 100px;
+
+.container {
+    padding-left: 0;
+    margin: 0;
+}
+
+.content {
+    padding: 120px 15px;
+    margin: 0;
+}
+
+.districts {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr); /* 4 cards per row by default */
+    gap: 20px;
+    padding: 0 20px;
 }
 
 .card {
@@ -17,14 +31,14 @@ body {
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
     border-radius: 10px;
     overflow: hidden;
-    background: #c11818; /* White background for the cards */
-    border: 2px solid #121010; /* Light gray border */
+    background: #ffffff;
+    border: 2px solid #121010;
+    position: relative;
 }
 
 .card:hover {
     transform: scale(1.05);
     box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
-    background-color: rgba(255, 255, 255, 0.9);
 }
 
 .card-body {
@@ -41,16 +55,34 @@ body {
     text-align: center;
     font-size: 1.25rem;
     font-weight: bold;
-    color: #a52a2a; /* Dark red color for the card title */
+    color: #a52a2a;
+}
+
+.card:hover .card-body {
+    background-color: rgba(255, 255, 255, 0.9);
+}
+
+@media (max-width: 1200px) {
+    .districts {
+        grid-template-columns: repeat(3, 1fr); /* 3 cards per row for medium screens */
+    }
 }
 
 @media (max-width: 768px) {
+    .districts {
+        grid-template-columns: repeat(2, 1fr); /* 2 cards per row for small screens */
+    }
+
     .card-body {
         height: 120px;
     }
 }
 
 @media (max-width: 480px) {
+    .districts {
+        grid-template-columns: 1fr; /* 1 card per row for extra small screens */
+    }
+
     .card-body {
         height: 100px;
     }

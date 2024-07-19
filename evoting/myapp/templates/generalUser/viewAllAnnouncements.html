@@ -5,10 +5,11 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'adminDashboard/home.css' %}"> 
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
     body{
-        background: url('/static/images/image.jpeg');
-        background-size: 1440px; /* Ensures the image covers the entire background */
+        background: url('/static/images/redFlag.png') center center/cover fixed;
+        background-size: cover; /* Ensures the image covers the entire background */
         background-position: center; /* Centers the image */
         background-repeat: no-repeat; /* Prevents the image from repeating */
         background-attachment: fixed; /* Makes the background image fixed */

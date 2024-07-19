@@ -1,5 +1,4 @@
- /* Header styles */
- .header {
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -12,34 +11,71 @@
     left: 0;
     z-index: 2;
     font-family: "Lato", sans-serif;
-  }
-  
-  .logo-container img {
+}
+
+.logoImage img {
     height: 60px;
-  }
-  
-  .navigation {
+    padding-top: 3px;
+}
+
+.navigation {
     display: flex;
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-  
-  .navigation li {
+}
+
+.navigation li {
     margin-right: 3rem;
-  }
-  
-  .navigation a {
+}
+
+.navigation a {
     text-decoration: none;
     color: black;
     font-weight: bold;
     transition: color 0.3s ease;
-    padding: 8px 12px; /* Padding around links */
-    border-radius: 4px; /* Rounded corners */
-    transition: background-color 0.3s, color 0.3s; /* Transition for hover effects */
+    padding: 8px 12px;
+    border-radius: 4px;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.navigation a:hover {
+    background-color: #e87676;
+    color: #f1f1f1;
+}
+
+@media screen and (max-width: 768px) {
+  .header {
+      padding: 0.5rem 1rem;
   }
-  
-  .navigation a:hover {
-    background-color: #e87676; /* Darker background on hover */
-    color: #f1f1f1; /* Lighter text on hover */
+
+  .logo-container {
+      margin-bottom: 0.5rem;
   }
+
+  .logo-container img {
+      height: 40px;
+  }
+
+  .navigation {
+      margin-top: 0.5rem; /* Optional: adjust spacing if needed */
+  }
+
+  .navigation li {
+      margin-right: 1rem; /* Adjust spacing between items */
+  }
+
+  .navigation a {
+      padding: 10px 12px; /* Adjust padding */
+  }
+}
+@media screen and (max-width: 320px) {
+    .header {
+        padding: 0.5rem;
+    }
+
+    .navigation a {
+        padding: 8px 6px;
+        font-size: 0.9rem;
+    }
+}

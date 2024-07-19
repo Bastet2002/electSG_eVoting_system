@@ -19,6 +19,7 @@ body {
 
 .logo-container img {
     height: 60px;
+    padding-top: 3px;
 }
 
 .navigation {
@@ -149,7 +150,7 @@ footer {
 }
 
 .footer img {
-    height: 100px;
+    height: 120px;
 }
 
 .contact-support-container {
@@ -182,4 +183,73 @@ footer {
 .contact-info a:hover,
 .support-info a:hover {
     text-decoration: underline;
+}
+
+.logoImage img{
+    width: 80px;
+}
+
+
+
+@media screen and (max-width: 768px) {
+    .header {
+        padding: 1rem;
+    }
+
+    .navigation {
+        flex-wrap: wrap;
+    }
+
+    .navigation li {
+        margin-right: 0.5rem;
+    }
+
+    .main-content {
+        padding: 5vh 1rem;
+    }
+
+    .login-container {
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .footer {
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        text-align: left;
+        
+    }
+
+    .contact-support-container {
+        flex-direction: column;
+        justify-content: space-between;
+        padding-right: 10px;
+    }
+
+    .contact-info,
+    .support-info {
+        width: 48%;
+    }
+
+    
+}
+
+@media screen and (max-width: 420px) {
+    .login-container {
+        padding: 1rem;
+    }
+
+    .login-container h2 {
+        font-size: 1.5rem;
+    }
+
+    .login-container button,
+    .singpass-login button {
+        width: 100%;
+    }
+
+    .footer img {
+        height: 60px;
+    }
 }

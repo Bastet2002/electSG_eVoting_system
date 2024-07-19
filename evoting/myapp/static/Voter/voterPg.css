@@ -20,7 +20,7 @@ body {
   align-items: center;
   margin-bottom: 15px;
   padding: 10px 20px;
-  background-color: #f8d7da;
+  background-color: #f8d7da57;
   border-radius: 8px;
 }
 
@@ -115,3 +115,5 @@ button:hover {
   color: #ffffff;
   transform: scale(1.05);
 }
+
+
