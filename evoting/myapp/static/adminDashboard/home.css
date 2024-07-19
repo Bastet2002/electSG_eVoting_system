@@ -50,3 +50,34 @@
 .announcement-box p {
     margin-bottom: 10px;
 }
+
+@media screen and (max-width: 568px) {
+    .container {
+        margin-left: 0; /* Remove margin to fit the screen */
+        padding: 15px;
+        padding-top: 80px; /* Adjust padding for the header */
+    }
+
+    .container_general {
+        margin-left: 0; /* Remove margin to fit the screen */
+        padding-top: 80px; /* Adjust padding for the header */
+    }
+
+    .announcement-box {
+        width: 100%; /* Make the box full-width */
+        padding: 15px; /* Adjust padding for smaller screens */
+        margin-bottom: 15px; /* Reduce margin */
+    }
+
+    .phase-details p {
+        font-size: 14px; /* Adjust font size */
+    }
+
+    .announcement-box p {
+        margin-bottom: 8px; /* Reduce margin */
+    }
+
+    .announcement-container {
+        margin-top: 20px; /* Adjust margin for smaller screens */
+    }
+}

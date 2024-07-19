@@ -4,8 +4,9 @@ body {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    background: url('/static/images/image.png') no-repeat center center fixed;
-    background-size: 1450px;
+    /* background: url('/static/images/redFlag2.jpeg') no-repeat center center fixed; */
+    background-color: #a82121;
+    background-size: cover;
     color: #333;
 }
 
@@ -16,34 +17,38 @@ body {
 }
 
 .container {
-    max-width: 1400px;
+    max-width: 100%;
     margin: 0 auto;
-    padding: 100px;
+    padding: 20px;
+    padding-top: 100px;
+    box-sizing: border-box;
     flex: 1;
-   
     
 }
 
 h1 {
     text-align: center;
    
-    color: #333;
+    color: #ffffff;
     font-weight: bold;
 }
 .status {
-    background-color: #ffffff9d;
+    background-color: #ffffff00;
    
     display: flex;
     justify-content: center;
     align-items: center;
-    padding-left: 90px;
+    
     
    
 }
+
+
 .content {
     display: flex;
-    justify-content: space-between;
-    gap: 40px;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
     padding-top: 20px;
 }
 
@@ -54,6 +59,7 @@ h1 {
     border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     width: 500px;
+    max-width: 100%;
 }
 
 .announcement-box {
@@ -117,6 +123,7 @@ h1 {
     display: block;
 }
 
+
 footer {
     background-color: #ffffff;
     padding: 1rem 2rem;
@@ -126,8 +133,8 @@ footer {
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.1);
 }
 
-.footer img {
-    height: 100px;
+.logo-container img {
+    height: 60px;
 }
 
 .contact-support-container {
@@ -162,14 +169,44 @@ footer {
     text-decoration: underline;
 }
 
-/* Responsive Styles */
-@media (max-width: 768px) {
-    .content {
-        flex-direction: column;
+@media screen and (max-width: 568px) {
+    .container {
+        padding: 20px;
+        padding-top: 90px;
+        align-items: center;
     }
 
-    .contact-support {
+    .status {
+        padding-left: 0;
+    }
+
+    .content {
+        gap: 20px;
         flex-direction: column;
-        gap: 10px;
+        align-items: center;
+    }
+
+    .announcements {
+        width: 100%;
+    }
+
+    .footer {
+        flex-direction: column;
+        justify-content: space-between;
+        align-items: flex-start;
+        text-align: left;
+        
+    }
+
+    .contact-support-container {
+        flex-direction: column;
+        justify-content: space-between;
+        padding-right: 10px;
+    }
+
+    .contact-info,
+    .support-info {
+        width: 48%;
     }
 }
+
