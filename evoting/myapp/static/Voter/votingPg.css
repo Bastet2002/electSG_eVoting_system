@@ -84,14 +84,14 @@ body {
     color :white;
 }
 
-<<<<<<< HEAD
-=======
 .chart-container {
     display: flex;
     justify-content: space-around;
     align-items: center;
     margin-top: 20px;
 }
+
+
 .chart {
     width: 100px !important;
     height: 400px !important;
@@ -115,4 +115,3 @@ canvas {
     height: 400px !important;
 }
 
->>>>>>> ffe14b5 ([13] Added final result)
