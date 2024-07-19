@@ -74,6 +74,7 @@ class UserAccount(AbstractBaseUser):
     role = models.ForeignKey('Profile', on_delete=models.SET_NULL, null=True, blank=True)
     district = models.ForeignKey('District', on_delete=models.SET_NULL, null=True, blank=True)
     party = models.ForeignKey('Party', on_delete=models.SET_NULL, null=True, blank=True)
+    first_login = models.BooleanField(default=True)
     
     USERNAME_FIELD = 'username'  # Use username as the unique identifier
     REQUIRED_FIELDS = ['full_name', 'date_of_birth', 'password', 'role']

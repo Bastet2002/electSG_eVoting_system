@@ -1,0 +1,150 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>First Login - Set Password and Register WebAuthn</title>
+</head>
+<body>
+    <h2>Set Your Password and Register WebAuthn</h2>
+    <form id="passwordForm">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
+    </form>
+
+    <script>
+        async function setPasswordAndRegisterWebAuthn() {
+            const formData = new FormData(document.getElementById('passwordForm'));
+            try {
+                const response = await fetch('{% url "first_login_password_change" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                });
+                const result = await response.json();
+                if (result.status === 'success') {
+                    // If password set successfully, proceed with WebAuthn registration
+                    await startWebAuthnRegistration();
+                } else {
+                    alert('Failed to set password. Please try again.');
+                }
+            } catch (error) {
+                console.error('Error setting password:', error);
+                alert('An error occurred while setting the password.');
+            }
+        }
+
+        async function startWebAuthnRegistration() {
+            try {
+                console.log('Starting WebAuthn registration');
+                const response = await fetch('/webauthn/register/options/');
+                console.log('Fetch response:', response);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const options = await response.json();
+                console.log('Received options:', options);
+        
+                // Convert challenge and user.id from base64url to Uint8Array
+                const challengeBuffer = base64urlToUint8Array(options.challenge);
+                const userIdBuffer = base64urlToUint8Array(options.user.id);
+        
+                // Create a new object with the converted values
+                const publicKeyCredentialCreationOptions = {
+                    ...options,
+                    challenge: challengeBuffer,
+                    user: {
+                        ...options.user,
+                        id: userIdBuffer,
+                    },
+                };
+        
+                console.log('Modified options:', publicKeyCredentialCreationOptions);
+                
+                console.log('Calling navigator.credentials.create');
+                const credential = await navigator.credentials.create({
+                    publicKey: publicKeyCredentialCreationOptions
+                });
+                console.log('Credential created:', credential);
+        
+                const credentialData = {
+                    id: credential.id,
+                    rawId: arrayBufferToBase64(credential.rawId),
+                    type: credential.type,
+                    response: {
+                        attestationObject: arrayBufferToBase64(credential.response.attestationObject),
+                        clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON)
+                    }
+                };
+                console.log('Credential data prepared:', credentialData);
+        
+                console.log('Sending verification request');
+                const verificationResponse = await fetch('/webauthn/register/verify/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(credentialData)
+                });
+                console.log('Verification response:', verificationResponse);
+                
+                if (!verificationResponse.ok) {
+                    const errorData = await verificationResponse.json();
+                    throw new Error(errorData.message || 'Verification failed');
+                }
+                
+                const verificationResult = await verificationResponse.json();
+                console.log('Verification result:', verificationResult);
+                
+                if (verificationResult.status === 'success') {
+                    alert('WebAuthn registration successful!');
+                    // Redirect to the appropriate home page
+                    window.location.href = verificationResult.redirect_url;
+                } else {
+                    alert('WebAuthn registration failed: ' + verificationResult.message);
+                }
+            } catch (error) {
+                console.error('Detailed error during WebAuthn registration:', error);
+                alert('An error occurred during WebAuthn registration: ' + error.message);
+            }
+        }
+
+        // Utility functions
+        function base64urlToUint8Array(base64url) {
+            const padding = '='.repeat((4 - base64url.length % 4) % 4);
+            const base64 = (base64url + padding)
+                .replace(/-/g, '+')
+                .replace(/_/g, '/');
+            const rawData = atob(base64);
+            return Uint8Array.from(rawData, char => char.charCodeAt(0));
+        }        
+        
+        function arrayBufferToBase64(buffer) {
+            const binary = String.fromCharCode.apply(null, new Uint8Array(buffer));
+            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
+        }
+        
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    </script>
+</body>
+</html>
