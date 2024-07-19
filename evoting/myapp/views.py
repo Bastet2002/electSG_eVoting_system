@@ -138,8 +138,9 @@ def create_account(request):
 
             # Check if the created user account is for a candidate
             if new_user.role.profile_name == 'Candidate':
-                # Create a CandidateProfile instance for the candidate user
+                # Create a CandidateProfile and VoteResult instance for the candidate user
                 CandidateProfile.objects.create(candidate=new_user)
+                VoteResults.objects.create(candidate=new_user, total_vote=0)
                 # Generate user and voting currency via gRPC
                 try:
                     grpc_generate_candidate_keys_run(candidate_id=new_user.user_id)
@@ -198,7 +199,7 @@ def edit_account(request, user_id):
 @flexible_access('admin')
 def delete_account(request, user_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    if current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
         messages.error(request, 'You do not have permission to delete the account at this time.')
         return redirect('view_user_accounts')
     
@@ -292,7 +293,7 @@ def edit_district(request, district_id):
 @flexible_access('admin')
 def delete_district(request, district_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    if current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
         messages.error(request, 'You do not have permission to delete the district at this time.')
         return redirect('candidate_home')
     
@@ -544,6 +545,12 @@ def cast_vote(request):
         for candidate_id in selected_candidates:
             try:
                 grpc_compute_vote_run(candidate_id=int(candidate_id), voter_id=voter.voter_id)
+                
+                vote_result = get_object_or_404(VoteResults, candidate_id=candidate_id)
+                if vote_result:
+                    vote_result.total_vote += 1
+                    vote_result.save()
+
             except GrpcError as e:
                 # Check if the error message indicates double voting
                 if "CORE_DOUBLE_VOTING" in str(e):
@@ -706,12 +713,12 @@ def general_user_home(request):
 
 @flexible_access('public')
 def view_district_detail(request, district_id):
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if current_phase and current_phase.phase_name == 'End Election':
+        compute_final_total_vote(request, district_id)
     
     district = get_object_or_404(District, pk=district_id)
     candidate_profiles = CandidateProfile.objects.filter(candidate__district=district)
-
-    view_results(request, district_id)
-    
     candidates = UserAccount.objects.filter(district=district)
     vote_results = VoteResults.objects.filter(candidate__district=district)
 
@@ -719,17 +726,27 @@ def view_district_detail(request, district_id):
     total_votes = [candidate.total_vote for candidate in vote_results]
 
     total_votes_sum = VoteResults.objects.filter(candidate__in=candidates).aggregate(Sum('total_vote'))['total_vote__sum']
-    # total_votes_sum = VoteResults.objects.filter(candidate__in=[candidate.candidate for candidate in candidates]).aggregate(Sum('total_vote'))
+    if total_votes_sum is None:
+        total_votes_sum = 0
     print(total_votes_sum)
+
     return render(request, 'generalUser/viewDistrictDetail.html', {
+        'phase': current_phase.phase_name,
         'district': district,
         'candidate_profiles': candidate_profiles,
         'candidate_names': candidate_names,
         'total_votes': total_votes,
-        'result': total_votes_sum
+        'result': total_votes_sum 
     })
 
-def view_results(request, district_id):
+def get_ongoing_result(request, district_id):
+    candidates = UserAccount.objects.filter(district__district_id=district_id)
+    total_votes_sum = VoteResults.objects.filter(candidate__in=candidates).aggregate(Sum('total_vote'))['total_vote__sum']
+    if total_votes_sum is None:
+        total_votes_sum = 0
+    return JsonResponse({'result': total_votes_sum})
+
+def compute_final_total_vote(request, district_id):
     try:
         grpc_calculate_total_vote_run(district_ids=[district_id])
     except GrpcError as e:
@@ -738,8 +755,6 @@ def view_results(request, district_id):
     except Exception as e:
         print(f"Unexpected error: {e}")
         messages.error(request, f"Unexpected error in calculating vote result for {district_id}: {e}")
-
-
 
 #------------------------------------------------- WebAuthn------------------------------------------------------
 from django.http import JsonResponse, HttpResponse

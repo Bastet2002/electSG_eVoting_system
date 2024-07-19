@@ -15,28 +15,26 @@ class Command(BaseCommand):
         end_letter = random.choice(string.ascii_uppercase)
         middle_digits = ''.join(random.choices(string.digits, k=7))
         return f"{start_letter}{middle_digits}{end_letter}"
+    
+    #testing purpose
+    def generate_strings(self, base='A1234567', count=26):
+        result = []
+        for letter in string.ascii_uppercase[:count]:
+            result.append(f"{base}{letter}")
+        return result
 
     def handle(self, *args, **kwargs):
-
-        if not SingpassUser.objects.filter(singpass_id='A1234567B').exists():
-            hashed_password = make_password('123456')
+        # Example usage
+        fake = Faker()
+        generated_strings = self.generate_strings()
+        for id in generated_strings:
             SingpassUser.objects.create(
-                singpass_id='A1234567B',
-                password=hashed_password,
-                full_name='James Mary',
+                singpass_id=id,
+                password=make_password('123'),
+                full_name=fake.name(),
                 date_of_birth='1980-01-01',
                 phone_num='09876543',
                 district='Clementi'
-            )
-        if not SingpassUser.objects.filter(singpass_id='A1234567C').exists():
-            hashed_password = make_password('123456')
-            SingpassUser.objects.create(
-                singpass_id='A1234567C',
-                password=hashed_password,
-                full_name='James Parker',
-                date_of_birth='1980-01-01',
-                phone_num='09876543',
-                district='Jurong East'
             )
             
         fake = Faker()
@@ -66,7 +64,7 @@ class Command(BaseCommand):
                 district=random.choice(districts)
             ))
 
-        SingpassUser.objects.bulk_create(mock_data)
+        # SingpassUser.objects.bulk_create(mock_data)
         self.stdout.write(self.style.SUCCESS('Successfully inserted mock SingpassUser data'))
 
         

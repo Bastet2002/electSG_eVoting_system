@@ -210,10 +210,11 @@ class VoteResults(models.Model):
     total_vote = models.IntegerField()
 
     def clean(self):
-        if self.total_vote < 0:
-            raise ValidationError("Total vote cannot be negative.")
-        if self.total_vote > 1000000:  # Example threshold for a very large vote count
-            raise ValidationError("Total vote is unrealistically large.")
+        if self.total_vote:
+            if self.total_vote < 0:
+                raise ValidationError("Total vote cannot be negative.")
+            if self.total_vote > 1000000:  # Example threshold for a very large vote count
+                raise ValidationError("Total vote is unrealistically large.")
 
     def save(self, *args, **kwargs):
         self.clean()

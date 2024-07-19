@@ -7,12 +7,54 @@
 <link rel="stylesheet" href="{% static 'Voter/voterPg.css' %}"> 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<div class="chart-container">
-    <canvas id="pieChart" class="chart" width="40" height="40"style="display: block; box-sizing: border-box; height: 98px; width: 98px;"></canvas>
-    <canvas id="histogram" class="chart" width="40" height="40"style="display: block; box-sizing: border-box; height: 98px; width: 98px;"></canvas>
+
+<div class="main">
+    <div class="status-container">
+        {% if phase == 'Polling Day' %}
+        <div class="ongoing-result">
+            Ongoing Result: <span id="result-number">{{ result }}</span>
+        </div>
+        {% elif phase == 'End Election' %}
+        <div class="final-result">
+            Final Result: <span>{{ result }}</span>
+        </div>
+        {% endif %}
+        <div class="district">
+            District: <span>{{ district.district_name }}</span>
+        </div>
+    </div>
+
+    {% if phase == 'End Election' %}
+    <div style="display: flex; justify-content: space-around;">
+        <div class="pie-chart-container" style="width: 30%; height: 30%; padding: 100px;">
+            <canvas id="pieChart" class="chart"></canvas>
+        </div>
+        <div class="histrogram-chart-container" style="width: 40%; height: 50%; padding: 160px;">
+            <canvas id="histogram" class="chart"></canvas>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="candidates-container">
+        {% for candidate in candidate_profiles %}
+        
+        <div class="candidate">
+            {% if candidate.profile_picture %}
+            <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
+            {% else %}
+            <img src="{% static 'images/profile.png' %}" alt="{{ candidate.candidate.full_name }}">
+            {% endif %}
+            <h3>{{ candidate.candidate.full_name }}</h3>
+            <p>Party: {{ candidate.candidate.party.party_name }}</p>
+        </div>
+        
+        {% endfor %}
+    </div>
 </div>
 
+{% if phase == 'End Election' %}
 <script>
+    // Charts
     const candidateNames = {{ candidate_names|safe }};
     const totalVotes = {{ total_votes|safe }};
 
@@ -35,6 +77,7 @@
     });
 
     // Histogram
+    console.log('Fetching new result...');
     const ctxHist = document.getElementById('histogram').getContext('2d');
     const histogram = new Chart(ctxHist, {
         type: 'bar',
@@ -55,29 +98,67 @@
         }
     });
 </script>
-<div class="main">
-    <div class="status-container">
-        <div class="status">
-            Ongoing Result: <span>{{ result }}</span>
-        </div>
-        <div class="district">
-            District: <span>{{ district.district_name }}</span>
-        </div>
-    </div>
-    <div class="candidates-container">
-        {% for candidate in candidate_profiles %}
-        
-        <div class="candidate">
-            {% if candidate.profile_picture %}
-            <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
-            {% else %}
-            <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
-            {% endif %}
-            <h3>{{ candidate.candidate.full_name }}</h3>
-            <p>Party: {{ candidate.candidate.party.party_name }}</p>
-        </div>
-        
-        {% endfor %}
-    </div>
-</div>
+{% elif phase == 'Polling Day' %}
+<script>
+    // Ongoing Result 
+    console.log('Fetching new result...');
+    let currentResult = {{ result }};
+    const districtId = {{ district.district_id }};
+
+    function updateResult() {
+        console.log('Fetching new result...');
+        fetch(`/ongoing-result/${districtId}/`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                console.log('Received data:', data);
+                const resultElement = document.getElementById('result-number');
+                if (!resultElement) {
+                    console.error('result-number element not found');
+                    return;
+                }
+                const newResult = data.result;
+                
+                console.log('Current result:', currentResult);
+                console.log('New result:', newResult);
+                
+                if (newResult > currentResult) {
+                    resultElement.textContent = newResult;
+                    resultElement.classList.add('increased');
+                    console.log('Result increased');
+                    
+                    setTimeout(() => {
+                        resultElement.classList.remove('increased');
+                    }, 1000);
+                    
+                    currentResult = newResult;
+                } else {
+                    console.log('Result unchanged');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+    }
+
+    // Update results every 5 seconds
+    setInterval(updateResult, 10000);
+
+    // Initial update
+    updateResult();
+</script>
+<style>
+    #result-number {
+        transition: all 0.3s ease;
+    }
+
+    #result-number.increased {
+        color: green;
+        transform: scale(1.2);
+    }
+</style>
+{% endif %}
+
 {% endblock %}

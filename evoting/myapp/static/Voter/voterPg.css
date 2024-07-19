@@ -24,13 +24,13 @@ body {
   border-radius: 8px;
 }
 
-.status, .district {
+.ongoing-result, .final-result, .district {
   font-weight: bold;
   font-size: 25px;
   color: #000000;
 }
 
-.status span {
+.final-result span {
   color: #d76359;
 }
 

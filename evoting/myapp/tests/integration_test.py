@@ -250,7 +250,6 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
         vote_data = {
             'candidate': [candidate.user_id]
         }
-        print(candidate.user_id)
         response = self.client.post(reverse('cast_vote'), vote_data)
         self.assertEqual(response.status_code, 302)  # Assuming a redirect on success
 
@@ -437,8 +436,7 @@ class ElectionPhaseIntegrationTest(TransactionTestCase):
         # Check if upload button is now disabled for candidate
         response = self.client.get(reverse('candidate_home'))
         self.assertNotContains(response, '<button class="edit-icon btn')
-        current_phase = ElectionPhase.objects.filter(is_active=True).first()
-        print(current_phase.phase_id)
+
         # Update candidate statement
         statement_data = {
             'candidate_statement': 'This is my campaign promise 123.'

@@ -59,15 +59,6 @@
         }
     },
     {
-        "model": "myapp.candidateprofile",
-        "pk": 2,
-        "fields": {
-            "election_poster": "",
-            "profile_picture": "images/candidate1.jpg",
-            "candidate_statement": "I promise to serve you well."
-        }
-    },
-    {
         "model": "myapp.announcement",
         "pk": 1,
         "fields": {
