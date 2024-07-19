@@ -5,18 +5,70 @@
 
 {% block content %}
 <link rel="stylesheet" href="{% static 'Voter/voterPg.css' %}"> 
+<<<<<<< HEAD
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+=======
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<div class="chart-container">
+    <canvas id="pieChart" class="chart" width="40" height="40"style="display: block; box-sizing: border-box; height: 98px; width: 98px;"></canvas>
+    <canvas id="histogram" class="chart" width="40" height="40"style="display: block; box-sizing: border-box; height: 98px; width: 98px;"></canvas>
+</div>
+
+<script>
+    const candidateNames = {{ candidate_names|safe }};
+    const totalVotes = {{ total_votes|safe }};
+
+    const chartOptions = {
+    responsive: false,
+    maintainAspectRatio: false,
+    // ... other options
+    };
+    // Pie Chart
+    const ctxPie = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(ctxPie, {
+        type: 'pie',
+        data: {
+            labels: candidateNames,
+            datasets: [{
+                data: totalVotes,
+                backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40']
+            }]
+        }
+    });
+
+    // Histogram
+    const ctxHist = document.getElementById('histogram').getContext('2d');
+    const histogram = new Chart(ctxHist, {
+        type: 'bar',
+        data: {
+            labels: candidateNames,
+            datasets: [{
+                label: 'Total Votes',
+                data: totalVotes,
+                backgroundColor: '#36A2EB'
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+>>>>>>> ffe14b5 ([13] Added final result)
 <div class="main">
     <div class="status-container">
         <div class="status">
-            Ongoing Result: <span>{{ voting_status }}</span>
+            Ongoing Result: <span>{{ result }}</span>
         </div>
         <div class="district">
             District: <span>{{ district.district_name }}</span>
         </div>
     </div>
     <div class="candidates-container">
-        {% for candidate in candidates %}
+        {% for candidate in candidate_profiles %}
         
         <div class="candidate">
             {% if candidate.profile_picture %}

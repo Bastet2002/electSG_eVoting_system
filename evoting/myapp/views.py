@@ -9,7 +9,8 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.db.models import Q
 from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm, FirstLoginPasswordChangeForm
-from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter
+from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter, VoteResults
+from django.db.models import Sum
 from django.contrib.auth.hashers import check_password
 from .decorators import flexible_access
 from django.core.exceptions import ValidationError
@@ -21,6 +22,7 @@ from pygrpc.ringct_client import (
     grpc_construct_calculate_total_vote_request,
     grpc_generate_candidate_keys_run,
     grpc_compute_vote_run,
+    grpc_calculate_total_vote_run,
     GrpcError,
 )
 
@@ -704,12 +706,39 @@ def general_user_home(request):
 
 @flexible_access('public')
 def view_district_detail(request, district_id):
+    
     district = get_object_or_404(District, pk=district_id)
-    candidates = CandidateProfile.objects.filter(candidate__district=district)
+    candidate_profiles = CandidateProfile.objects.filter(candidate__district=district)
+
+    view_results(request, district_id)
+    
+    candidates = UserAccount.objects.filter(district=district)
+    vote_results = VoteResults.objects.filter(candidate__district=district)
+
+    candidate_names = [candidate.full_name for candidate in candidates]
+    total_votes = [candidate.total_vote for candidate in vote_results]
+
+    total_votes_sum = VoteResults.objects.filter(candidate__in=candidates).aggregate(Sum('total_vote'))['total_vote__sum']
+    # total_votes_sum = VoteResults.objects.filter(candidate__in=[candidate.candidate for candidate in candidates]).aggregate(Sum('total_vote'))
+    print(total_votes_sum)
     return render(request, 'generalUser/viewDistrictDetail.html', {
         'district': district,
-        'candidates': candidates,
+        'candidate_profiles': candidate_profiles,
+        'candidate_names': candidate_names,
+        'total_votes': total_votes,
+        'result': total_votes_sum
     })
+
+def view_results(request, district_id):
+    try:
+        grpc_calculate_total_vote_run(district_ids=[district_id])
+    except GrpcError as e:
+        print(f"Error in gRPC call: {e}")
+        messages.error(request, f"Error in calculating vote result for {district_id}: {e}")
+    except Exception as e:
+        print(f"Unexpected error: {e}")
+        messages.error(request, f"Unexpected error in calculating vote result for {district_id}: {e}")
+
 
 
 #------------------------------------------------- WebAuthn------------------------------------------------------

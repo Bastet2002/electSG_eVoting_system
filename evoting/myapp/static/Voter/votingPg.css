@@ -84,3 +84,35 @@ body {
     color :white;
 }
 
+<<<<<<< HEAD
+=======
+.chart-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 20px;
+}
+.chart {
+    width: 100px !important;
+    height: 400px !important;
+}
+canvas {
+    width: 100px !important;
+    height: 400px !important;
+    max-width: 10px !important;
+    max-height: 100% !important;
+}
+
+/* .chart-container canvas {
+    width: 400px !important;
+    height: 400px !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+} */
+
+#pieChart, #histogram {
+    width: 400px !important;
+    height: 400px !important;
+}
+
+>>>>>>> ffe14b5 ([13] Added final result)

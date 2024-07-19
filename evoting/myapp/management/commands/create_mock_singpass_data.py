@@ -51,7 +51,7 @@ class Command(BaseCommand):
         ]
 
         # Generate 1000 mock SingpassUser records
-        for _ in range(1000):
+        for _ in range(10):
             phone_num = fake.phone_number()
             # Ensure phone_num is at most 20 characters
             if len(phone_num) > 20:
