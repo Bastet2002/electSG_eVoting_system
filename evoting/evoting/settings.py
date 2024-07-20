@@ -13,10 +13,10 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import dj_database_url
 import os
+from csp.constants import NONCE, SELF, NONE, STRICT_DYNAMIC, UNSAFE_INLINE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
@@ -45,6 +45,7 @@ INSTALLED_APPS = [
     'myapp',
     'django_extensions',
     'sslserver',
+    # 'csp',
 ]
 
 AUTH_USER_MODEL = 'myapp.UserAccount'
@@ -62,6 +63,7 @@ MIDDLEWARE = [
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
+    # 'csp.middleware.CSPMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -152,4 +154,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 SECURE_SSL_REDIRECT = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+SESSION_COOKIE_HTTPONLY = True # does the client side still have access to cookie
+ 
+# CSP
+# CONTENT_SECURITY_POLICY = {
+#     "DIRECTIVES": {
+#         "default-src": [SELF],
+#         # "script-src": [SELF,NONCE, "'strict-dynamic'"], 
+#         "script-src": [SELF,NONCE, STRICT_DYNAMIC], 
+#         "frame-ancestors": [NONE],
+#         "form-action": [SELF],
+#         "report-uri": "/csp-report/",
+#     },
+# }
 

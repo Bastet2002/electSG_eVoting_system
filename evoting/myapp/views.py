@@ -1,4 +1,4 @@
-from django.contrib.auth import authenticate, login, logout, get_backends
+from django.contrib.auth import authenticate, login, logout, get_backends, get_user_model
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.hashers import make_password
 from django.contrib.sessions.models import Session
@@ -8,7 +8,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.db.models import Q
-from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm
+from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm, FirstLoginPasswordChangeForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter
 from django.contrib.auth.hashers import check_password
 from .decorators import flexible_access
@@ -24,43 +24,82 @@ from pygrpc.ringct_client import (
     GrpcError,
 )
 
+User = get_user_model()
+
 @flexible_access('public')
 def user_login(request):
     if request.method == 'POST':
-        username = request.POST['username']
-        password = request.POST['password']
+        username = request.POST.get('username')
+        password = request.POST.get('password')
         user = authenticate(request, username=username, password=password)
-
         if user is not None:
-            login(request, user)
+            # Check if the user has registered WebAuthn credentials
+            has_webauthn = WebauthnCredentials.objects.filter(user=user).exists()
+            
+            # Store the user ID in the session for WebAuthn verification
+            request.session['pending_user_id'] = user.user_id
+            
+            return JsonResponse({
+                'status': 'success',
+                'requires_webauthn': has_webauthn
+            })
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=400)
+    else:
+        return render(request, 'login.html')
+
+def change_password(request):
+    if request.method == 'POST':
+        form = PasswordChangeForm(request.user, request.POST)
+        if form.is_valid():
+            user = request.user
+            user.set_password(form.cleaned_data['new_password'])
+            user.save()
+            messages.success(request, 'Your password has been successfully changed.')
+            backend = get_backends()[0]
+            backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
+            
+            # Log the user in with the specified backend
+            login(request, user, backend=backend_path)
             if user.role.profile_name == 'Admin':
                 return redirect('admin_home')
             elif user.role.profile_name == 'Candidate':
                 return redirect('candidate_home')
-        else:
-            messages.error(request, "Invalid username or password.")
- 
-    return render(request, 'login.html')
-
-def change_password(request):
-    if request.method == 'POST':
-        form = PasswordChangeForm(request.POST)
-        if form.is_valid():
-            current_password = form.cleaned_data.get('current_password')
-            new_password = form.cleaned_data.get('new_password')
-
-            if not check_password(current_password, request.user.password):
-                form.add_error('current_password', 'Current password is incorrect.')
-            else:
-                user = request.user
-                user.set_password(new_password)
-                user.save()
-                messages.success(request, 'Your password has been successfully changed.')
-                return redirect('login')
+            messages.success(request, 'Your password has been set.')
     else:
-        form = PasswordChangeForm()
+        form = PasswordChangeForm(request.user)
 
     return render(request, 'changePassword.html', {'form': form})
+
+
+def first_login_password_change(request):
+    if 'pending_user_id' not in request.session:
+        return redirect('login')
+
+    user = User.objects.get(user_id=request.session['pending_user_id'])
+
+    if request.method == 'POST':
+        form = FirstLoginPasswordChangeForm(request.POST)
+        if form.is_valid():
+            user.set_password(form.cleaned_data['new_password'])
+            user.first_login = False
+            user.save()
+
+            backend = get_backends()[0]
+            backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
+            
+            # Log the user in with the specified backend
+            login(request, user, backend=backend_path)
+
+            # Return a JSON response indicating success and that WebAuthn registration should be initiated
+            return JsonResponse({'status': 'success', 'prompt_webauthn': True})
+    else:
+        form = FirstLoginPasswordChangeForm()
+
+    return render(request, 'firstLogin.html', {'form': form})
+
+
+
 
 @flexible_access('admin', 'candidate', 'voter')
 def user_logout(request):
@@ -653,7 +692,6 @@ import base64
 import os
 import json
 
-
 @login_required
 @require_http_methods(["GET"])
 def webauthn_register_options(request):
@@ -747,7 +785,15 @@ def webauthn_register_verify(request):
         all_credentials = WebauthnCredentials.objects.filter(user=request.user)
         print(f"All credentials for user {request.user.username}: {list(all_credentials.values())}")  # Debug: Print all user credentials
         
-        return JsonResponse({'status': 'success'})
+        # Determine the redirect URL based on user role
+        if request.user.role.profile_name == 'Admin':
+            redirect_url = reverse('admin_home')
+        elif request.user.role.profile_name == 'Candidate':
+            redirect_url = reverse('candidate_home')
+        else:
+            redirect_url = reverse('default_home')  # Make sure to define a default home URL
+
+        return JsonResponse({'status': 'success', 'redirect_url': redirect_url})
     except WebauthnRegistration.DoesNotExist:
         print("Error: WebauthnRegistration not found")  # Debug: Print error if registration not found
         return JsonResponse({'status': 'error', 'message': 'Registration not found'}, status=400)
@@ -758,23 +804,26 @@ def webauthn_register_verify(request):
         print(f"Unexpected error: {str(e)}")  # Debug: Print unexpected errors
         return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
 
-
 @require_http_methods(["GET"])
 def webauthn_login_options(request):
     try:
-        user = request.user if request.user.is_authenticated else None
+        # Get the pending user from the session
+        pending_user_id = request.session.get('pending_user_id')
+        if not pending_user_id:
+            return JsonResponse({'error': 'No pending login'}, status=400)
+        
+        user = User.objects.get(user_id=pending_user_id)  # Changed from 'id' to 'user_id'
         
         allow_credentials = []
-        if user:
-            for cred in user.webauthn_credentials.all():
-                try:
-                    decoded_id = base64.urlsafe_b64decode(cred.credential_id + '==')
-                    allow_credentials.append({
-                        'type': 'public-key',
-                        'id': decoded_id
-                    })
-                except Exception as e:
-                    print(f"Error processing credential {cred.credential_id}: {str(e)}")
+        for cred in user.webauthn_credentials.all():
+            try:
+                decoded_id = base64.urlsafe_b64decode(cred.credential_id + '==')
+                allow_credentials.append({
+                    'type': 'public-key',
+                    'id': decoded_id
+                })
+            except Exception as e:
+                print(f"Error processing credential {cred.credential_id}: {str(e)}")
         
         options = generate_authentication_options(
             rp_id='localhost',
@@ -801,6 +850,8 @@ def webauthn_login_options(request):
         }
         
         return JsonResponse(json_options)
+    except User.DoesNotExist:
+        return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         print(f"Error in webauthn_login_options: {str(e)}")
         import traceback
@@ -841,9 +892,13 @@ def webauthn_login_verify(request):
         
         user = user_credential.user
         
-        # TODO reminder to add in manifest file
+        # Ensure the user matches the pending user
+        pending_user_id = request.session.get('pending_user_id')
+        if not pending_user_id or user.user_id != pending_user_id:
+            return JsonResponse({'status': 'error', 'message': 'User mismatch'}, status=400)
+        
         origin = os.environ.get("EXPECTED_ORIGIN", 'https://localhost:8000')
-        rp_id =os.environ.get("EXPECTED_RP_ID", 'localhost')
+        rp_id = os.environ.get("EXPECTED_RP_ID", 'localhost')
 
         try:
             verification = verify_authentication_response(
@@ -869,7 +924,13 @@ def webauthn_login_verify(request):
             # Log the user in with the specified backend
             login(request, user, backend=backend_path)
             
-            return JsonResponse({'status': 'success'})
+            # Include the user's role in the response
+            user_role = user.role.profile_name if hasattr(user, 'role') and hasattr(user.role, 'profile_name') else 'Unknown'
+            
+            return JsonResponse({
+                'status': 'success',
+                'user_role': user_role
+            })
         except Exception as e:
             print(f"Verification failed: {str(e)}")
             return JsonResponse({'status': 'error', 'message': f'Verification failed: {str(e)}'}, status=400)
@@ -885,5 +946,20 @@ def webauthn_register_view(request):
 def webauthn_login_view(request):
     return render(request, 'webauthn_login.html')
 
+def webauthn_verify_view(request):
+    if 'pending_user_id' not in request.session:
+        return redirect('login')
+    return render(request, 'webauthn_verify.html')
+
 def user_has_webauthn_credential(user):
     return WebauthnCredentials.objects.filter(user=user).exists()
+
+@flexible_access('admin')
+def delete_all_credentials(request, user_id):
+    user = get_object_or_404(UserAccount, user_id=user_id)
+    
+    if request.method == 'POST':
+        WebauthnCredentials.objects.filter(user=user).delete()
+        messages.success(request, f"All WebAuthn credentials for {user.username} have been deleted.")
+    
+    return redirect('view_user_accounts')
