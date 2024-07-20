@@ -22,7 +22,7 @@
     </div>
     
     <div class="main-content">
-        <div class="login-container">
+        <div class="login-container" id="login-container">
             <h2>Login</h2>
             <div class="singpass-login">
                 <button type="button" onclick="window.location.href='/singpass_login'">Login with Singpass</button>
@@ -34,7 +34,7 @@
                 <input type="text" id="username" name="username" required>
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
-                <button type="button" onclick="startLogin()">Login</button>
+                <button type="button" id="loginbtn">Login</button>
                 <a href="/change_password">Change password</a>
             </form>
         </div>
@@ -58,14 +58,16 @@
         </div>
     </footer>
 
-    <script>
+    <script nonce="{{reqeust.csp_nonce}}"">
+        document.getElementById('loginbtn').addEventListener('click', startLogin);
+
         async function startLogin() {
             const username = document.getElementById('username').value;
             const password = document.getElementById('password').value;
 
             try {
                 // First, perform the regular login
-                const loginResponse = await fetch('{% url 'login' %}', {
+                const loginResponse = await fetch("{% url 'login' %}", {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/x-www-form-urlencoded',

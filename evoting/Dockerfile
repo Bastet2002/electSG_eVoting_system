@@ -45,5 +45,6 @@ EXPOSE 8000
 RUN pip install --upgrade webauthn
 # RUN openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout /app/localhost.key -out /app/localhost.crt -subj "/C=US/ST=Denial/L=Springfield/O=Dis/CN=localhost"
 
+RUN pip install -U django-csp==4.0b1
 
 CMD ["./wait-for-postgres.sh", "djangodb", "python", "manage.py", "runsslserver", "0.0.0.0:8000", "--certificate", "/app/localhost.crt", "--key", "/app/localhost.key"]
