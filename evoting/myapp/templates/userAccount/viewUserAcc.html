@@ -39,7 +39,7 @@
                         <td>{{ user.party }}</td>
                         <td>{{ user.district }}</td>
                         <td>
-                            <a href="{% url 'edit_user' user.user_id %}"><button type="button" class="btn btn-primary">Update</button></a>
+                            <a href="{% url 'edit_user' user.user_id %}"><button type="button" class="btn btn-primary" style="padding-bottom: 30px;">Update</button></a>
     
                             <form method="post" action="{% url 'delete_user' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete('user')">
                                 {% csrf_token %}
@@ -48,7 +48,7 @@
 
                             <form method="post" action="{% url 'delete_all_credentials' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete('credentials')">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-warning">Delete All Credentials</button>
+                                <button type="submit" class="btn btn-warning" style="padding-bottom: 30px;">Delete All Credentials</button>
                             </form>
                         </td>
                     </tr>
