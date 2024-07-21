@@ -4,31 +4,64 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>First Login - Set Password and Register WebAuthn</title>
+    <title>My Account</title>
 </head>
 <body>
-    <h2>Set Your Password and Register WebAuthn</h2>
-    <div id="errorPopup" class="error-popup"></div>
-    <form id="passwordForm">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
-    </form>
+    <h1>My Account</h1>
+
+    <div class="section">
+        <h2>Change Password</h2>
+        <div id="errorPopup" class="popup-alert"></div>
+        <form id="passwordForm" method="post" action="{% url 'change_password' %}">
+            {% csrf_token %}
+            {{ password_form.as_p }}
+            <button type="button" onclick="validateAndSubmitForm()">Change Password</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>WebAuthn Registration</h2>
+        <button id="register-button">Register WebAuthn</button>  
+    </div>
+
+    <div class="section">
+        <h2>Delete All Credentials</h2>
+        <form method="post" action="{% url 'delete_all_credentials_temp' %}">
+            {% csrf_token %}
+            <p>This deletes ALL credentials.</p>
+            <button type="submit" onclick="return confirm('Are you sure you want to delete all credentials?');">Delete All Credentials</button>
+        </form>
+    </div>
+
+    {% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        setTimeout(() => {
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.classList.remove('show');
+        }, 3000);
+    </script>
+    {% endif %}
 
     <script>
         function showError(message) {
             const errorPopup = document.getElementById('errorPopup');
             errorPopup.textContent = message;
-            errorPopup.style.display = 'block';
+            errorPopup.classList.add('show');
             setTimeout(() => {
-                errorPopup.style.display = 'none';
-            }, 5000); // Hide after 5 seconds
+                errorPopup.classList.remove('show');
+                errorPopup.textContent = '';
+            }, 3000); // Hide after 3 seconds
         }
 
         function validatePassword(password) {
             const errors = [];
             if (!password || password.trim() === '') {
-                errors.push("Password cannot be empty.");
+                errors.push("New Password cannot be empty.");
             } else {
                 if (password.length < 8) {
                     errors.push("Password must have more than 8 characters.");
@@ -51,59 +84,57 @@
             }
             return errors;
         }
-        
 
-        async function setPasswordAndRegisterWebAuthn() {
-            const formData = new FormData(document.getElementById('passwordForm'));
-            const newPassword = formData.get('new_password');
-            const confirmPassword = formData.get('confirm_password');
+        async function validateCurrentPassword(currentPassword) {
+            try {
+                const response = await fetch('{% url "check_current_password" %}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                    body: JSON.stringify({ current_password: currentPassword })
+                });
+                const result = await response.json();
+                return result.is_valid;
+            } catch (error) {
+                console.error('Error checking current password:', error);
+                return false;
+            }
+        }
 
-            // Client-side validation
+        async function validateAndSubmitForm() {
+            const currentPassword = document.querySelector('input[name="current_password"]').value;
+            const newPassword = document.querySelector('input[name="new_password"]').value;
+            const confirmPassword = document.querySelector('input[name="confirm_password"]').value;
+
+            // Check if current password is correct
+            const isCurrentPasswordValid = await validateCurrentPassword(currentPassword);
+            if (!isCurrentPasswordValid) {
+                showError("Current password is incorrect.");
+                return;
+            }
+
+            // Validate new password
             const passwordErrors = validatePassword(newPassword);
             if (passwordErrors.length > 0) {
                 showError(passwordErrors.join('\n'));
                 return;
             }
 
+            // Check if new password and confirm password match
             if (newPassword !== confirmPassword) {
-                showError("Confirm password does not match new password.");
+                showError("New password and confirm password do not match.");
                 return;
             }
 
-            try {
-                const response = await fetch('{% url "first_login_password_change" %}', {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-CSRFToken': '{{ csrf_token }}'
-                    }
-                });
-                const result = await response.json();
-                if (result.status === 'success') {
-                    // If password set successfully, proceed with WebAuthn registration
-                    await startWebAuthnRegistration();
-                } else {
-                    if (result.errors) {
-                        const errorMessages = [];
-                        for (const [field, errors] of Object.entries(result.errors)) {
-                            if (Array.isArray(errors)) {
-                                errors.forEach(error => errorMessages.push(`${field}: ${error}`));
-                            } else if (typeof errors === 'string') {
-                                errorMessages.push(`${field}: ${errors}`);
-                            }
-                        }
-                        showError(errorMessages.join('\n'));
-                    } else {
-                        showError('Failed to set password. Please try again.');
-                    }
-                }
-            } catch (error) {
-                console.error('Error setting password:', error);
-                showError('An error occurred while setting the password.');
-            }
+            // If all validations pass, submit the form
+            document.getElementById('passwordForm').submit();
         }
 
-        async function startWebAuthnRegistration() {
+        document.getElementById('register-button').addEventListener('click', registerWebAuthn);
+
+        async function registerWebAuthn() {
             try {
                 console.log('Starting WebAuthn registration');
                 const response = await fetch('/webauthn/register/options/');
@@ -159,25 +190,23 @@
                     body: JSON.stringify(credentialData)
                 });
                 console.log('Verification response:', verificationResponse);
-                
+        
                 if (!verificationResponse.ok) {
                     const errorData = await verificationResponse.json();
                     throw new Error(errorData.message || 'Verification failed');
                 }
-                
+        
                 const verificationResult = await verificationResponse.json();
                 console.log('Verification result:', verificationResult);
-                
+        
                 if (verificationResult.status === 'success') {
-                    alert('WebAuthn registration successful!');
-                    // Redirect to the appropriate home page
-                    window.location.href = verificationResult.redirect_url;
+                    showError('WebAuthn registration successful!', 'success');
                 } else {
-                    alert('WebAuthn registration failed: ' + verificationResult.message);
+                    showError('WebAuthn registration failed: ' + verificationResult.message, 'error');
                 }
             } catch (error) {
                 console.error('Detailed error during WebAuthn registration:', error);
-                alert('An error occurred during WebAuthn registration: ' + error.message);
+                showError('An error occurred during WebAuthn registration: ' + error.message, 'error');
             }
         }
 
