@@ -5,14 +5,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Login - Set Password and Register WebAuthn</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/firstlogin.css' %}">
 </head>
-<body>
-    <h2>Set Your Password and Register WebAuthn</h2>
-    <form id="passwordForm">
-        {% csrf_token %}
-        {{ form.as_p }}
-        <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
-    </form>
+<div class="container">
+    <body>
+        <h2>Set Your Password and Register WebAuthn</h2>
+        <form id="passwordForm">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
+        </form>
+</div>
 
     <script>
         async function setPasswordAndRegisterWebAuthn() {
