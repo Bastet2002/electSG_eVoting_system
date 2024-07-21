@@ -52,6 +52,12 @@ def user_login(request):
     else:
         return render(request, 'login.html')
 
+def check_current_password(request):
+    data = json.loads(request.body)
+    current_password = data.get('current_password')
+    is_valid = request.user.check_password(current_password)
+    return JsonResponse({'is_valid': is_valid})
+
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
@@ -96,14 +102,15 @@ def first_login_password_change(request):
             login(request, user, backend=backend_path)
 
             # Return a JSON response indicating success and that WebAuthn registration should be initiated
-            return JsonResponse({'status': 'success', 'prompt_webauthn': True})
+            return JsonResponse({'status': 'success', 'prompt_webauthn': True, 'errors': form.errors})
     else:
         form = FirstLoginPasswordChangeForm()
 
     return render(request, 'firstLogin.html', {'form': form})
 
-
-
+def my_account(request):
+    password_form = PasswordChangeForm(request.user)
+    return render(request, 'myAccount.html', {'password_form': password_form})
 
 @flexible_access('admin', 'candidate', 'voter')
 def user_logout(request):
@@ -1231,3 +1238,10 @@ def delete_all_credentials(request, user_id):
         messages.success(request, f"All WebAuthn credentials for {user.username} have been deleted.")
     
     return redirect('view_user_accounts')
+
+def delete_all_credentials_temp(request):
+    if request.method == 'POST':
+        # Delete all credentials in the system
+        WebauthnCredentials.objects.all().delete()
+        messages.success(request, "All credentials have been deleted.")
+    return redirect('login')  # Redirect to admin index or appropriate page

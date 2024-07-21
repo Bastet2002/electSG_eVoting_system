@@ -13,6 +13,7 @@
     <nav>
         <ul class="navigation">
             <li>
+                <li><a href="{% url 'my_account' %}">My Account</a></li>
                 {% if user.is_authenticated %}
                     {% if user.role.profile_name == 'Candidate' %}
                         <a href="{% url 'candidate_home' %}">Home</a>
