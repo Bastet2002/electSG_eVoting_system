@@ -17,6 +17,9 @@ class CreateNewUser(forms.ModelForm):
         super(CreateNewUser, self).__init__(*args, **kwargs)
         self.fields['role'].required = True
 
+class CSVUploadForm(forms.Form):
+    csv_file = forms.FileField()
+
 class EditUser(forms.ModelForm):
     class Meta:
         model = UserAccount
@@ -63,27 +66,31 @@ class CreateProfileForm(forms.ModelForm):
             self.fields['profile_name'].disabled = True
             self.fields['description'].disabled = True
 
-class CreateDistrict(forms.Form):
-    district_names = forms.CharField(
-        widget=forms.Textarea(attrs={'placeholder': 'Enter district names separated by semicolons (;)'}),
-    )
+class CreateDistrict(forms.ModelForm):
+    class Meta:
+        model = District
+        fields = ['district_name', 'num_of_people']
 
-    def clean_district_names(self):
-        district_names = self.cleaned_data.get('district_names')
-        
-        district_list = [name.strip() for name in district_names.split(';') if name.strip()]
-        for name in district_list:
-            if len(name) > 30:
-                raise ValidationError(f"District name '{name}' exceeds 30 characters limit.")
+    # district_names = forms.CharField(
+    #     widget=forms.Textarea(attrs={'placeholder': 'Enter district names separated by semicolons (;)'}),
+    # )
 
-        existing_districts = []
-        for name in district_list:
-            if District.objects.filter(district_name__iexact=name).exists():
-                existing_districts.append(name)
-        if existing_districts:
-            raise ValidationError(f"District(s) already exist: {', '.join(existing_districts)}")
+    # def clean_district_names(self):
+    #     district_names = self.cleaned_data.get('district_names')
         
-        return district_names
+    #     district_list = [name.strip() for name in district_names.split(';') if name.strip()]
+    #     for name in district_list:
+    #         if len(name) > 30:
+    #             raise ValidationError(f"District name '{name}' exceeds 30 characters limit.")
+
+    #     existing_districts = []
+    #     for name in district_list:
+    #         if District.objects.filter(district_name__iexact=name).exists():
+    #             existing_districts.append(name)
+    #     if existing_districts:
+    #         raise ValidationError(f"District(s) already exist: {', '.join(existing_districts)}")
+        
+    #     return district_names
 
 class EditDistrict(forms.ModelForm):
     class Meta:
@@ -100,18 +107,18 @@ class CreateParty(forms.ModelForm):
         model = Party
         fields = ['party_name']
 
-    def clean_party_name(self):
-        party_name = self.cleaned_data.get('party_name')
-        if len(party_name) > 50:
-            raise ValidationError("Party name cannot exceed 50 characters.")
-        if not self.instance.pk:
-            if Party.objects.filter(party_name=party_name).exists():
-                raise ValidationError("A party with this name already exists.")
-        else:
-            existing_party = Party.objects.filter(party_name=party_name).exclude(pk=self.instance.pk)
-            if existing_party.exists():
-                raise ValidationError("A party with this name already exists.")
-        return party_name
+    # def clean_party_name(self):
+    #     party_name = self.cleaned_data.get('party_name')
+    #     if len(party_name) > 50:
+    #         raise ValidationError("Party name cannot exceed 50 characters.")
+    #     if not self.instance.pk:
+    #         if Party.objects.filter(party_name=party_name).exists():
+    #             raise ValidationError("A party with this name already exists.")
+    #     else:
+    #         existing_party = Party.objects.filter(party_name=party_name).exclude(pk=self.instance.pk)
+    #         if existing_party.exists():
+    #             raise ValidationError("A party with this name already exists.")
+    #     return party_name
 
 class PasswordChangeForm(forms.Form):
     current_password = forms.CharField(widget=forms.PasswordInput, label="Current Password")

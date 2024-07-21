@@ -8,11 +8,16 @@
 
 <div class="main">
     <h1 style="text-align: center;">Add District</h1>
-    <form method="post" action="{% url 'create_district' %}" class="add-district-form">
+    <form method="post" action="{% url 'create_district' 'normal_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <p>Enter multiple district names separated by semicolons (;)</p>
-        <button type="submit" name="create-district">Add District</button>
+        <button type="submit" name="create-district">Create District</button>
+    </form>
+
+    <form method="post" enctype="multipart/form-data" action="{% url 'create_district' 'csv_upload' %}" class="add-district-form">
+        {% csrf_token %}
+        {{ csv_form.as_p }}
+        <button type="submit" name="create-district">Create New Districts</button>
     </form>
 </div>
 

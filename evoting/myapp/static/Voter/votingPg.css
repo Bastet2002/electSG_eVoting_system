@@ -84,3 +84,38 @@ body {
     color :white;
 }
 
+.pie-chart-container {
+    padding-top: 1000px;
+}
+/* 
+.chart-container {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    margin-top: 20px;
+}
+
+
+.chart {
+    width: 50vw !important;
+    height: 50vh !important;
+}
+canvas {
+    width: 100px !important;
+    height: 400px !important;
+    max-width: 10px !important;
+    max-height: 100% !important;
+}
+
+.chart-container canvas {
+    width: 400px !important;
+    height: 400px !important;
+    max-width: 100% !important;
+    max-height: 100% !important;
+}
+
+#pieChart, #histogram {
+    width: 400px !important;
+    height: 400px !important;
+} */
+

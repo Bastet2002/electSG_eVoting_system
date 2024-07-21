@@ -31,8 +31,8 @@
         {% endfor %}
     </div>
     <div class="vote-button-container">
-        <a href="{% url 'ballot_paper' %}" class="button-link">
-            <button>Vote</button>
+        <a href="{% if not disable_vote %}{% url 'ballot_paper' %}{% endif %}" class="button-link {% if disable_vote %}btn-disabled{% endif %}">
+            <button {% if disable_vote %}disabled{% endif %}>Vote</button>
         </a>
     </div>
 </div>
