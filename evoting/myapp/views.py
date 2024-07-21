@@ -8,12 +8,14 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.db.models import Q
-from .forms import CreateNewUser, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm, FirstLoginPasswordChangeForm
+from django.db.models import Sum
+from .forms import CreateNewUser, CSVUploadForm, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm, FirstLoginPasswordChangeForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter, VoteResults
 from django.db.models import Sum
 from django.contrib.auth.hashers import check_password
 from .decorators import flexible_access
 from django.core.exceptions import ValidationError
+import csv, datetime
 
 from pygrpc.ringct_client import (
     grpc_generate_user_and_votingcurr_run,
@@ -125,43 +127,159 @@ def admin_home(request):
     return render(request, 'adminDashboard/home.html', {'active_phase': active_phase, 'announcements': announcements})
 
 # ---------------------------------------UserAccount views------------------------------------------------
+# @flexible_access('admin')
+# def create_account(request, upload_type=None):
+#     if request.method == 'POST':
+#         if upload_type == 'csv_upload':
+#             form = CSVUploadForm(request.POST, request.FILES)
+#             if form.is_valid():
+#                 csv_file = request.FILES['csv_file']
+#                 decoded_file = csv_file.read().decode('utf-8').splitlines()
+#                 reader = csv.DictReader(decoded_file)
+
+#                 for row in reader:
+#                     user = UserAccount(
+#                         username = row['username'],
+#                         full_name = row['full_name'],
+#                         password = make_password(row['password']),
+#                         date_of_birth = row['date_of_birth'],
+#                         role_name = Profile.objects.get(profile_name=row['role']),
+#                         district_name = District.objects.get(district_name=row['district']),
+#                         party_name = Party.objects.get(party_name=row['party'])
+#                     )
+
+#                     user.save()
+
+#                     if user.role.profile_name == 'Candidate':
+#                         CandidateProfile.objects.create(candidate=user)
+#                         VoteResults.objects.create(candidate=user, total_vote=0)
+#                         # Generate user and voting currency via gRPC
+#                         try:
+#                             grpc_generate_candidate_keys_run(candidate_id=user.user_id)
+#                             messages.success(request, 'Account successfully created.')
+#                         except GrpcError as grpc_error:
+#                             # Handle specific gRPC errors
+#                             print(f"Error in gRPC call: {grpc_error}")
+#                             messages.error(request, f"Error in creating candidate keys: {grpc_error}")
+#                         except Exception as e:
+#                             # Handle other unexpected exceptions
+#                             print(f"Unexpected error: {e}")
+#                             messages.error(request, f"Unexpected error in creating candidate keys: {e}")
+#                     else:
+#                         messages.success(request, 'Account successfully created.')
+#                 messages.success(request, 'Users created successfully')
+#                 return redirect('create_account')  # Replace with your actual success URL
+#         else:
+#             form = CreateNewUser(request.POST)
+#             if form.is_valid():
+#                 new_user = form.save(commit=False)
+#                 # Hash the password before saving
+#                 password = form.cleaned_data['password']
+#                 new_user.password = make_password(password)
+#                 new_user.save()
+
+#                 # Check if the created user account is for a candidate
+#                 if new_user.role.profile_name == 'Candidate':
+#                     CandidateProfile.objects.create(candidate=new_user)
+#                     VoteResults.objects.create(candidate=new_user, total_vote=0)
+#                     # Generate user and voting currency via gRPC
+#                     try:
+#                         grpc_generate_candidate_keys_run(candidate_id=new_user.user_id)
+#                         messages.success(request, 'Account successfully created.')
+#                     except GrpcError as grpc_error:
+#                         # Handle specific gRPC errors
+#                         print(f"Error in gRPC call: {grpc_error}")
+#                         messages.error(request, f"Error in creating candidate keys: {grpc_error}")
+#                     except Exception as e:
+#                         # Handle other unexpected exceptions
+#                         print(f"Unexpected error: {e}")
+#                         messages.error(request, f"Unexpected error in creating candidate keys: {e}")
+#                 else:
+#                     messages.success(request, 'Account successfully created.')
+#                 return redirect('create_account')  # Redirect to clear the form and show the success message
+#             else:
+#                 messages.error(request, 'Invalid form submission.')
+#     else:
+#         form = CreateNewUser()
+#         csv_form = CSVUploadForm()
+
+#     return render(request, 'userAccount/createUserAcc.html', {'form': form, 'csv_form': csv_form})
+
 @flexible_access('admin')
-def create_account(request):
+def create_account(request, upload_type=None):
     if request.method == 'POST':
-        form = CreateNewUser(request.POST)
-        if form.is_valid():
-            new_user = form.save(commit=False)
-            # Hash the password before saving
-            password = form.cleaned_data['password']
-            new_user.password = make_password(password)
-            new_user.save()
-
-            # Check if the created user account is for a candidate
-            if new_user.role.profile_name == 'Candidate':
-                # Create a CandidateProfile and VoteResult instance for the candidate user
-                CandidateProfile.objects.create(candidate=new_user)
-                VoteResults.objects.create(candidate=new_user, total_vote=0)
-                # Generate user and voting currency via gRPC
-                try:
-                    grpc_generate_candidate_keys_run(candidate_id=new_user.user_id)
-                    messages.success(request, 'Account successfully created.')
-                except GrpcError as grpc_error:
-                    # Handle specific gRPC errors
-                    print(f"Error in gRPC call: {grpc_error}")
-                    messages.error(request, f"Error in creating candidate keys: {grpc_error}")
-                except Exception as e:
-                    # Handle other unexpected exceptions
-                    print(f"Unexpected error: {e}")
-                    messages.error(request, f"Unexpected error in creating candidate keys: {e}")
-            else:
-                messages.success(request, 'Account successfully created.')
-            return redirect('create_account')  # Redirect to clear the form and show the success message
+        if upload_type == 'csv_upload':
+            return handle_user_csv_upload(request)
         else:
-            messages.error(request, 'Invalid form submission.')
+            return handle_single_user_creation(request)
     else:
-        form = CreateNewUser()
+        return render(request, 'userAccount/createUserAcc.html', {
+            'form': CreateNewUser(),
+            'csv_form': CSVUploadForm()
+        })
+    
+def handle_user_csv_upload(request):
+    required_fields = ['username', 'full_name', 'date_of_birth', 'password', 'role', 'party', 'district']
+    form = CSVUploadForm(request.POST, request.FILES)
+    if form.is_valid():
+        print("here")
+        csv_file = request.FILES['csv_file']
+        reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines())
+        # Check if required fields are present
+        if not all(field in reader.fieldnames for field in required_fields):
+            missing_fields = [field for field in required_fields if field not in reader.fieldnames]
+            messages.error(request, f"Missing fields in CSV: {', '.join(missing_fields)}")
+            return redirect('create_account')
+        for row in reader:
+            date_of_birth = datetime.datetime.strptime(row['date_of_birth'], '%d/%m/%Y').date()
+            user = UserAccount(
+                    username = row['username'],
+                    full_name = row['full_name'],
+                    password = make_password(row['password']),
+                    date_of_birth = date_of_birth,
+                    role = Profile.objects.get(profile_name=row['role']),
+                    district = District.objects.get(district_name=row['district']),
+                    party = Party.objects.get(party_name=row['party'])
+                )
+            try:
+                user.save()
+                create_additional_candidate_data(request, user)
+            except ValidationError as e:
+                for field, messages_list in e.message_dict.items():
+                    for message in messages_list:
+                        messages.error(request, f"{field}: {message}")
+                return redirect('create_account')
+            messages.success(request, 'Users created successfully')
+    else:
+        messages.error(request, 'Invalid CSV file')
+    return redirect('create_account')
 
-    return render(request, 'userAccount/createUserAcc.html', {'form': form})
+def handle_single_user_creation(request):
+    form = CreateNewUser(request.POST)
+    if form.is_valid():
+        user = form.save(commit=False)
+        user.password = make_password(form.cleaned_data['password'])
+        user.save()
+        create_additional_candidate_data(request, user)
+        messages.success(request, 'Account successfully created.')
+        return redirect('create_account')
+    else:
+        messages.error(request, 'Invalid form submission.')
+        return render(request, 'userAccount/createUserAcc.html', {
+            'form': form,
+            'csv_form': CSVUploadForm()
+        })
+    
+def create_additional_candidate_data(request, user):
+    if user.role.profile_name == 'Candidate':
+        CandidateProfile.objects.create(candidate=user)
+        VoteResults.objects.create(candidate=user, total_vote=0)
+        try:
+            grpc_generate_candidate_keys_run(candidate_id=user.user_id)
+        except GrpcError as grpc_error:
+            messages.error(request, f"Error in creating candidate keys: {grpc_error}")
+        except Exception as e:
+            messages.error(request, f"Unexpected error in creating candidate keys: {e}")
 
 @flexible_access('admin')
 def view_accounts(request):
@@ -224,36 +342,102 @@ def list_election_phases(request):
     return render(request, 'electionPhase/listPhases.html', {'phases': phases})
 
 # ---------------------------------------District views-----------------------------------------------------
+# @flexible_access('admin')
+# def create_district(request):
+#     if request.method == 'POST':
+#         form = CreateDistrict(request.POST)
+#         if form.is_valid():
+#             district_names = form.cleaned_data['district_names']
+#             district_list = [name.strip().upper() for name in district_names.split(';') if name.strip()]
+
+#             for name in district_list:
+#                 district, created = District.objects.get_or_create(district_name=name)
+#                 if created:
+#                     try:
+#                         grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
+#                     except GrpcError as grpc_error:
+#                         # Handle gRPC errors
+#                         print(f"Error in gRPC call: {grpc_error}")
+#                         messages.error(request, f"Error in gRPC call: {grpc_error}")
+#                     except Exception as e:
+#                         # Handle other exceptions
+#                         print(f"Unexpected error: {e}")
+#                         messages.error(request, f"Error: {e}")
+
+#             messages.success(request, 'District(s) successfully created.')
+#             return redirect('create_district')  # Redirect to clear the form and show the success message
+#         else:
+#             messages.error(request, 'Invalid form submission.')
+#     else:
+#         form = CreateDistrict()
+
+#     return render(request, 'district/createDistrict.html', {'form': form})
+
 @flexible_access('admin')
-def create_district(request):
+def create_district(request, upload_type=None):
     if request.method == 'POST':
-        form = CreateDistrict(request.POST)
-        if form.is_valid():
-            district_names = form.cleaned_data['district_names']
-            district_list = [name.strip().upper() for name in district_names.split(';') if name.strip()]
-
-            for name in district_list:
-                district, created = District.objects.get_or_create(district_name=name)
-                if created:
-                    try:
-                        grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
-                    except GrpcError as grpc_error:
-                        # Handle gRPC errors
-                        print(f"Error in gRPC call: {grpc_error}")
-                        messages.error(request, f"Error in gRPC call: {grpc_error}")
-                    except Exception as e:
-                        # Handle other exceptions
-                        print(f"Unexpected error: {e}")
-                        messages.error(request, f"Error: {e}")
-
-            messages.success(request, 'District(s) successfully created.')
-            return redirect('create_district')  # Redirect to clear the form and show the success message
+        # csv_form = CSVUploadForm(request.POST, request.FILES)
+        # form = CreateDistrict(request.POST)
+        if upload_type == 'csv_upload':
+            return handle_district_csv_upload(request)
         else:
-            messages.error(request, 'Invalid form submission.')
+            return handle_single_district_creation(request)
     else:
-        form = CreateDistrict()
+        return render(request, 'district/createDistrict.html', {
+            'form': CreateDistrict(),
+            'csv_form': CSVUploadForm()
+        })
+    
+def handle_district_csv_upload(request):
+    required_fields = ['district_name', 'num_of_people']
+    form = CSVUploadForm(request.POST, request.FILES)
+    if form.is_valid():
+        csv_file = request.FILES['csv_file']
+        reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines())
+        # Check if required fields are present
+        if not all(field in reader.fieldnames for field in required_fields):
+            missing_fields = [field for field in required_fields if field not in reader.fieldnames]
+            messages.error(request, f"Missing fields in CSV: {', '.join(missing_fields)}")
+            return redirect('create_district')
+        for row in reader:
+            district = District(
+                district_name=row['district_name'],
+                num_of_people=row['num_of_people']
+            )
+            try:
+                district.save()
+                create_additional_voter_data(request, district)
+                
+            except ValidationError as e:
+                for field, messages_list in e.message_dict.items():
+                    for message in messages_list:
+                        messages.error(request, f"{field}: {message}")
+                return redirect('create_district')
+            messages.success(request, 'Distticts created successfully')
+    else:
+        messages.error(request, 'Invalid CSV file')
+    return redirect('create_district')
 
-    return render(request, 'district/createDistrict.html', {'form': form})
+def handle_single_district_creation(request):
+    form = CreateDistrict(request.POST)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'District successfully created.')
+        return redirect('create_district')
+    else:
+        messages.error(request, 'Invalid form submission.')
+        return render(request, 'district/createDistrict.html', {
+            'form': form,
+            'csv_form': CSVUploadForm()
+        })
+
+def create_additional_voter_data(request, district):
+    try:
+        grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=district.num_of_people)
+    except GrpcError as grpc_error:
+        messages.error(request, f"Error in gRPC call: {grpc_error}")
+    except Exception as e:
+        messages.error(request, f"Error: {e}")
 
 @flexible_access('public', 'admin')
 def view_district(request):
@@ -716,6 +900,8 @@ def view_district_detail(request, district_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
     if current_phase and current_phase.phase_name == 'End Election':
         compute_final_total_vote(request, district_id)
+
+    phase_name = current_phase.phase_name if current_phase and current_phase.phase_name else 'Not Available'
     
     district = get_object_or_404(District, pk=district_id)
     candidate_profiles = CandidateProfile.objects.filter(candidate__district=district)
@@ -731,7 +917,7 @@ def view_district_detail(request, district_id):
     print(total_votes_sum)
 
     return render(request, 'generalUser/viewDistrictDetail.html', {
-        'phase': current_phase.phase_name,
+        'phase': phase_name,
         'district': district,
         'candidate_profiles': candidate_profiles,
         'candidate_names': candidate_names,

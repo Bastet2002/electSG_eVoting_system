@@ -3,14 +3,16 @@
         "model": "myapp.district",
         "pk": 1,
         "fields": {
-            "district_name": "Clementi"
+            "district_name": "Clementi",
+            "num_of_people": "10"
         }
     },
     {
         "model": "myapp.district",
         "pk": 2,
         "fields": {
-            "district_name": "Jurong East"
+            "district_name": "Jurong East",
+            "num_of_people": "10"
         }
     },
     {
@@ -43,19 +45,6 @@
         "fields": {
             "party_name": "DAP",
             "description": "DAP is a political party in Singapore."
-        }
-    },
-    {
-        "model": "myapp.useraccount",
-        "pk": 2,
-        "fields": {
-            "username": "candidate1",
-            "full_name": "Jane Smith",
-            "date_of_birth": "1985-05-15",
-            "password": "pbkdf2_sha256$600000$noJ7TTLVlQpeFDueDBXI8z$uypWGtc2mN0i6I5fT/vAIu40bhIZ8sQYmMpOdtpvZSI=",  
-            "party": 1,
-            "district": 1,
-            "role": 1
         }
     },
     {
