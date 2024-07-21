@@ -23,10 +23,10 @@
                         <td style="text-align: center; vertical-align: middle">{{ profile.profile_name }}</td>
                         <td style="text-align: center; vertical-align: middle; display: flex; justify-content: center; align-items: center">
                             {% if profile.profile_name not in disable_edit_list %}
-                                <a href="{% url 'edit_profile' profile.profile_id %}" class="btn btn-danger">Update</a>
+                                <a href="{% url 'edit_profile' profile.profile_id %}" class="btn btn-primary" style="padding-bottom: 27px;">Update</a>
                                 <form method="post" action="{% url 'delete_profile' profile.profile_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn-danger" {% if disable_deletion %}disabled{% endif %}>Delete</button>
+                                    <button type="submit" class="btn btn-danger" style="padding-left: 10px; margin-left: 5px;" {% if disable_deletion %}disabled{% endif %}>Delete</button>
                                 </form>
                             {% else %}
                                 <span style="text-align: center;">Permanent Profile</span>
