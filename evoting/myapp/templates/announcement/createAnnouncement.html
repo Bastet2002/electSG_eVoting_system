@@ -7,11 +7,11 @@
 <link rel="stylesheet" href="{% static 'announcement/createAnnouncement.css' %}">
     
 <div class="main">
-    <h1 style="text-align: center;">Create Announcement</h1>
+    <h1 style="text-align: center; margin: 30px 0px">Create Announcement</h1>
     <form method="post" action="{% url 'create_announcement' %}" class="create-announcement-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" name="publish">Publish</button>
+        <button type="submit" name="publish" style="margin-left: 50%;">Publish</button>
     </form>
 </div>
 

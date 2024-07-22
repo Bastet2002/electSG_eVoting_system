@@ -7,11 +7,11 @@
     <link rel="stylesheet" href="{% static 'district/editDistrict.css' %}">
     
     <div class="main">
-        <h1 style="text-align: center;">Edit Announcement</h1>
+        <h1 style="text-align: center; margin: 100px 0px 20px 0px;">Edit Announcement</h1>
         <form method="post" class="edit-district-form">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" name="save-changes">Save changes</button>
+            <button type="submit" name="save-changes" style="margin-left: 40%;">Save changes</button>
         </form>
     </div>
 {% endblock %}

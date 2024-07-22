@@ -5,27 +5,27 @@
 
 {% block content %}
 <div class="main">
-    <h1 style="text-align: center;">User Accounts</h1>
+    <h1 style="text-align: center; margin-top: 30px;">User Accounts</h1>
     <link rel="stylesheet" href="{% static 'userAccount/viewUserAcc.css' %}">
     <div class="table-container">
-        <div class="search-bar">
+        <div class="search-bar" style="margin: 0px 0 30px 37%;">
             <form action="" method="get">
                 <input type="text" name="search" id="search" placeholder="Search..." value="{{ request.GET.search }}">
                 <button type="submit" id="search-btn">Search</button>
             </form>
         </div>
         <div class="table-wrapper">
-            <table id="user-table">
+            <table id="user-table" style="text-align: center; width: 100%;">
                 <thead>
                     <tr>
-                        <th>ID</th>
-                        <th>Username</th>
-                        <th>Full Name</th>
-                        <th>Date of Birth</th>
-                        <th>Role</th>
-                        <th>Party</th>
-                        <th>District</th>
-                        <th>Actions</th>
+                        <th style="text-align: center; vertical-align: middle">ID</th>
+                        <th style="text-align: center; vertical-align: middle">Username</th>
+                        <th style="text-align: center; vertical-align: middle">Full Name</th>
+                        <th style="text-align: center; vertical-align: middle">Date of Birth</th>
+                        <th style="text-align: center; vertical-align: middle">Role</th>
+                        <th style="text-align: center; vertical-align: middle">Party</th>
+                        <th style="text-align: center; vertical-align: middle">District</th>
+                        <th style="text-align: center; vertical-align: middle">Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -39,7 +39,7 @@
                         <td>{{ user.party }}</td>
                         <td>{{ user.district }}</td>
                         <td>
-                            <a href="{% url 'edit_user' user.user_id %}"><button type="button" class="btn btn-primary">Update</button></a>
+                            <a href="{% url 'edit_user' user.user_id %}"><button type="button" class="btn btn-primary" style="padding-bottom: 30px;">Update</button></a>
     
                             <form method="post" action="{% url 'delete_user' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete('user')">
                                 {% csrf_token %}
@@ -48,7 +48,7 @@
 
                             <form method="post" action="{% url 'delete_all_credentials' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete('credentials')">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-warning">Delete All Credentials</button>
+                                <button type="submit" class="btn btn-warning" style="padding-bottom: 30px;">Delete All Credentials</button>
                             </form>
                         </td>
                     </tr>
