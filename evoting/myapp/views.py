@@ -30,6 +30,9 @@ from pygrpc.ringct_client import (
 
 User = get_user_model()
 
+def health_check(request):
+    return HttpResponse("OK", status=200)
+
 @flexible_access('public')
 def user_login(request):
     if request.method == 'POST':
@@ -966,6 +969,9 @@ from django.utils.module_loading import import_string
 import base64
 import os
 import json
+origin = os.environ.get("EXPECTED_ORIGIN", 'https://localhost:8000')
+rp_id =os.environ.get("EXPECTED_RP_ID", 'localhost')
+rp_name = "electsg"
 
 @login_required
 @require_http_methods(["GET"])
@@ -976,8 +982,8 @@ def webauthn_register_options(request):
         print(f"Full Name: {request.user.full_name}")
         
         options = generate_registration_options(
-            rp_id='localhost',
-            rp_name='myapp',
+            rp_id=rp_id,
+            rp_name=rp_name,
             user_id=str(request.user.user_id).encode('utf-8'),
             user_name=request.user.username,
             user_display_name=request.user.full_name
@@ -1029,8 +1035,8 @@ def webauthn_register_verify(request):
             verification = verify_registration_response(
                 credential=credential,
                 expected_challenge=base64.urlsafe_b64decode(registration.challenge + '=='),
-                expected_origin='https://localhost:8000',
-                expected_rp_id='localhost'
+                expected_origin=origin,
+                expected_rp_id=rp_id
             )
             print(f"Verification successful: {verification}")  # Debug: Print verification result
         except Exception as e:
@@ -1101,7 +1107,7 @@ def webauthn_login_options(request):
                 print(f"Error processing credential {cred.credential_id}: {str(e)}")
         
         options = generate_authentication_options(
-            rp_id='localhost',
+            rp_id=rp_id,
             challenge=os.urandom(32),
             allow_credentials=allow_credentials
         )

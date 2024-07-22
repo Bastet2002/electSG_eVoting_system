@@ -1,31 +1,57 @@
-#!/bin/sh
+#!/bin/bash
 # wait-for-postgres.sh
 
 set -e
 
-host="$1"
-shift
-cmd="$@"
-
 # wait for the ringct database is up, and ringct database could create the db table needed
-initial_wait=10
+initial_wait=5
 
 >&2 echo "Waiting for $initial_wait seconds for the ringct database to be up"
 sleep $initial_wait
 
-until PGPASSWORD=$DJANGO_DB_PASSWORD psql -h "$host" -U "$DJANGO_DB_USER" -d "$DJANGO_DB_NAME" -c '\q'; do
-  >&2 echo "Postgres is unavailable - sleeping"
-  sleep 1
-done
+wait_for_postgres() {
+  until psql $DATABASE_URL -c '\q'; do
+    >&2 echo "Postgres is unavailable - sleeping"
+    sleep 1
+  done
+}
+
+drop_all_user_tables() {
+  >&2 echo "Dropping all user tables in the database..."
+  psql $DATABASE_URL <<EOF
+DO \$\$
+DECLARE
+    r RECORD;
+BEGIN
+    FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+        EXECUTE 'DROP TABLE IF EXISTS ' || quote_ident(r.tablename) || ' CASCADE';
+    END LOOP;
+END \$\$;
+EOF
+  >&2 echo "All user tables dropped."
+}
+
+wait_for_postgres
+drop_all_user_tables
+
+export PYTHONPATH=/app:$PYTHONPATH
 
 >&2 echo "Postgres is up - executing command"
-python manage.py makemigrations 
-python manage.py migrate 
-python manage.py loaddata ./dbinit/initial_data.json
-python manage.py create_election_phase
-python manage.py create_admin_acc
-python manage.py create_mock_singpass_data
+command psql $DATABASE_URL -f ./ringct/dbinit/db_init.sql
+command python manage.py makemigrations 
+command python manage.py migrate 
+command python manage.py loaddata ./dbinit/initial_data.json
+command python manage.py create_election_phase
+command python manage.py create_admin_acc
+command python manage.py create_mock_singpass_data
 
 python ./pygrpc/test_init.py # this required the ringct database to be up
 
-exec $cmd
+# production grade deployment 
+if [ "$ENVIRONMENT" = "dev" ]; then 
+  echo "Running in aws development"
+  command python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 evoting.wsgi:application 
+else
+  echo "Running in local development"
+  command python manage.py collectstatic --noinput && python manage.py runsslserver 0.0.0.0:8000 --certificate /app/ssl/localhost.crt --key /app/ssl/localhost.key
+fi

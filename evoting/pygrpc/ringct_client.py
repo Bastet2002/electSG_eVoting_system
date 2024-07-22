@@ -4,9 +4,10 @@ import grpc
 from pygrpc import ringct_pb2_grpc, ringct_pb2
 
 import logging
+import os
 
 # global variable for the channel
-channel = grpc.insecure_channel("ring-ct:50051")
+channel = grpc.insecure_channel(os.getenv("RINGCT_URL"))
 stub = ringct_pb2_grpc.RingCT_ServiceStub(channel)
 
 class GrpcError(Exception):

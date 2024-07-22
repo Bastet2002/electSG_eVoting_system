@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 from pathlib import Path
 import dj_database_url
 import os
+from django.core.management.utils import get_random_secret_key
 from csp.constants import NONCE, SELF, NONE, STRICT_DYNAMIC, UNSAFE_INLINE
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -21,20 +22,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-2+=j!omdg4iyeyxss5$p8y9vrib+madac5dq6nc3__*+hxxfcl'
+# need to create a secret key for the django app and store it
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
+if not SECRET_KEY:
+    SECRET_KEY = get_random_secret_key()
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "True") == "True"
 
-# ALLOWED_HOSTS = ['0.0.0.0']
-# ALLOWED_HOSTS = []
-ALLOWED_HOSTS = ['localhost', '127.0.0.1', '0.0.0.0']
-
-
+ALLOWED_HOSTS = os.environ.get("DJANGO_ALLOWED_HOSTS",'localhost 127.0.0.1 0.0.0.0').split() 
+ALLOWED_CIDR_NETS = ['10.0.0.0/16']  # This covers all 10.0.x.x IP addresses, 2^16 addresses, is the range of the VPC
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -43,6 +41,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'myapp',
+    'storages',
     'django_extensions',
     'sslserver',
     # 'csp',
@@ -58,6 +57,7 @@ AUTHENTICATION_BACKENDS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -65,6 +65,8 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     # 'csp.middleware.CSPMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'allow_cidr.middleware.AllowCIDRMiddleware',
+    # "whitenoise.storage.CompressedStaticFilesStorage",
 ]
 
 ROOT_URLCONF = 'evoting.urls'
@@ -92,16 +94,6 @@ WSGI_APPLICATION = 'evoting.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    # 'default': {
-    #     'ENGINE': 'django.db.backends.postgresql',
-    #     'NAME': os.environ.get('DJANGO_DB_NAME'),
-    #     'HOST': os.environ.get('DJANGO_DB_HOST'), 
-    #     'USER': os.environ.get('DJANGO_DB_USER'),
-    #     'PASSWORD': os.environ.get('DJANGO_DB_PASSWORD'),
-    #     'TEST' : {
-    #         'NAME' : 'test_mydb',
-    #     },
-    # }
     'default': dj_database_url.config(default=os.environ.get('DATABASE_URL'))
 }
 
@@ -136,36 +128,88 @@ USE_I18N = True
 
 USE_TZ = True
 
+# Default primary key field type
+# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+
+# Logging for cloudwatch
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'INFO',
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
-
 STATIC_URL = '/static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # Absolute path to the directory where collectstatic will collect static files for deployment.
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
+STATICFILES_DIRS = [
+    "/app/myapp/static",
+]
 
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-SECURE_SSL_REDIRECT = True
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-
-SESSION_COOKIE_HTTPONLY = True # does the client side still have access to cookie
- 
-# CSP
-# CONTENT_SECURITY_POLICY = {
-#     "DIRECTIVES": {
-#         "default-src": [SELF],
-#         # "script-src": [SELF,NONCE, "'strict-dynamic'"], 
-#         "script-src": [SELF,NONCE, STRICT_DYNAMIC], 
-#         "frame-ancestors": [NONE],
-#         "form-action": [SELF],
-#         "report-uri": "/csp-report/",
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')  # For user-uploaded files
+# STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+# STORAGES = {
+#     "staticfiles": {
+#         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage",
 #     },
 # }
 
+# s3 
+USE_S3 = os.environ.get('USE_S3') == 'TRUE'
+
+if USE_S3:
+    AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
+    AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME')
+    AWS_S3_OBJECT_PARAMETERS = {
+        'CacheControl': 'max-age=86400',
+    }
+    STORAGES ={
+        "default":{
+            "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+            "OPTIONS":{
+                "AWS_ACCESS_KEY_ID": AWS_ACCESS_KEY_ID,
+                "AWS_SECRET_ACCESS_KEY": AWS_SECRET_ACCESS_KEY,
+                "AWS_STORAGE_BUCKET_NAME": os.environ.get('AWS_STORAGE_BUCKET_NAME'),
+                "AWS_S3_FILE_OVERWRITE": True,
+                "AWS_LOCATION": "media",
+                "AWS_QUERYSTRING_EXPIRE": 3600,
+                "AWS_HEADERS": {
+                    "CacheControl": "max-age=86400",
+                },
+            }
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+else:
+    STORAGES={
+        "default":{
+            "BACKEND": "django.core.files.storage.FileSystemStorage",
+            "location": "media",
+        },
+        "staticfiles": {
+            "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+        },
+    }
+
+# security
+# if not DEBUG:
+SECURE_SSL_REDIRECT=True
+SESSION_COOKIE_SECURE=True
+CSRF_COOKIE_SECURE=True
+
+SESSION_COOKIE_HTTPONLY=True

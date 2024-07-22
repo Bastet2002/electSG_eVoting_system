@@ -1,0 +1,57 @@
+name: django-server
+type: Load Balanced Web Service
+
+http:
+  path: '/'
+  alias: elect-sg.cookndrum.com
+  # hosted_zone: Z07917493347CDKRNQS1F
+  redirect_to_https: true
+  healthcheck:
+    path: /health/  
+    success_codes: "200-499"
+    healthy_threshold: 2
+    interval: 15s
+    timeout: 10s
+    grace_period: 120s
+    deregistration_delay: 0s
+
+
+image:
+  build: ../Dockerfile
+  port: 8000
+
+cpu: 256
+memory: 512
+platform: linux/x86_64
+
+# count:
+#   spot: 1
+count: 1
+
+exec: true
+network:
+  connect: true
+
+environments:
+  dev:
+    variables:
+      DJANGO_DB_NAME: mydb
+      DJANGO_DB_USER: postgres
+      DJANGO_DB_HOST: djangodb.cj8ug0qq88oo.ap-southeast-1.rds.amazonaws.com
+      DJANGO_ALLOWED_HOSTS: ".cookndrum.com elects-Publi-d6EMd60hLUg0-972429885.ap-southeast-1.elb.amazonaws.com"
+      # DJANGO_ALLOWED_HOSTS: "*"
+      PYTHONPATH: "/app:/app/pygrpc"
+      DEBUG: "False"
+      RINGCT_URL: "ringct-service:50051"
+      AWS_STORAGE_BUCKET_NAME: elect-sg-bucket
+      AWS_S3_REGION_NAME: ap-southeast-1
+      USE_S3: "TRUE"
+      ENVIRONMENT: "dev"
+      EXPECTED_ORIGIN: "https://elect-sg.cookndrum.com"
+      EXPECTED_RP_ID: "elect-sg.cookndrum.com"
+    secrets:
+      DATABASE_URL: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DATABASE_URL::"'  
+      DJANGO_DB_PASSWORD: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_DB_PASSWORD::"'
+      DJANGO_SECRET_KEY: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_SECRET_KEY::"'
+      AWS_ACCESS_KEY_ID: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:AWS_ACCESS_KEY_ID::"'
+      AWS_SECRET_ACCESS_KEY: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:AWS_SECRET_ACCESS_KEY::"'

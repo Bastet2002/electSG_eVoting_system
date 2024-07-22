@@ -1,0 +1,27 @@
+name: ringct-service
+type: Backend Service
+
+image:
+  build: ../ringct/Dockerfile
+  port: 50051
+
+cpu: 256       
+memory: 512    
+
+# count: 
+#   spot: 1       
+count: 1
+
+exec: true     
+network:
+  connect: true # Enable Service Connect for intra-environment traffic between services.
+
+environments:
+  dev:
+    variables:
+      DJANGO_DB_NAME: mydb
+      DJANGO_DB_USER: postgres
+      DJANGO_DB_HOST: djangodb.cj8ug0qq88oo.ap-southeast-1.rds.amazonaws.com
+    secrets:
+      DATABASE_URL: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DATABASE_URL::"'  
+      DJANGO_DB_PASSWORD: '"arn:aws:secretsmanager:ap-southeast-1:590183771013:secret:dev/electsg/django-R6MhSI:DJANGO_DB_PASSWORD::"'

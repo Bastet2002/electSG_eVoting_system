@@ -3,5 +3,14 @@ asgiref==3.7.2
 psycopg2-binary==2.9.3
 django_extensions
 dj-database-url
+django-allow-cidr==0.7.1
+Pillow==10.4.0
+gunicorn
+whitenoise
+boto3
+django-storages
 webauthn
 django-sslserver
+faker
+python-dateutil
+django-csp==4.0b1

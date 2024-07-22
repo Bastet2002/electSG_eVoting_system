@@ -4,10 +4,13 @@
 #include "../rct/rctType.h"
 #include "../rct/rctOps.h"
 #include <pqxx/pqxx>
+#include <cstdlib>
 
 // TODO change to separate db later
-const string cnt_django = "postgresql://admin:password@djangodb:5432/mydb";
-const string cnt_rct = "postgresql://admin:password@ringct-db:5432/ringct";
+const string cnt_django = std::string(std::getenv("DATABASE_URL"));
+const string cnt_rct = std::string(std::getenv("DATABASE_URL"));
+// const string cnt_django = "postgresql://admin:password@djangodb:5432/mydb";
+// const string cnt_rct = "postgresql://admin:password@ringct-db:5432/ringct";
 
 User get_voter(int32_t voter_id);
 User get_candidate(int32_t &district_id, const int32_t candidate_id);
