@@ -4,17 +4,6 @@
 
 using namespace nlohmann;
 
-/*
-TODO : to implement it
-
-DB ERROR CODES
-
-301 - Failed to open connection to django db
-302 - Failed to open connection to rct db
-303 - return empty row
-304 - return more than 1 row
-*/
-
 // can also get user by pk for function overloading
 User get_voter(int32_t voter_id)
 {
@@ -64,7 +53,8 @@ User get_candidate(int32_t &district_id, const int32_t candidate_id)
     return User(pkV, pkS);
 }
 
-User get_candidate_s(int32_t &district_id, const int32_t candidate_id) {
+User get_candidate_s(int32_t &district_id, const int32_t candidate_id)
+{
     User candidate = get_candidate(district_id, candidate_id);
     string pkV;
     to_string(pkV, candidate.pkV, 32);
@@ -198,10 +188,9 @@ void write_candidate(const int32_t candidate_id, const User &candidate)
     pqxx::work txn_d(c_d);
     txn_d.exec_prepared("insert candidate_public", candidate_id, pkV, pkS);
     txn_d.commit();
-
 }
 
-void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const int32_t district_id, const User &signer)
+void scan_for_stealthaddress(Commitment &receivedCmt, StealthAddress &sa, const int32_t district_id, const User &signer)
 {
     cout << "scan for stealth address in district " << district_id << endl;
 
@@ -211,40 +200,50 @@ void scan_for_stealthaddress(Commitment& receivedCmt, StealthAddress &sa, const 
         throw runtime_error("Failed to open connection to " + string(C.dbname()));
     }
     pqxx::work W(C);
+    int batch_size = 100;
+    int offset = 0;
+    bool more_page = true;
 
-    pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment,  commitment_record->'commitment'->>'amount_mask' as amount_mask from myapp_votingcurrency where district_id = " + to_string(district_id) + ";");
-
-    // TODO : what if the record is too much
-    for (const auto &row : r)
+    while (more_page)
     {
-        string stealth_address = row["stealth_address"].as<string>();
-        string rG = row[1].as<string>();
-        StealthAddress sa_temp(stealth_address, rG);
-        if (receiver_test_stealth_address(sa_temp, signer))
+        pqxx::result r = W.exec("select stealth_address, commitment_record->>'rG' as rG, commitment_record->'commitment'->>'output_commitment' as output_commitment,  commitment_record->'commitment'->>'amount_mask' as amount_mask from myapp_votingcurrency where district_id = " + to_string(district_id) + " order by stealth_address limit " + to_string(batch_size) + " offset " + to_string(offset) + ";");
+        if (r.empty())
         {
-            cout << "Stealth address found" << endl;
-            sa = sa_temp;
-            string output_commitment_str = row["output_commitment"].as<string>();
+            more_page = false;
+        }
+        else
+        {
+            for (const auto &row : r)
+            {
+                string stealth_address = row["stealth_address"].as<string>();
+                string rG = row[1].as<string>();
+                StealthAddress sa_temp(stealth_address, rG);
+                if (receiver_test_stealth_address(sa_temp, signer))
+                {
+                    cout << "Stealth address found" << endl;
+                    sa = sa_temp;
+                    string output_commitment_str = row["output_commitment"].as<string>();
 
-            BYTE output_commitment[32];
-            hex_to_bytearray(output_commitment, output_commitment_str);
+                    BYTE output_commitment[32];
+                    hex_to_bytearray(output_commitment, output_commitment_str);
 
-            BYTE amount_mask[8];
-            hex_to_bytearray(amount_mask, row["amount_mask"].as<string>());
+                    BYTE amount_mask[8];
+                    hex_to_bytearray(amount_mask, row["amount_mask"].as<string>());
 
-            array<BYTE, 32> output_commitment_arr;
-            copy(begin(output_commitment), end(output_commitment), output_commitment_arr.begin());
+                    array<BYTE, 32> output_commitment_arr;
+                    copy(begin(output_commitment), end(output_commitment), output_commitment_arr.begin());
 
-            array<BYTE, 8> amount_mask_arr;
-            copy(begin(amount_mask), end(amount_mask), amount_mask_arr.begin());
+                    array<BYTE, 8> amount_mask_arr;
+                    copy(begin(amount_mask), end(amount_mask), amount_mask_arr.begin());
 
-            receivedCmt.outputs_commitments.push_back(output_commitment_arr);
-            receivedCmt.amount_masks.push_back(amount_mask_arr);
-            return; // Stealth address found and valid
+                    receivedCmt.outputs_commitments.push_back(output_commitment_arr);
+                    receivedCmt.amount_masks.push_back(amount_mask_arr);
+                    return; // Stealth address found and valid
+                }
+            }
+            offset += batch_size;
         }
     }
-
-    // TODO need to handle this error in the core.cc to let django know  
     throw runtime_error("Stealth address not found in scan_for_stealthaddress");
 }
 
@@ -266,7 +265,7 @@ bool verify_double_voting(const int32_t district_id, const BYTE *key_image)
     return r.empty();
 }
 
-void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment)
+void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment)
 {
     // TODO right one for one, for the simplicity
     /*
@@ -344,7 +343,9 @@ void write_voterecord(const int32_t district_id, const blsagSig &blsagSig, const
     W.commit();
 }
 
-vector<int32_t> get_district_ids () {
+
+vector<int32_t> get_district_ids()
+{
     pqxx::connection C(cnt_django);
     if (!C.is_open())
     {
@@ -355,7 +356,8 @@ vector<int32_t> get_district_ids () {
     pqxx::result r = W.exec("select district_id from myapp_district;");
 
     vector<int> district_ids;
-    for(const auto& row : r) {
+    for (const auto &row : r)
+    {
         district_ids.push_back(row["district_id"].as<int32_t>());
     }
 
@@ -375,21 +377,43 @@ vector<int32_t> get_candidate_ids(const int32_t &district_id)
     pqxx::result r = W.exec_prepared("get candidate ids in district", district_id);
 
     vector<int32_t> candidate_ids;
-    for (const auto& row : r){
+    for (const auto &row : r)
+    {
         candidate_ids.push_back(row["user_id"].as<int32_t>());
     }
 
     return candidate_ids;
 }
 
-void grab_decoys()
+vector<StealthAddress> grab_decoys(const int32_t district_id, const StealthAddress& signerSA)
 {
+    int decoy_size = 10;
+    string signerSA_pk;
+    to_string(signerSA_pk, signerSA.pk, 32);
+
+    pqxx::connection C(cnt_django);
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::work W(C);
+    C.prepare("grab random stealth address", "select stealth_address from myapp_votingcurrency where district_id = $1 and stealth_address <> '"+ signerSA_pk +"' order by random() limit " + to_string(decoy_size) + ";");
+    pqxx::result r = W.exec_prepared("grab random stealth address", district_id);
+
+    vector<StealthAddress> decoys;
+    for (const auto &row : r)
+    {
+        string stealth_address = row["stealth_address"].as<string>();
+        StealthAddress temp;
+        hex_to_bytearray(temp.pk, stealth_address);
+        decoys.push_back(temp);
+    }
+    return decoys; 
 }
 
 void verify_vote_record()
 {
 }
-
 
 void count_write_vote(const int32_t district_id, const int32_t candidate_id, const User &candidate)
 {
@@ -399,30 +423,55 @@ void count_write_vote(const int32_t district_id, const int32_t candidate_id, con
         throw runtime_error("Failed to open connection to " + string(C.dbname()));
     }
     pqxx::work W(C);
-    pqxx::result r = W.exec("select transaction_record->>'stealth_address' as stealth_address, transaction_record->>'rG' as rG, transaction_record->'commitment'->>'output_commitment' as output_commitment,  transaction_record->'commitment'->>'amount_mask' as amount_mask from myapp_voterecords where district_id = " + to_string(district_id) + ";");
+    // TODO do we need to test the performance for the query with or without pagination
 
+    int batch_size = 100; // each page is 100 records
+    int offset = 0;
     int total_vote = 0;
-    // TODO : what if the record is too much
-    for (const auto &row : r)
+    bool more_page = true;
+    while (more_page)
     {
-        string stealth_address = row["stealth_address"].as<string>();
-        string rG = row["rG"].as<string>();
-        StealthAddress sa_temp(stealth_address, rG);
+        pqxx::result r = W.exec("select transaction_record->>'stealth_address' as stealth_address, transaction_record->>'rG' as rG, transaction_record->'commitment'->>'output_commitment' as output_commitment,  transaction_record->'commitment'->>'amount_mask' as amount_mask from myapp_voterecords where district_id = " + to_string(district_id) + " order by key_image limit " + to_string(batch_size) + " offset " + to_string(offset) + ";");
 
-        if (receiver_test_stealth_address(sa_temp, candidate)) {
-            BYTE amount_mask_byte[8];
-            hex_to_bytearray(amount_mask_byte, row["amount_mask"].as<string>());
-            BYTE amount_byte[8];
-            XOR_amount_mask_receiver(amount_byte, amount_mask_byte, 0, sa_temp, candidate);
-            long long amount;
-            byte_to_int(amount, amount_byte, 8);
-            if (amount == 30) 
-                total_vote += 1;
+        if (r.empty())
+        {
+            more_page = false;
+        }
+        else
+        {
+            for (const auto &row : r)
+            {
+                string stealth_address = row["stealth_address"].as<string>();
+                string rG = row["rG"].as<string>();
+                StealthAddress sa_temp(stealth_address, rG);
+
+                if (receiver_test_stealth_address(sa_temp, candidate))
+                {
+                    BYTE amount_mask_byte[8];
+                    hex_to_bytearray(amount_mask_byte, row["amount_mask"].as<string>());
+                    BYTE amount_byte[8];
+                    XOR_amount_mask_receiver(amount_byte, amount_mask_byte, 0, sa_temp, candidate);
+                    long long amount;
+                    byte_to_int(amount, amount_byte, 8);
+                    if (amount == 30)
+                        total_vote += 1;
+                }
+            }
+            offset += batch_size;
         }
     }
 
+    pqxx::row d_row = W.exec1("select * from myapp_voteresults where candidate_id = " + to_string(candidate_id) + ";");
+    if (!d_row.size() > 0)
+    {
+        C.prepare("update total vote", "update myapp_voteresults set total_vote = $1 where candidate_id = $2;");
+        W.exec_prepared("update total vote", total_vote, candidate_id);
+    }
+    else
+    {
+        C.prepare("insert total vote", "insert into myapp_voteresults (candidate_id, total_vote) values ($1, $2);");
+        W.exec_prepared("insert total vote", candidate_id, total_vote);
+    }
     cout << "Total vote for candidate in district " << " is " << total_vote << endl;
-    C.prepare("insert total vote", "insert into myapp_voteresults (candidate_id, total_vote) values ($1, $2);");
-    W.exec_prepared("insert total vote", candidate_id, total_vote);
     W.commit();
 }

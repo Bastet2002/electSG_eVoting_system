@@ -141,19 +141,19 @@ void voter_cast_vote(Vote &vote)
     // extract amount, compute commitment, mask, and verify commitment balancing
     compute_commitment_simple(candidateCmt, candidateSA, candidate, receivedCmt, receivedSA, signer);
 
-    // TODO grab decoy from db
-    vector<User> users_blsag(10);
-    vector<StealthAddress> blsagSA; // decoy
-    int secret_index = secret_index_gen(users_blsag.size());
-    CA_generate_address(blsagSA, users_blsag); // when storing in db, only store the stealthAddress.pk of the decoy and signer
+    // rangeproof
+    RangeProof rp;
+    rangeproof(rp, candidateCmt.output_blindingfactor);
+
+    // grab decoys from db
+    vector<StealthAddress> decoySA = grab_decoys(district_id, receivedSA); // decoy
+    int secret_index = secret_index_gen(decoySA.size());
 
     // blsag
-    // BYTE m[32];
     compute_message(blsagSig, candidateSA, candidateCmt);
 
-    // TODO need to move the key image out from blsag simple gen.
     // The reason is to compare double voting, and move it to earlier step for efficiency
-    blsag_simple_gen(blsagSig, blsagSig.m, secret_index, receivedSA, blsagSA);
+    blsag_simple_gen(blsagSig, blsagSig.m, secret_index, receivedSA, decoySA);
     bool is_verified = blsag_simple_verify(blsagSig, blsagSig.m);
     if (!is_verified)
     {
@@ -163,13 +163,14 @@ void voter_cast_vote(Vote &vote)
     // need to wipe r, sk in stealth address before store in db
     sodium_memzero(candidateSA.r, 32);
     sodium_memzero(candidateSA.sk, 32);
+    sodium_memzero(candidateCmt.output_blindingfactor, 32); // for rangeproof
 
     // blsag -> c, r, keyimage, membersSA.pk/index in db
     // stealth address -> pk, rG
     // commitment -> output, pseudo output, outputmask, amount mask
     try
     {
-        write_voterecord(district_id, blsagSig, candidateSA, candidateCmt);
+        write_voterecord(district_id, rp, blsagSig, candidateSA, candidateCmt);
     }
     catch (const pqxx::sql_error &e)
     {

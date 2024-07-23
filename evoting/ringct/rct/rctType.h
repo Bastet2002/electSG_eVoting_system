@@ -40,11 +40,8 @@ void hex_to_bytearray(BYTE *output, const string &input);
 // it is the same as the result from the generate_H 
 const BYTE H_point[] = {0x9f, 0xac, 0xd9, 0x67, 0x6d, 0x4d, 0xd5, 0x68, 0x90, 0xf9, 0x2c, 0xf4, 0xca, 0x6d, 0x38, 0x9d, 0x24, 0xa1, 0x1f, 0xd2, 0x05, 0x79, 0xfc, 0xab, 0x6b, 0x28, 0xe5, 0x28, 0x30, 0x52, 0x28, 0x20};
 
+const int vote_currency = 30;
 
-// TODO : create one more user type with public key only??
-// when do we need sk?
-// 1. verify the stealth address
-// sign ring is with stealth_address_secretkey
 struct User
 {
     BYTE skV[64];
@@ -152,6 +149,7 @@ struct Commitment{
     vector<array<BYTE,32>> outputs_commitments;
     vector<array<BYTE,32>> inputs_commitments; // no need to store in db, if need to verify, can be searched
 
+    BYTE output_blindingfactor[32]; // no need to store in db, for rangeproof calculation
     vector<array<BYTE,32>> pseudoouts_blindingfactor_masks;
     vector<array<BYTE,32>> outputs_blindingfactor_masks;
     vector<array<BYTE,8>> amount_masks;
@@ -163,6 +161,22 @@ struct Commitment{
         pseudoouts_blindingfactor_masks.resize(0);
         outputs_blindingfactor_masks.resize(0);
         amount_masks.resize(0);
+        sodium_memzero(output_blindingfactor,32);
+    }
+};
+
+struct RangeProof{
+    vector<array<BYTE,32>> C1;
+    vector<array<BYTE,32>> C2;
+    BYTE bbee[32];
+    vector<array<BYTE,32>> bbs0;
+    vector<array<BYTE,32>> bbs1;
+    RangeProof(){
+        C1.resize(8);
+        C2.resize(8);
+        bbs0.resize(8);
+        bbs1.resize(8);
+        sodium_memzero(bbee,32);
     }
 };
 

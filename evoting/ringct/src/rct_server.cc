@@ -208,6 +208,11 @@ int main(int argc, char **argv)
         cout << "sodium_init failed" << endl;
         return 1;
     }
+    RangeProof rp;
+    BYTE bf[32];
+    crypto_core_ed25519_scalar_random(bf);
+    rangeproof(rp, bf);
+    
 
     // string input_path = filesystem::absolute("./test/text/hash_infile");
     // string output_path = filesystem::absolute("./test/text/h2p.txt");

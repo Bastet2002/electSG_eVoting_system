@@ -1,12 +1,14 @@
 #ifndef RCTOPS_H
 #define RCTOPS_H
+#include <cmath>
+#include <bitset>
 
 #include "rctType.h"
 
 // util functions
 void to_string(string &output, const BYTE *BYTE, const size_t n);
 void int_to_scalar_BYTE(BYTE *out, const long long input);
-void byte_to_int(long long &output, const BYTE* input, const size_t n);
+void byte_to_int(long long &output, const BYTE *input, const size_t n);
 void print_bytearray(const BYTE *key, const size_t n);
 void print_hex(const BYTE *key, const size_t n);
 
@@ -23,18 +25,36 @@ bool receiver_test_stealth_address(StealthAddress &stealth_address, const User &
 void mix_address(vector<StealthAddress> &vec);
 int secret_index_gen(size_t n);
 void compute_key_image(blsagSig &blsagSig, const StealthAddress &signerSA);
-void compute_message(blsagSig& blsag, const StealthAddress& sa, const Commitment& commitment);
+void compute_message(blsagSig &blsag, const StealthAddress &sa, const Commitment &commitment);
 void blsag_simple_gen(blsagSig &blsagSig, const unsigned char *m, const size_t secret_index, const StealthAddress &signerSA, const vector<StealthAddress> &decoy);
 bool blsag_simple_verify(const blsagSig &blsagSig, const BYTE *m);
 
-
-void CA_generate_voting_currency(Commitment& commitment, const StealthAddress& sa, const User& receiver);
+void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &sa, const User &receiver);
 bool verify_commitment_balancing(const vector<array<BYTE, 32>> output_commitments, const vector<array<BYTE, 32>> pseudo_output_commitments);
-void compute_commitment_simple(Commitment& commitment, const StealthAddress& sa, const User& receiver, const Commitment& received_commitment, const StealthAddress& received_sa, const User& signer);
+void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa, const User &receiver, const Commitment &received_commitment, const StealthAddress &received_sa, const User &signer);
 
-void XOR_amount_mask_signer(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
-void XOR_amount_mask_receiver(BYTE* out, const BYTE* in, const size_t t, const StealthAddress& sa, const User& receiver);
+void XOR_amount_mask_signer(BYTE *out, const BYTE *in, const size_t t, const StealthAddress &sa, const User &receiver);
+void XOR_amount_mask_receiver(BYTE *out, const BYTE *in, const size_t t, const StealthAddress &sa, const User &receiver);
 void compute_commitment_mask(BYTE *yt, const BYTE *r, const BYTE *pkv, size_t index);
 void generatePseudoBfs(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
 bool compareBlindingFactors(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &pseudoOutBfs, const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &outputCommitmentBfs);
+
+void generateC1C2(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &blindingFactors,
+                  const bitset<8> &bits,
+                  vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
+                  vector<array<BYTE, crypto_core_ed25519_BYTES>> &C2);
+void generateBlindingFactors(vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &blindingFactors, const BYTE *outputCommitmentBf);
+void generate_Borromean(const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &x,
+                        const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
+                        const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C2,
+                        const bitset<8> &indices,
+                        BYTE *bbee,
+                        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs0,
+                        vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs1);
+bool checkBorromean(const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
+                    const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C2,
+                    const BYTE *bbee,
+                    const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs0,
+                    const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs1);
+void rangeproof (RangeProof& rangeproof, const BYTE* output_blinding_factor);
 #endif

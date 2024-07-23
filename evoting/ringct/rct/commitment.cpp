@@ -73,6 +73,7 @@ void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa,
     commitment.outputs_blindingfactor_masks.push_back(yt);
     add_key(output_commitment.data(), yt.data(), b, H_point);
     commitment.outputs_commitments.push_back(output_commitment);
+    memcpy(commitment.output_blindingfactor, yt.data(), 32);
 
     // pseudo output commitment
     array<BYTE, 32> pseudoout_commitment;
@@ -95,10 +96,6 @@ void verify_commitment() {
     
 }
 
-// one to many
-void compute_commitment()
-{
-}
 
 // compute the amount mask to conceal the amount
 // amount_mask = b 8-byte-XOR Hn("amount", Hn(rKv_b, t))
