@@ -14,7 +14,7 @@ from .models import UserAccount, District, ElectionPhase, Announcement, Party, P
 from django.db.models import Sum
 from django.contrib.auth.hashers import check_password
 from .decorators import flexible_access
-from django.core.exceptions import ValidationError
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
 import csv, datetime
 
 from pygrpc.ringct_client import (
@@ -127,9 +127,6 @@ def user_logout(request):
 def index(response):
     return HttpResponse("<h1>Hello World!</h1>")
 
-def base(response):
-    return render(response, "adminDashboard/base.html", {})
-
 @flexible_access('admin')
 def admin_home(request):
     active_phase = ElectionPhase.objects.filter(is_active=True).first()
@@ -137,84 +134,6 @@ def admin_home(request):
     return render(request, 'adminDashboard/home.html', {'active_phase': active_phase, 'announcements': announcements})
 
 # ---------------------------------------UserAccount views------------------------------------------------
-# @flexible_access('admin')
-# def create_account(request, upload_type=None):
-#     if request.method == 'POST':
-#         if upload_type == 'csv_upload':
-#             form = CSVUploadForm(request.POST, request.FILES)
-#             if form.is_valid():
-#                 csv_file = request.FILES['csv_file']
-#                 decoded_file = csv_file.read().decode('utf-8').splitlines()
-#                 reader = csv.DictReader(decoded_file)
-
-#                 for row in reader:
-#                     user = UserAccount(
-#                         username = row['username'],
-#                         full_name = row['full_name'],
-#                         password = make_password(row['password']),
-#                         date_of_birth = row['date_of_birth'],
-#                         role_name = Profile.objects.get(profile_name=row['role']),
-#                         district_name = District.objects.get(district_name=row['district']),
-#                         party_name = Party.objects.get(party_name=row['party'])
-#                     )
-
-#                     user.save()
-
-#                     if user.role.profile_name == 'Candidate':
-#                         CandidateProfile.objects.create(candidate=user)
-#                         VoteResults.objects.create(candidate=user, total_vote=0)
-#                         # Generate user and voting currency via gRPC
-#                         try:
-#                             grpc_generate_candidate_keys_run(candidate_id=user.user_id)
-#                             messages.success(request, 'Account successfully created.')
-#                         except GrpcError as grpc_error:
-#                             # Handle specific gRPC errors
-#                             print(f"Error in gRPC call: {grpc_error}")
-#                             messages.error(request, f"Error in creating candidate keys: {grpc_error}")
-#                         except Exception as e:
-#                             # Handle other unexpected exceptions
-#                             print(f"Unexpected error: {e}")
-#                             messages.error(request, f"Unexpected error in creating candidate keys: {e}")
-#                     else:
-#                         messages.success(request, 'Account successfully created.')
-#                 messages.success(request, 'Users created successfully')
-#                 return redirect('create_account')  # Replace with your actual success URL
-#         else:
-#             form = CreateNewUser(request.POST)
-#             if form.is_valid():
-#                 new_user = form.save(commit=False)
-#                 # Hash the password before saving
-#                 password = form.cleaned_data['password']
-#                 new_user.password = make_password(password)
-#                 new_user.save()
-
-#                 # Check if the created user account is for a candidate
-#                 if new_user.role.profile_name == 'Candidate':
-#                     CandidateProfile.objects.create(candidate=new_user)
-#                     VoteResults.objects.create(candidate=new_user, total_vote=0)
-#                     # Generate user and voting currency via gRPC
-#                     try:
-#                         grpc_generate_candidate_keys_run(candidate_id=new_user.user_id)
-#                         messages.success(request, 'Account successfully created.')
-#                     except GrpcError as grpc_error:
-#                         # Handle specific gRPC errors
-#                         print(f"Error in gRPC call: {grpc_error}")
-#                         messages.error(request, f"Error in creating candidate keys: {grpc_error}")
-#                     except Exception as e:
-#                         # Handle other unexpected exceptions
-#                         print(f"Unexpected error: {e}")
-#                         messages.error(request, f"Unexpected error in creating candidate keys: {e}")
-#                 else:
-#                     messages.success(request, 'Account successfully created.')
-#                 return redirect('create_account')  # Redirect to clear the form and show the success message
-#             else:
-#                 messages.error(request, 'Invalid form submission.')
-#     else:
-#         form = CreateNewUser()
-#         csv_form = CSVUploadForm()
-
-#     return render(request, 'userAccount/createUserAcc.html', {'form': form, 'csv_form': csv_form})
-
 @flexible_access('admin')
 def create_account(request, upload_type=None):
     if request.method == 'POST':
@@ -232,7 +151,6 @@ def handle_user_csv_upload(request):
     required_fields = ['username', 'full_name', 'date_of_birth', 'password', 'role', 'party', 'district']
     form = CSVUploadForm(request.POST, request.FILES)
     if form.is_valid():
-        print("here")
         csv_file = request.FILES['csv_file']
         reader = csv.DictReader(csv_file.read().decode('utf-8').splitlines())
         # Check if required fields are present
@@ -241,25 +159,29 @@ def handle_user_csv_upload(request):
             messages.error(request, f"Missing fields in CSV: {', '.join(missing_fields)}")
             return redirect('create_account')
         for row in reader:
-            date_of_birth = datetime.datetime.strptime(row['date_of_birth'], '%d/%m/%Y').date()
-            user = UserAccount(
-                    username = row['username'],
-                    full_name = row['full_name'],
-                    password = make_password(row['password']),
-                    date_of_birth = date_of_birth,
-                    role = Profile.objects.get(profile_name=row['role']),
-                    district = District.objects.get(district_name=row['district']),
-                    party = Party.objects.get(party_name=row['party'])
-                )
             try:
+                date_of_birth = datetime.datetime.strptime(row['date_of_birth'], '%d/%m/%Y').date()
+                user = UserAccount(
+                        username = row['username'],
+                        full_name = row['full_name'],
+                        password = make_password(row['password']),
+                        date_of_birth = date_of_birth,
+                        role = Profile.objects.get(profile_name=row['role']),
+                        district = District.objects.get(district_name=row['district']),
+                        party = Party.objects.get(party_name=row['party'])
+                    )
                 user.save()
                 create_additional_candidate_data(request, user)
+            except ObjectDoesNotExist as e:
+                messages.error(request, f"Error creating user {row['username']}: {e}")
+                return redirect('create_account')
             except ValidationError as e:
                 for field, messages_list in e.message_dict.items():
                     for message in messages_list:
                         messages.error(request, f"{field}: {message}")
                 return redirect('create_account')
-            messages.success(request, 'Users created successfully')
+            
+        messages.success(request, 'Users created successfully')
     else:
         messages.error(request, 'Invalid CSV file')
     return redirect('create_account')
@@ -347,7 +269,7 @@ def activate_election_phase(request, phase_id):
         district_ids = District.objects.values_list('district_id', flat=True)
         compute_final_total_vote(request, district_ids)
     phase.save()
-    return redirect('list_election_phases')
+    return redirect('view_election_phases')
 
 @flexible_access('admin')
 def list_election_phases(request):
@@ -355,37 +277,6 @@ def list_election_phases(request):
     return render(request, 'electionPhase/listPhases.html', {'phases': phases})
 
 # ---------------------------------------District views-----------------------------------------------------
-# @flexible_access('admin')
-# def create_district(request):
-#     if request.method == 'POST':
-#         form = CreateDistrict(request.POST)
-#         if form.is_valid():
-#             district_names = form.cleaned_data['district_names']
-#             district_list = [name.strip().upper() for name in district_names.split(';') if name.strip()]
-
-#             for name in district_list:
-#                 district, created = District.objects.get_or_create(district_name=name)
-#                 if created:
-#                     try:
-#                         grpc_generate_user_and_votingcurr_run(district_id=district.district_id, voter_num=20)
-#                     except GrpcError as grpc_error:
-#                         # Handle gRPC errors
-#                         print(f"Error in gRPC call: {grpc_error}")
-#                         messages.error(request, f"Error in gRPC call: {grpc_error}")
-#                     except Exception as e:
-#                         # Handle other exceptions
-#                         print(f"Unexpected error: {e}")
-#                         messages.error(request, f"Error: {e}")
-
-#             messages.success(request, 'District(s) successfully created.')
-#             return redirect('create_district')  # Redirect to clear the form and show the success message
-#         else:
-#             messages.error(request, 'Invalid form submission.')
-#     else:
-#         form = CreateDistrict()
-
-#     return render(request, 'district/createDistrict.html', {'form': form})
-
 @flexible_access('admin')
 def create_district(request, upload_type=None):
     if request.method == 'POST':
@@ -413,11 +304,11 @@ def handle_district_csv_upload(request):
             messages.error(request, f"Missing fields in CSV: {', '.join(missing_fields)}")
             return redirect('create_district')
         for row in reader:
-            district = District(
-                district_name=row['district_name'],
-                num_of_people=row['num_of_people']
-            )
             try:
+                district = District(
+                    district_name=row['district_name'],
+                    num_of_people=row['num_of_people']
+                )
                 district.save()
                 create_additional_voter_data(request, district)
                 
@@ -426,7 +317,7 @@ def handle_district_csv_upload(request):
                     for message in messages_list:
                         messages.error(request, f"{field}: {message}")
                 return redirect('create_district')
-            messages.success(request, 'Distticts created successfully')
+        messages.success(request, 'Distticts created successfully')
     else:
         messages.error(request, 'Invalid CSV file')
     return redirect('create_district')
@@ -453,7 +344,7 @@ def create_additional_voter_data(request, district):
         messages.error(request, f"Error: {e}")
 
 @flexible_access('public', 'admin')
-def view_district(request):
+def view_districts(request):
     query = request.GET.get('search', '')
     if query:
         # Filter districts where the search query matches the name field
@@ -461,14 +352,13 @@ def view_district(request):
     else:
         districts = District.objects.all()
 
-    if isinstance(request.user, UserAccount):
-        if request.user.role.profile_name.lower() == 'admin':
+    if request.user.is_authenticated and request.path == '/admin_home/view_districts/':
             current_phase = ElectionPhase.objects.filter(is_active=True).first()
             disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
 
             return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
+        
     # for general user
-    # if not request.user.is_authenticated:
     return render(request, 'generalUser/viewAllDistricts.html', {'districts': districts})
     
 @flexible_access('admin')
@@ -479,7 +369,7 @@ def edit_district(request, district_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'District successfully updated.')
-            return redirect('view_district')
+            return redirect('view_districts')
         else:
             messages.error(request, 'Invalid form submission.')
     else:
@@ -492,16 +382,16 @@ def delete_district(request, district_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
     if current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
         messages.error(request, 'You do not have permission to delete the district at this time.')
-        return redirect('candidate_home')
+        return redirect('view_districts')
     
     district = get_object_or_404(District, pk=district_id)
     if request.method == 'POST':
         district.delete()
         messages.success(request, 'District successfully deleted.')
-        return redirect('view_district')
+        return redirect('view_districts')
     else:
         messages.error(request, 'Error deleting district.')
-        return redirect('view_district')
+        return redirect('view_districts')
 
 # ---------------------------------------Profile view-----------------------------------------------------
 @flexible_access('admin')
@@ -572,12 +462,12 @@ def create_announcement(request):
     return render(request, 'announcement/createAnnouncement.html', {'form': form})
 
 @flexible_access('public', 'admin')
-def view_announcement(request):
+def view_announcements(request):
     announcements = Announcement.objects.all()
-    if not request.user.is_authenticated:
-        return render(request, 'generalUser/viewAllAnnouncements.html', {'announcements': announcements})
-    else:
+    if request.user.is_authenticated and request.path == '/admin_home/view_announcements/':
         return render(request, 'announcement/viewAnnouncement.html', {'announcements': announcements})
+    else:
+        return render(request, 'generalUser/viewAllAnnouncements.html', {'announcements': announcements})
 
 @flexible_access('admin')
 def view_announcement_detail(request, announcement_id):
@@ -592,7 +482,7 @@ def edit_announcement(request, announcement_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Announcement successfully updated.')
-            return redirect('view_announcement')
+            return redirect('view_announcements')
     else:
         form = CreateAnnouncement(instance=announcement)
     return render(request, 'announcement/editAnnouncement.html', {'form': form, 'announcement': announcement})
@@ -603,10 +493,10 @@ def delete_announcement(request, announcement_id):
     if request.method == 'POST':
         announcement.delete()
         messages.success(request, 'Announcement successfully deleted.')
-        return redirect('view_announcement')
+        return redirect('view_announcements')
     else:
         messages.error(request, 'Error deleting announcement.')
-        return redirect('view_announcement')
+        return redirect('view_announcements')
 
 # ---------------------------------------Party views------------------------------------------------
 @flexible_access('admin')
@@ -624,7 +514,7 @@ def create_party(request):
     return render(request, 'party/createParty.html', {'form': form})
 
 @flexible_access('admin')
-def view_party(request):
+def view_parties(request):
     parties = Party.objects.all()
     return render(request, 'party/viewParty.html', {'parties': parties})
 
@@ -636,7 +526,7 @@ def edit_party(request, party_id):
         if form.is_valid():
             form.save()
             messages.success(request, 'Party successfully updated.')
-            return redirect('view_party')
+            return redirect('view_parties')
         else:
             messages.error(request, 'Invalid form submission.')
     else:
@@ -649,10 +539,10 @@ def delete_party(request, party_id):
     if request.method == 'POST':
         party.delete()
         messages.success(request, 'Party successfully deleted.')
-        return redirect('view_party')
+        return redirect('view_parties')
     else:
         messages.error(request, 'Error deleting party.')
-        return redirect('view_party')
+        return redirect('view_parties')
 
 # ---------------------------------------Voter views------------------------------------------------
 @flexible_access('public')

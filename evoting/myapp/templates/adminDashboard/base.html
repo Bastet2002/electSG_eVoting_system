@@ -29,42 +29,42 @@
       <i class="fa fa-caret-down"></i>
     </button>
     <div class="dropdown-container">
-      <a href="/account/create"><i class="fas fa-user-plus" style="margin-right: 2px"></i> Create User Account</a>
-      <a href="/account"><i class="fas fa-users" style="margin-right: 4px;"></i> View User Account</a>
+      <a href="{% url 'create_account' %}"><i class="fas fa-user-plus" style="margin-right: 2px"></i> Create User Account</a>
+      <a href="{% url 'view_accounts' %}"><i class="fas fa-users" style="margin-right: 4px;"></i> View User Account</a>
     </div>
     <button class="dropdown-btn"><i class="fas fa-id-badge" style="margin: 0px 20px"></i> User Profile
         <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-container">
-        <a href="/create_profile"><i class="fas fa-user-edit" style="margin-right: 2px"></i> Create User Profile</a>
-        <a href="/view_profiles"><i class="fas fa-address-book" style="margin-right: 8px;"></i> View User Profile</a>
+        <a href="{% url 'create_profile' %}"><i class="fas fa-user-edit" style="margin-right: 2px"></i> Create User Profile</a>
+        <a href="{% url 'view_profiles' %}"><i class="fas fa-address-book" style="margin-right: 8px;"></i> View User Profile</a>
       </div>
       <button class="dropdown-btn"><i class="fas fa-map-marked-alt" style="margin: 0px 18px"></i> District
         <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-container">
-        <a href="/district/create"><i class="fas fa-map-pin" style="margin-right: 10px;"></i> Create District</a>
-        <a href="/district"><i class="fas fa-map" style="margin-right: 4px"></i> View District</a>
+        <a href="{% url 'create_district' %}"><i class="fas fa-map-pin" style="margin-right: 10px;"></i> Create District</a>
+        <a href="{% url 'view_districts' %}"><i class="fas fa-map" style="margin-right: 4px"></i> View District</a>
       </div>
       <button class="dropdown-btn"><i class="fas fa-poll" style="margin: 0px 19px"></i> Election Status
         <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-container">
-        <a href="/phases"><i class="fas fa-exchange-alt" style="margin-right: 20px;"></i> Change Status</a>
+        <a href="{% url 'view_election_phases' %}"><i class="fas fa-exchange-alt" style="margin-right: 20px;"></i> Change Status</a>
       </div>
       <button class="dropdown-btn"><i class="fas fa-bullhorn" style="margin: 0px 18px"></i> Announcement
         <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-container">
-        <a href="/announcement/create"><i class="fas fa-plus-square" style="margin-right: 8px;"></i> Create Announcement</a>
-        <a href="/announcement"><i class="fas fa-bullhorn"></i> View Announcement</a>
+        <a href="{% url 'create_announcement' %}"><i class="fas fa-plus-square" style="margin-right: 8px;"></i> Create Announcement</a>
+        <a href="{% url 'view_announcements' %}"><i class="fas fa-bullhorn"></i> View Announcement</a>
       </div>
       <button class="dropdown-btn"><i class="fas fa-flag" style="margin: 0px 18px"></i> Party
         <i class="fa fa-caret-down"></i>
       </button>
       <div class="dropdown-container">
-        <a href="/party/create"><i class="fas fa-plus-square" style="margin-right: 8px;"></i> Create Party</a>
-        <a href="/party"><i class="fas fa-flag" style="margin-right: 8px;"></i> View Party</a>
+        <a href="{% url 'create_party' %}"><i class="fas fa-plus-square" style="margin-right: 8px;"></i> Create Party</a>
+        <a href="{% url 'view_parties' %}"><i class="fas fa-flag" style="margin-right: 8px;"></i> View Party</a>
       </div>
     {% endblock %}
   </div>
