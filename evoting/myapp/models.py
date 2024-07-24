@@ -26,15 +26,16 @@ class Profile(models.Model):
     description = models.TextField()
 
     def clean(self):
-        if len(self.profile_name) > 20:
-            raise ValidationError({"profile_name": "Profile name cannot exceed 20 characters."})
-        
-        # Get all existing profile names, excluding the current instance
-        existing_profiles = Profile.objects.exclude(pk=self.pk).values_list('profile_name', flat=True)
-        # Check if the new profile name contains or is contained by any existing name
-        for existing_name in existing_profiles:
-            if ((existing_name.lower() in self.profile_name.lower() or self.profile_name.lower() in existing_name.lower())):
-                raise ValidationError({"profile_name": f"Profile name '{self.profile_name}' is too similar to existing profile '{existing_name}'."})
+        if self.profile_name:
+            if len(self.profile_name) > 20:
+                raise ValidationError({"profile_name": "Profile name cannot exceed 20 characters."})
+            
+            # Get all existing profile names, excluding the current instance
+            existing_profiles = Profile.objects.exclude(pk=self.pk).values_list('profile_name', flat=True)
+            # Check if the new profile name contains or is contained by any existing name
+            for existing_name in existing_profiles:
+                if ((existing_name.lower() in self.profile_name.lower() or self.profile_name.lower() in existing_name.lower())):
+                    raise ValidationError({"profile_name": f"Profile name '{self.profile_name}' is too similar to existing profile '{existing_name}'."})
                 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -50,15 +51,17 @@ class District(models.Model):
     num_of_people = models.IntegerField()
 
     def clean_district_name(self):
-        if len(self.district_name) > 30:
-            raise ValidationError({"district_name": "District name cannot exceed 30 characters."})
-        
-        if District.objects.filter(district_name__iexact=self.district_name).exclude(pk=self.pk).exists():
-            raise ValidationError({"district_name": f"District with this name '{self.district_name}' already exist."})
+        if self.district_name:
+            if len(self.district_name) > 30:
+                raise ValidationError({"district_name": "District name cannot exceed 30 characters."})
+            
+            if District.objects.filter(district_name__iexact=self.district_name).exclude(pk=self.pk).exists():
+                raise ValidationError({"district_name": f"District with this name '{self.district_name}' already exist."})
     
     def clean_num_of_people(self):
-        if self.num_of_people <= 0:
-            raise ValidationError({"num_of_people": "Number of people cannot be zero or negative number."})
+        if self.num_of_people:
+            if self.num_of_people <= 0:
+                raise ValidationError({"num_of_people": "Number of people cannot be zero or negative number."})
         
     def full_clean(self, *args, **kwargs):
         errors = {}
@@ -114,15 +117,21 @@ class UserAccount(AbstractBaseUser):
                 raise ValidationError({"date_of_birth": "Candidate must be at least 45 years old."})
 
     def clean_username(self):
-        if len(self.username) > 25:
-            raise ValidationError({"username": "Username cannot exceed 15 characters."})
-        if UserAccount.objects.filter(username=self.username).exclude(pk=self.pk).exists():
-            raise ValidationError({"username": f"User account with this username '{self.username}' already exists."})
+        if self.username:
+            if len(self.username) > 25:
+                raise ValidationError({"username": "Username cannot exceed 15 characters."})
+            if UserAccount.objects.filter(username=self.username).exclude(pk=self.pk).exists():
+                raise ValidationError({"username": f"User account with this username '{self.username}' already exists."})
 
     def clean_password(self):
-        if len(self.password) < 8 or not any(char.isdigit() for char in self.password) or not any(char.islower() for char in self.password) or not any(char.isupper() for char in self.password):
-            raise ValidationError({"password": "Password must be at least 8 characters long and contain at least one number, one lower case letter, and one upper case letter."})
-
+        if self.password:
+            if (len(self.password) < 8 or 
+            not any(char.isdigit() for char in self.password) or 
+            not any(char.islower() for char in self.password) or 
+            not any(char.isupper() for char in self.password) or 
+            not any(char in '!@#$%^&*()-_=+[]{}|;:,.<>?/~' for char in self.password)):
+                raise ValidationError({"password": "Password must be at least 8 characters long and contain at least one number, one lowercase letter, one uppercase letter, and one special character."})
+            
     def clean_role(self):
         if self.role is None:
             raise ValidationError({"role": "This field is required."})
@@ -185,12 +194,6 @@ class CandidateProfile(models.Model):
             # Get the old instance from the database
                 old_instance = CandidateProfile.objects.get(pk=self.pk)
             
-            # If there's a new profile picture and it's different from the old one
-            # if self.profile_picture and old_instance.profile_picture != self.profile_picture:
-            #     # Delete the old picture file
-            #     if old_instance.profile_picture:
-            #         if os.path.isfile(old_instance.profile_picture.path):
-            #             os.remove(old_instance.profile_picture.path)
                 if old_instance.profile_picture and self.profile_picture and old_instance.profile_picture != self.profile_picture:
                     old_instance.profile_picture.delete(save=False)
                 # Check if the election_poster field is updated
@@ -226,7 +229,7 @@ class VoteResults(models.Model):
                 raise ValidationError("Total vote is unrealistically large.")
 
     def save(self, *args, **kwargs):
-        self.clean()
+        self.full_clean()
         super().save(*args, **kwargs)
 
 # PARTY Model
@@ -236,13 +239,14 @@ class Party(models.Model):
     description = models.TextField()
 
     def clean(self):
-        if len(self.party_name) > 50:
-            raise ValidationError({"party_name": "Party name cannot exceed 50 characters."})
-        if Party.objects.filter(party_name=self.party_name).exclude(pk=self.pk).exists():
-            raise ValidationError({"party_name": f"Party with this name '{self.party_name}' already exists."})
+        if self.party_name:
+            if len(self.party_name) > 50:
+                raise ValidationError({"party_name": "Party name cannot exceed 50 characters."})
+            if Party.objects.filter(party_name=self.party_name).exclude(pk=self.pk).exists():
+                raise ValidationError({"party_name": f"Party with this name '{self.party_name}' already exists."})
         
     def save(self, *args, **kwargs):
-        self.clean()
+        self.full_clean()
         super().save(*args, **kwargs)
         
     def __str__(self):
@@ -263,6 +267,18 @@ class ElectionPhase(models.Model):
     phase_id = models.AutoField(primary_key=True)
     phase_name = models.CharField(max_length=255)
     is_active = models.BooleanField(default=False)
+
+    def clean(self):
+        if self.is_active:
+            active_phases = ElectionPhase.objects.filter(is_active=True)
+            if self.pk:
+                active_phases = active_phases.exclude(pk=self.pk)
+            if active_phases.exists():
+                raise ValidationError('There can be only one active election phase.')
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return self.phase_name

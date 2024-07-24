@@ -343,6 +343,9 @@ def activate_election_phase(request, phase_id):
     ElectionPhase.objects.update(is_active=False)  # Set all phases to inactive
     phase = ElectionPhase.objects.get(pk=phase_id)
     phase.is_active = True
+    if (phase.phase_name == 'End Election'):
+        district_ids = District.objects.values_list('district_id', flat=True)
+        compute_final_total_vote(request, district_ids)
     phase.save()
     return redirect('list_election_phases')
 
@@ -908,8 +911,8 @@ def general_user_home(request):
 @flexible_access('public')
 def view_district_detail(request, district_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase and current_phase.phase_name == 'End Election':
-        compute_final_total_vote(request, district_id)
+    # if current_phase and current_phase.phase_name == 'End Election':
+    #     compute_final_total_vote(request, district_id)
 
     phase_name = current_phase.phase_name if current_phase and current_phase.phase_name else 'Not Available'
     
@@ -942,9 +945,9 @@ def get_ongoing_result(request, district_id):
         total_votes_sum = 0
     return JsonResponse({'result': total_votes_sum})
 
-def compute_final_total_vote(request, district_id):
+def compute_final_total_vote(request, district_ids):
     try:
-        grpc_calculate_total_vote_run(district_ids=[district_id])
+        grpc_calculate_total_vote_run(district_ids=district_ids)
     except GrpcError as e:
         print(f"Error in gRPC call: {e}")
         messages.error(request, f"Error in calculating vote result for {district_id}: {e}")
