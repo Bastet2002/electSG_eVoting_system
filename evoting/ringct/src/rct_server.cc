@@ -1,5 +1,7 @@
 #include "ringct.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/health_check_service_interface.h>
 #include "../util/custom_exception.h"
 #include "evoting.h"
 #include "core.h"
@@ -83,7 +85,16 @@ void compute_total_vote_to_compute_total_vote_response(Calculate_Total_Vote_Resp
 // ------------------------------ server class logic ------------------------------
 class RingCT_Service_Impl final : public RingCT_Service::Service
 {
+// private:
+//     grpc::HealthCheckServiceInterface* health_check_service_ = nullptr;
+//     bool is_serving_ = true;
+
 public:
+    // health check
+    // void set_health_check_service(grpc::HealthCheckServiceInterface* health_check_service){
+    //     health_check_service_ = health_check_service;
+    // }
+
     Status Compute_Vote(ServerContext *context, const Vote_Request *request, Vote_Response *response) override
     {
         // use the django defined one
@@ -188,15 +199,20 @@ public:
 // ------------------------------ server run ------------------------------
 void RunServer()
 {
-    // TODO update to the server address
+    // enable health check
+    grpc::EnableDefaultHealthCheckService(true);
+    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+    
+
     string server_address("0.0.0.0:50051");
     RingCT_Service_Impl service;
 
     ServerBuilder builder;
-    // TODO temp run without enc
+    // Server is running in VPC, so no need for SSL
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
     unique_ptr<Server> server(builder.BuildAndStart());
+    // service.set_health_check_service(server->GetHealthCheckService());
     cout << "Server listening on " << server_address << endl;
     server->Wait();
 }

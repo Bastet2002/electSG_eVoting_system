@@ -267,7 +267,6 @@ bool verify_double_voting(const int32_t district_id, const BYTE *key_image)
 
 void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  const blsagSig &blsagSig, const StealthAddress &sa, const Commitment &commitment)
 {
-    // TODO right one for one, for the simplicity
     /*
     keyimage
     {
@@ -284,6 +283,12 @@ void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  
         "r": ["hex"],
         "members": ["stealthaddress"]
     }
+    "rangeproof":{
+        "bbee": "hex",
+        "bbs0": ["hex"],
+        "bbs1": ["hex"],
+        "C1": ["hex"],
+        "C2": ["hex"],
     }
     */
     pqxx::connection C(cnt_django);
@@ -298,6 +303,8 @@ void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  
     string c, m;
     vector<string> r;
     vector<string> members;
+    string bbee;
+    vector<string> bbs0, bbs1, C1, C2;
 
     to_string(key_image, blsagSig.key_image, 32);
     to_string(rg, sa.rG, 32);
@@ -308,6 +315,9 @@ void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  
 
     to_string(c, blsagSig.c, 32);
     to_string(m, blsagSig.m, 32);
+
+    to_string(bbee, rangeproof.bbee, 32);
+
     for (int i = 0; i < blsagSig.r.size(); i++)
     {
         string temp;
@@ -320,6 +330,30 @@ void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  
         to_string(temp, blsagSig.members[i].pk, 32);
         members.push_back(temp);
     }
+    for (int i = 0; i < rangeproof.bbs0.size(); i++)
+    {
+        string temp;
+        to_string(temp, rangeproof.bbs0[i].data(), 32);
+        bbs0.push_back(temp);
+    }
+    for (int i = 0; i < rangeproof.bbs1.size(); i++)
+    {
+        string temp;
+        to_string(temp, rangeproof.bbs1[i].data(), 32);
+        bbs1.push_back(temp);
+    }
+    for (int i = 0; i < rangeproof.C1.size(); i++)
+    {
+        string temp;
+        to_string(temp, rangeproof.C1[i].data(), 32);
+        C1.push_back(temp);
+    }
+    for (int i = 0; i < rangeproof.C2.size(); i++)
+    {
+        string temp;
+        to_string(temp, rangeproof.C2[i].data(), 32);
+        C2.push_back(temp);
+    }
 
     json commit_json = {
         {"output_commitment", output_commitment},
@@ -330,11 +364,18 @@ void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  
         {"m", m},
         {"r", r},
         {"members", members}};
+    json rangeproof_json = {
+        {"bbee", bbee},
+        {"bbs0", bbs0},
+        {"bbs1", bbs1},
+        {"C1", C1},
+        {"C2", C2}};
     json record_json = {
         {"rG", rg},
         {"stealth_address", stealth_address},
         {"commitment", commit_json},
-        {"blsagSig", blsag_json}};
+        {"blsagSig", blsag_json},
+        {"rangeproof", rangeproof_json}};
 
     string record_str = record_json.dump();
 
@@ -342,7 +383,6 @@ void write_voterecord(const int32_t district_id, const RangeProof& rangeproof,  
     W.exec_prepared("insert vote_record", district_id, key_image, record_str);
     W.commit();
 }
-
 
 vector<int32_t> get_district_ids()
 {

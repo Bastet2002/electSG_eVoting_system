@@ -92,11 +92,6 @@ void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa,
     commitment.amount_masks.push_back(amount_mask_array);
 }
 
-void verify_commitment() {
-    
-}
-
-
 // compute the amount mask to conceal the amount
 // amount_mask = b 8-byte-XOR Hn("amount", Hn(rKv_b, t))
 // the max t is probably not more than 10
