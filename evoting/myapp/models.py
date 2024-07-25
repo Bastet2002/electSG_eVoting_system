@@ -328,3 +328,7 @@ class WebauthnCredentials(models.Model):
     credential_id = models.CharField(max_length=9000, blank=True, null=True)
     credential_public_key = models.CharField(max_length=9000, blank=True, null=True)
     current_sign_count = models.IntegerField(default=0)
+    is_master = models.BooleanField(default=False)  # New to mark a master device
+
+    def __str__(self):
+        return f"WebAuthn Credential for {self.user.username}"

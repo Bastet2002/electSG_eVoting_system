@@ -6,6 +6,24 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'adminDashboard/home.css' %}">
 <div class="container" style="text-align: center;">
+    {% if messages %}
+    <div id="popupAlert" class="popup-alert show">
+        {% for message in messages %}
+            <p class="{{ message.tags }}">{{ message }}</p>
+        {% endfor %}
+    </div>
+    <script>
+        // Show the alert
+        const alertBox = document.getElementById('popupAlert');
+        alertBox.classList.add('show');
+
+        // Hide the alert after 3 seconds
+        setTimeout(() => {
+            alertBox.classList.remove('show');
+        }, 3000); // Adjusted to 3 seconds
+    </script>
+    {% endif %}
+
     <!-- Display the active election phase -->
     {% if active_phase %}
     <h1 style="margin-bottom: 20px; margin-left: 10%;">Election Status : {{ active_phase.phase_name }}</h1>

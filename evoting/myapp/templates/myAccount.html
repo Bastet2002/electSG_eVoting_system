@@ -21,6 +21,10 @@
 
     <div class="section">
         <h2>WebAuthn Registration</h2>
+        <div>
+            <input type="checkbox" id="isMasterDevice" name="isMasterDevice">
+            <label for="isMasterDevice">Register as master device</label>
+        </div>
         <button id="register-button">Register WebAuthn</button>  
     </div>
 
@@ -30,6 +34,15 @@
             {% csrf_token %}
             <p>This deletes ALL credentials.</p>
             <button type="submit" onclick="return confirm('Are you sure you want to delete all credentials?');">Delete All Credentials</button>
+        </form>
+    </div>
+
+    <div class="section">
+        <h2>Delete All Non-master Credentials</h2>
+        <form method="post" action="{% url 'delete_non_master_credentials' %}">
+            {% csrf_token %}
+            <p>This deletes ALL non-master credentials.</p>
+            <button type="submit" onclick="return confirm('Are you sure you want to delete all non-master credentials?');">Delete All Non-master Credentials</button>
         </form>
     </div>
 
@@ -164,11 +177,23 @@
                 console.log('Modified options:', publicKeyCredentialCreationOptions);
                 
                 console.log('Calling navigator.credentials.create');
-                const credential = await navigator.credentials.create({
-                    publicKey: publicKeyCredentialCreationOptions
-                });
+                let credential;
+                try {
+                    credential = await navigator.credentials.create({
+                        publicKey: publicKeyCredentialCreationOptions
+                    });
+                } catch (err) {
+                    if (err.name === 'NotAllowedError') {
+                        console.log('User cancelled the registration');
+                        showError('WebAuthn registration was cancelled by the user.', 'info');
+                        return;
+                    } else {
+                        throw err;
+                    }
+                }
                 console.log('Credential created:', credential);
         
+                const isMasterDevice = document.getElementById('isMasterDevice').checked;
                 const credentialData = {
                     id: credential.id,
                     rawId: arrayBufferToBase64(credential.rawId),
@@ -176,7 +201,8 @@
                     response: {
                         attestationObject: arrayBufferToBase64(credential.response.attestationObject),
                         clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON)
-                    }
+                    },
+                    is_master: isMasterDevice  // Include the master device flag
                 };
                 console.log('Credential data prepared:', credentialData);
         
