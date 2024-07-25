@@ -8,7 +8,7 @@
     
     <div class="main">
         <h1 style="text-align: center; margin-top: 40px;">Create User Profile</h1>
-        <form method="post" action="/create_profile/" class="create-profile-form">
+        <form method="post" action="{% url 'create_profile' %}" class="create-profile-form">
             {% csrf_token %}
             {{ form.as_p }}
             <button type="submit" name="create_profile" style="margin-left: 280px">Create</button>

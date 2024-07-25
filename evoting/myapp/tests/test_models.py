@@ -23,12 +23,12 @@ import json
 class ModelsTestCase(TestCase):
 
     def setUp(self):
-        self.district = District.objects.create(district_name="Central District")
+        self.district = District.objects.create(district_name="Central District", num_of_people=10)
         self.profile = Profile.objects.create(profile_name="Administrator", description="Admin Profile")
         self.party = Party.objects.create(party_name="Democratic Party", description="Democratic Party Description")
         self.singpass_user = SingpassUser.objects.create(
             singpass_id="SP001",
-            password="password123",
+            password="Password123!",
             full_name="John Doe",
             date_of_birth="1990-01-01",
             phone_num="12345678",
@@ -36,7 +36,7 @@ class ModelsTestCase(TestCase):
         )
         self.user_account_one = UserAccount.objects.create(
             username="john_doe",
-            password="password123",
+            password="Password123!",
             full_name="John Doe",
             date_of_birth="1990-01-01",
             role=self.profile,
@@ -45,7 +45,7 @@ class ModelsTestCase(TestCase):
         )
         self.user_account_two = UserAccount.objects.create(
             username="testuser",
-            password="password123",
+            password="Password123!",
             full_name="John Doe",
             date_of_birth="1990-01-01",
             role=self.profile,
@@ -97,7 +97,7 @@ class ModelsTestCase(TestCase):
         self.assertEqual(self.profile.profile_name, "Administrator")
 
     def test_district_creation(self):
-        self.assertEqual(self.district.district_name, "Central District")
+        self.assertEqual(self.district.district_name, "Central District".upper())
 
     def test_user_account_creation(self):
         self.assertEqual(self.user_account_one.username, "john_doe")
@@ -153,18 +153,18 @@ class ModelsTestCase(TestCase):
             )
 
     def test_invalid_profile_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             Profile.objects.create(profile_name=None, description="Candidate Profile")  # Invalid profile_name (None)
 
     def test_invalid_district_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             District.objects.create(district_name=None)  # Invalid district_name (None)
 
     def test_invalid_user_account_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             UserAccount.objects.create(
-                username=None,  # Invalid username (None)
-                password="password123",
+                username=None,  # Invalid username (length 26)
+                password="Password123!",
                 full_name="John Doe",
                 date_of_birth="1990-01-01",
                 role=self.profile,
@@ -173,7 +173,7 @@ class ModelsTestCase(TestCase):
             )
 
     def test_invalid_candidate_profile_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             CandidateProfile.objects.create(
                 candidate=None,  # Invalid candidate (None)
                 profile_picture=None,
@@ -190,14 +190,14 @@ class ModelsTestCase(TestCase):
             )
 
     def test_invalid_vote_result_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             VoteResults.objects.create(
                 candidate=None,  # Invalid candidate (None)
                 total_vote=10
             )
 
     def test_invalid_party_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             Party.objects.create(
                 party_name=None  # Invalid party_name (None)
             )
@@ -210,7 +210,7 @@ class ModelsTestCase(TestCase):
             )
 
     def test_invalid_election_phase_creation(self):
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             ElectionPhase.objects.create(
                 phase_name=None,  # Invalid phase_name (None)
                 is_active=True
@@ -262,15 +262,15 @@ class ModelsTestCase(TestCase):
             )
     
     def test_profile_long_profile_name(self):
-        with self.assertRaises(DataError):
+        with self.assertRaises(ValidationError):
             Profile.objects.create(profile_name="x" * 256)  # Invalid profile_name (too long)
 
     def test_district_long_district_name(self):
-        with self.assertRaises(DataError):
+        with self.assertRaises(ValidationError):
             District.objects.create(district_name="x" * 256)  # Invalid district_name (too long)
 
     def test_useraccount_long_username(self):
-        with self.assertRaises(DataError):
+        with self.assertRaises(ValidationError):
             UserAccount.objects.create(
                 username="x" * 201,
                 password="password123",
@@ -284,17 +284,17 @@ class ModelsTestCase(TestCase):
     def test_useraccount_duplicate_username(self):
         UserAccount.objects.create(
             username="testinguser",
-            password="password123",
+            password="Password123!",
             full_name="John Doe",
             date_of_birth="1990-01-01",
             role=self.profile,
             district=self.district,
             party=self.party
         )
-        with self.assertRaises(IntegrityError):
+        with self.assertRaises(ValidationError):
             UserAccount.objects.create(
                 username="testinguser",
-                password="password456",
+                password="Password456!",
                 full_name="Jane Doe",
                 date_of_birth="1991-01-01",
                 role=self.profile,
@@ -334,7 +334,7 @@ class ModelsTestCase(TestCase):
             VoteResults.objects.create(candidate=self.user_account_two, total_vote=5000000)
 
     def test_party_long_party_name(self):
-        with self.assertRaises(DataError):
+        with self.assertRaises(ValidationError):
             Party.objects.create(party_name="x" * 256)  # Invalid party_name (too long)
 
     def test_announcement_future_date(self):
@@ -347,14 +347,13 @@ class ModelsTestCase(TestCase):
         )
         self.assertGreater(announcement.date, threshold_date)
 
-    # def test_electionphase_multiple_active_phases(self):
-    #     ElectionPhase.objects.create(phase_name="Phase 1", is_active=True)
-    #     ElectionPhase.objects.create(phase_name="Phase 2", is_active=True)
-    #     active_phases = ElectionPhase.objects.filter(is_active=True)
-    #     self.assertEqual(active_phases.count(), 2)
+    def test_electionphase_multiple_active_phases(self):
+        with self.assertRaises(ValidationError):
+            ElectionPhase.objects.create(phase_name="Phase 1", is_active=True)
+            ElectionPhase.objects.create(phase_name="Phase 2", is_active=True)
 
     def test_electionphase_long_phase_name(self):
-        with self.assertRaises(DataError):
+        with self.assertRaises(ValidationError):
             ElectionPhase.objects.create(
                 phase_name="x" * 256,
                 is_active=False

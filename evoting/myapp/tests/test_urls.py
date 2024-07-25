@@ -3,11 +3,6 @@ from django.urls import reverse, resolve
 from myapp import views
 
 class TestUrls(SimpleTestCase):
-
-    def test_base_url(self):
-        url = reverse('base')
-        self.assertEquals(resolve(url).func, views.base)
-
     def test_admin_home_url(self):
         url = reverse('admin_home')
         self.assertEquals(resolve(url).func, views.admin_home)
@@ -33,8 +28,8 @@ class TestUrls(SimpleTestCase):
         self.assertEquals(resolve(url).func, views.create_district)
 
     def test_view_district_url(self):
-        url = reverse('view_district')
-        self.assertEquals(resolve(url).func, views.view_district)
+        url = reverse('view_districts')
+        self.assertEquals(resolve(url).func, views.view_districts)
 
     def test_edit_district_url(self):
         url = reverse('edit_district', args=[1])
@@ -45,8 +40,8 @@ class TestUrls(SimpleTestCase):
         self.assertEquals(resolve(url).func, views.delete_district)
 
     def test_view_announcement_url(self):
-        url = reverse('view_announcement')
-        self.assertEquals(resolve(url).func, views.view_announcement)
+        url = reverse('view_announcements')
+        self.assertEquals(resolve(url).func, views.view_announcements)
 
     def test_view_announcement_detail_url(self):
         url = reverse('view_announcement_detail', args=[1])
@@ -65,8 +60,8 @@ class TestUrls(SimpleTestCase):
         self.assertEquals(resolve(url).func, views.delete_announcement)
 
     def test_view_party_url(self):
-        url = reverse('view_party')
-        self.assertEquals(resolve(url).func, views.view_party)
+        url = reverse('view_parties')
+        self.assertEquals(resolve(url).func, views.view_parties)
 
     def test_create_party_url(self):
         url = reverse('create_party')
@@ -85,15 +80,15 @@ class TestUrls(SimpleTestCase):
         self.assertEquals(resolve(url).func, views.user_login)
 
     def test_view_user_accounts_url(self):
-        url = reverse('view_user_accounts')
+        url = reverse('view_accounts')
         self.assertEquals(resolve(url).func, views.view_accounts)
 
     def test_edit_user_url(self):
-        url = reverse('edit_user', args=[1])
+        url = reverse('edit_account', args=[1])
         self.assertEquals(resolve(url).func, views.edit_account)
 
     def test_delete_user_url(self):
-        url = reverse('delete_user', args=[1])
+        url = reverse('delete_account', args=[1])
         self.assertEquals(resolve(url).func, views.delete_account)
 
     def test_create_account_url(self):
@@ -101,7 +96,7 @@ class TestUrls(SimpleTestCase):
         self.assertEquals(resolve(url).func, views.create_account)
 
     def test_list_election_phases_url(self):
-        url = reverse('list_election_phases')
+        url = reverse('view_election_phases')
         self.assertEquals(resolve(url).func, views.list_election_phases)
 
     def test_activate_election_phase_url(self):
@@ -150,4 +145,4 @@ class TestUrls(SimpleTestCase):
 
     def test_view_all_announcements_url(self):
         url = reverse('view_all_announcements')
-        self.assertEquals(resolve(url).func, views.view_announcement)
+        self.assertEquals(resolve(url).func, views.view_announcements)

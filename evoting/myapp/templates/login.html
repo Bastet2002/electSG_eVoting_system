@@ -8,6 +8,25 @@
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
+    {% block content %}
+    {% if messages %}
+        <div id="popupAlert" class="popup-alert show">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        <script>
+            // Show the alert
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.classList.add('show');
+            
+            // Hide the alert after 3 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 3000); // Adjusted to 3 seconds
+        </script>
+    {% endif %}
+    {% endblock %}
     <div class="header">
         <div class="logo-container">
             <img src="{% static 'images/logo.png' %}" alt="Logo">
