@@ -211,14 +211,13 @@ bool checkBorromean(const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
     return true;
 }
 
-void rangeproof (RangeProof& rangeproof, const BYTE* output_blidingfactor) {
+void rangeproof (RangeProof& rangeproof, const Commitment& commitment, const BYTE* output_blidingfactor) {
     // generate 8 bit blinding factor
     vector<array<BYTE, 32>> eight_bit_blindingFactors(8);
     generateBlindingFactors(eight_bit_blindingFactors, output_blidingfactor);
     cout << "after generateBlindingFactors" << endl;
 
-    // TODO get the value, from XOR?
-    uint8_t value = 30; 
+    uint8_t value = static_cast<uint8_t>(commitment.amount); 
     bitset<8> bits(value);
 
     // generate C1 and C2

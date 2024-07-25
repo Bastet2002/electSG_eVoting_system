@@ -56,5 +56,5 @@ bool checkBorromean(const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
                     const BYTE *bbee,
                     const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs0,
                     const vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> &bbs1);
-void rangeproof (RangeProof& rangeproof, const BYTE* output_blinding_factor);
+void rangeproof (RangeProof& rangeproof, const Commitment& commitment, const BYTE* output_blidingfactor);
 #endif

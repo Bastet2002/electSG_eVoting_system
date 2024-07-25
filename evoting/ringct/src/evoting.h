@@ -6,6 +6,8 @@ struct Vote
 {
     int32_t candidate_id;
     int32_t voter_id;
+    bool is_voting;
+    bool has_voted;
     string key_image;
     string test_output; // TODO temporary for testing
 };

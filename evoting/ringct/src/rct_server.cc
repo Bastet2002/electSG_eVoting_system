@@ -36,6 +36,7 @@ void vote_request_to_vote(Vote &vote, const Vote_Request &request)
 {
     vote.candidate_id = request.candidate_id();
     vote.voter_id = request.voter_id();
+    vote.is_voting = request.is_voting();
 }
 
 void vote_to_vote_response(Vote_Response &response, const Vote &vote)
@@ -43,6 +44,7 @@ void vote_to_vote_response(Vote_Response &response, const Vote &vote)
     response.set_candidate_id(vote.candidate_id);
     response.set_voter_id(vote.voter_id);
     response.set_key_image(vote.key_image);
+    response.set_has_voted(vote.has_voted);
     response.set_test_output(vote.test_output);
 }
 
@@ -224,10 +226,10 @@ int main(int argc, char **argv)
         cout << "sodium_init failed" << endl;
         return 1;
     }
-    RangeProof rp;
-    BYTE bf[32];
-    crypto_core_ed25519_scalar_random(bf);
-    rangeproof(rp, bf);
+    // RangeProof rp;
+    // BYTE bf[32];
+    // crypto_core_ed25519_scalar_random(bf);
+    // rangeproof(rp, bf);
     
 
     // string input_path = filesystem::absolute("./test/text/hash_infile");

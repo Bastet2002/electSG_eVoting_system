@@ -43,6 +43,7 @@ message Gen_Candidate_Response{
 message Vote_Request{
     int32 candidate_id = 1;
     int32 voter_id = 2;
+    bool is_voting = 3;
 }
 
 message Vote_Response{
@@ -50,5 +51,6 @@ message Vote_Response{
     int32 candidate_id = 1;
     int32 voter_id = 2;
     string key_image = 3;
-    string test_output = 4; // TODO temporary for printing
+    bool has_voted = 4;
+    string test_output = 5; // TODO temporary for printing
 }

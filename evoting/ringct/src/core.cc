@@ -130,6 +130,15 @@ void voter_cast_vote(Vote &vote)
     // check the keyimage against the voted table in db
     compute_key_image(blsagSig, receivedSA);
 
+    // for printing the status early
+    if (!vote.is_voting){
+        vote.has_voted = false;
+        if (!verify_double_voting(district_id, blsagSig.key_image)){
+            vote.has_voted = true;
+        }
+        return; 
+    }
+
     if (!verify_double_voting(district_id, blsagSig.key_image))
     {
         RingCTErrorCode errorCode = RingCTErrorCode::CORE_DOUBLE_VOTING;
@@ -143,7 +152,7 @@ void voter_cast_vote(Vote &vote)
 
     // rangeproof
     RangeProof rp;
-    rangeproof(rp, candidateCmt.output_blindingfactor);
+    rangeproof(rp, candidateCmt, candidateCmt.output_blindingfactor);
 
     // grab decoys from db
     vector<StealthAddress> decoySA = grab_decoys(district_id, receivedSA); // decoy

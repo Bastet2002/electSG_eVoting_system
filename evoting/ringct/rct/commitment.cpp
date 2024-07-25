@@ -3,7 +3,7 @@
 
 void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &sa, const User &receiver)
 {
-    const int c = 30;
+    const int c = vote_currency;
 
     // input commitment
     BYTE x[32];
@@ -43,6 +43,7 @@ void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &s
     copy(begin(amount_mask), end(amount_mask), amount_mask_array.begin());
 
     commitment.amount_masks.push_back(amount_mask_array);
+    commitment.amount = c;
 }
 
 // one to one

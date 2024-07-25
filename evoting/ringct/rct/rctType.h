@@ -150,6 +150,7 @@ struct Commitment{
     vector<array<BYTE,32>> inputs_commitments; // no need to store in db, if need to verify, can be searched
 
     BYTE output_blindingfactor[32]; // no need to store in db, for rangeproof calculation
+    int amount; // no need to store in db, for rangeproof calculation, will be cleared
     vector<array<BYTE,32>> pseudoouts_blindingfactor_masks;
     vector<array<BYTE,32>> outputs_blindingfactor_masks;
     vector<array<BYTE,8>> amount_masks;

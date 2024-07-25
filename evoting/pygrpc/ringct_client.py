@@ -26,10 +26,11 @@ def grpc_construct_gen_votercurr_request(district_id, voter_num):
     gen_usercurr_request.voter_num = voter_num
     return gen_usercurr_request
 
-def grpc_construct_vote_request(candidate_id, voter_id):
+def grpc_construct_vote_request(candidate_id, voter_id, is_voting=True): # default is voting
     vote_request = ringct_pb2.Vote_Request()
     vote_request.candidate_id = candidate_id
     vote_request.voter_id = voter_id
+    vote_request.is_voting = is_voting
     return vote_request
 
 def grpc_construct_gen_candidate_request(candidate_id):
@@ -49,11 +50,11 @@ def grpc_construct_calculate_total_vote_request(district_ids):
 # this will throw normal exception if the input is not correct
 # this will throw grpc error if there is error in grpc server processing
 
-def grpc_compute_vote_run(candidate_id, voter_id):
+def grpc_compute_vote_run(candidate_id, voter_id, is_voting=True):
     if not candidate_id or not voter_id:
         raise ValueError("Input error: district_id, candidate_id, voter_id cannot be empty")
     
-    vote_request = grpc_construct_vote_request(candidate_id, voter_id)
+    vote_request = grpc_construct_vote_request(candidate_id, voter_id, is_voting)
 
     try:
         print("-------------- ComputeVote --------------")
@@ -64,12 +65,11 @@ def grpc_compute_vote_run(candidate_id, voter_id):
 
         if vote_response.candidate_id != vote_request.candidate_id or vote_response.voter_id != vote_request.voter_id:
             raise grpc.RpcError("Input Output Mismatch: candidate_id, voter_id not matching after grpc_compute_vote_run")
-        if not vote_response.key_image:
+        if is_voting and not vote_response.key_image:
             raise grpc.RpcError("Output Error: Key image not found in grpc_compute_vote")
 
     except grpc.RpcError as e:
-        print(e)
-        print(e.code())
+        # print(e)
         raise GrpcError(f"Grpc error: {e.details()}")
 
     return vote_response

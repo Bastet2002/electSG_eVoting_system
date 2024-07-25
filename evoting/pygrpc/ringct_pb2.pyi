@@ -52,21 +52,25 @@ class Gen_Candidate_Response(_message.Message):
     def __init__(self, candidate_id: _Optional[int] = ..., test_output: _Optional[str] = ...) -> None: ...
 
 class Vote_Request(_message.Message):
-    __slots__ = ("candidate_id", "voter_id")
+    __slots__ = ("candidate_id", "voter_id", "is_voting")
     CANDIDATE_ID_FIELD_NUMBER: _ClassVar[int]
     VOTER_ID_FIELD_NUMBER: _ClassVar[int]
+    IS_VOTING_FIELD_NUMBER: _ClassVar[int]
     candidate_id: int
     voter_id: int
-    def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ...) -> None: ...
+    is_voting: bool
+    def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ..., is_voting: bool = ...) -> None: ...
 
 class Vote_Response(_message.Message):
-    __slots__ = ("candidate_id", "voter_id", "key_image", "test_output")
+    __slots__ = ("candidate_id", "voter_id", "key_image", "has_voted", "test_output")
     CANDIDATE_ID_FIELD_NUMBER: _ClassVar[int]
     VOTER_ID_FIELD_NUMBER: _ClassVar[int]
     KEY_IMAGE_FIELD_NUMBER: _ClassVar[int]
+    HAS_VOTED_FIELD_NUMBER: _ClassVar[int]
     TEST_OUTPUT_FIELD_NUMBER: _ClassVar[int]
     candidate_id: int
     voter_id: int
     key_image: str
+    has_voted: bool
     test_output: str
-    def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ..., key_image: _Optional[str] = ..., test_output: _Optional[str] = ...) -> None: ...
+    def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ..., key_image: _Optional[str] = ..., has_voted: bool = ..., test_output: _Optional[str] = ...) -> None: ...
