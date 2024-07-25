@@ -17,7 +17,8 @@ RUN apt-get update && apt-get install -y \
     libpq-dev \
     libpqxx-dev \
     git \
-    postgresql-client
+    postgresql-client\
+    wget
 
 # note that this is different from the official grpc which is $HOME/.local
 ENV MY_INSTALL_DIR=/usr/local
@@ -43,6 +44,10 @@ WORKDIR /app/
 RUN mkdir -p build && cd build \
     && cmake -DCMAKE_PREFIX_PATH=$MY_INSTALL_DIR .. \
     && make
+
+RUN GRPC_HEALTH_PROBE_VERSION=v0.4.28 && \
+    wget -qO/bin/grpc_health_probe https://github.com/grpc-ecosystem/grpc-health-probe/releases/download/${GRPC_HEALTH_PROBE_VERSION}/grpc_health_probe-linux-amd64 && \
+    chmod +x /bin/grpc_health_probe
 
 RUN chmod +x ./wait-for-it.sh
 

@@ -91,6 +91,7 @@ add_executable(rct_server
     "util/custom_exception.cc"
     "src/core.cc"
     "rct/rctOps.cpp"
+    "rct/rangeproof.cpp"
     "rct/commitment.cpp")
 
 target_link_libraries(rct_server
@@ -107,6 +108,7 @@ add_executable(test_rct
     "util/custom_exception.cc"
     "rct/rctOps.cpp"
     "rct/commitment.cpp"
+    "rct/rangeproof.cpp"
     "test/test_hash.cpp"
     "test/test_util.cc"
     "test/test_compute_stealth_address.cpp"

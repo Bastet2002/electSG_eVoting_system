@@ -4,6 +4,12 @@ type: Backend Service
 image:
   build: ../ringct/Dockerfile
   port: 50051
+  healthcheck:
+    command: ["CMD-SHELL", "/bin/grpc_health_probe -addr=localhost:50051 || exit 1"]
+    interval: 15s
+    timeout: 10s
+    grace_period: 120s
+
 
 cpu: 256       
 memory: 512    

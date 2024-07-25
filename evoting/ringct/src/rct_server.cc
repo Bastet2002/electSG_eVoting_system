@@ -1,5 +1,7 @@
 #include "ringct.grpc.pb.h"
 #include <grpcpp/grpcpp.h>
+#include <grpcpp/ext/proto_server_reflection_plugin.h>
+#include <grpcpp/health_check_service_interface.h>
 #include "../util/custom_exception.h"
 #include "evoting.h"
 #include "core.h"
@@ -34,6 +36,7 @@ void vote_request_to_vote(Vote &vote, const Vote_Request &request)
 {
     vote.candidate_id = request.candidate_id();
     vote.voter_id = request.voter_id();
+    vote.is_voting = request.is_voting();
 }
 
 void vote_to_vote_response(Vote_Response &response, const Vote &vote)
@@ -41,6 +44,7 @@ void vote_to_vote_response(Vote_Response &response, const Vote &vote)
     response.set_candidate_id(vote.candidate_id);
     response.set_voter_id(vote.voter_id);
     response.set_key_image(vote.key_image);
+    response.set_has_voted(vote.has_voted);
     response.set_test_output(vote.test_output);
 }
 
@@ -83,7 +87,16 @@ void compute_total_vote_to_compute_total_vote_response(Calculate_Total_Vote_Resp
 // ------------------------------ server class logic ------------------------------
 class RingCT_Service_Impl final : public RingCT_Service::Service
 {
+// private:
+//     grpc::HealthCheckServiceInterface* health_check_service_ = nullptr;
+//     bool is_serving_ = true;
+
 public:
+    // health check
+    // void set_health_check_service(grpc::HealthCheckServiceInterface* health_check_service){
+    //     health_check_service_ = health_check_service;
+    // }
+
     Status Compute_Vote(ServerContext *context, const Vote_Request *request, Vote_Response *response) override
     {
         // use the django defined one
@@ -188,15 +201,20 @@ public:
 // ------------------------------ server run ------------------------------
 void RunServer()
 {
-    // TODO update to the server address
+    // enable health check
+    grpc::EnableDefaultHealthCheckService(true);
+    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+    
+
     string server_address("0.0.0.0:50051");
     RingCT_Service_Impl service;
 
     ServerBuilder builder;
-    // TODO temp run without enc
+    // Server is running in VPC, so no need for SSL
     builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
     builder.RegisterService(&service);
     unique_ptr<Server> server(builder.BuildAndStart());
+    // service.set_health_check_service(server->GetHealthCheckService());
     cout << "Server listening on " << server_address << endl;
     server->Wait();
 }
@@ -208,6 +226,11 @@ int main(int argc, char **argv)
         cout << "sodium_init failed" << endl;
         return 1;
     }
+    // RangeProof rp;
+    // BYTE bf[32];
+    // crypto_core_ed25519_scalar_random(bf);
+    // rangeproof(rp, bf);
+    
 
     // string input_path = filesystem::absolute("./test/text/hash_infile");
     // string output_path = filesystem::absolute("./test/text/h2p.txt");

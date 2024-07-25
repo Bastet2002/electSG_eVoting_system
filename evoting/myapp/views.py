@@ -608,6 +608,11 @@ def ballot_paper(request):
         del request.session['messages']
     request.session.modified = True
 
+    # check if the voter already voted, for demo purpose
+    res = grpc_compute_vote_run(candidate_id=candidates[0].candidate_id, voter_id=voter.voter_id, is_voting=False)
+    if res.has_voted:
+        messages.error(request, 'You have already voted.')
+
     return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
 @flexible_access('voter')
@@ -631,7 +636,7 @@ def cast_vote(request):
 
         for candidate_id in selected_candidates:
             try:
-                grpc_compute_vote_run(candidate_id=int(candidate_id), voter_id=voter.voter_id)
+                grpc_compute_vote_run(candidate_id=int(candidate_id), voter_id=voter.voter_id, is_voting=True)
                 
                 vote_result = get_object_or_404(VoteResults, candidate_id=candidate_id)
                 if vote_result:

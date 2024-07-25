@@ -3,7 +3,7 @@
 
 void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &sa, const User &receiver)
 {
-    const int c = 30;
+    const int c = vote_currency;
 
     // input commitment
     BYTE x[32];
@@ -43,6 +43,7 @@ void CA_generate_voting_currency(Commitment &commitment, const StealthAddress &s
     copy(begin(amount_mask), end(amount_mask), amount_mask_array.begin());
 
     commitment.amount_masks.push_back(amount_mask_array);
+    commitment.amount = c;
 }
 
 // one to one
@@ -73,6 +74,7 @@ void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa,
     commitment.outputs_blindingfactor_masks.push_back(yt);
     add_key(output_commitment.data(), yt.data(), b, H_point);
     commitment.outputs_commitments.push_back(output_commitment);
+    memcpy(commitment.output_blindingfactor, yt.data(), 32);
 
     // pseudo output commitment
     array<BYTE, 32> pseudoout_commitment;
@@ -89,15 +91,6 @@ void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa,
     array<BYTE, 8> amount_mask_array;
     XOR_amount_mask_signer(amount_mask_array.data(), amount_byte, 0, sa, receiver);
     commitment.amount_masks.push_back(amount_mask_array);
-}
-
-void verify_commitment() {
-    
-}
-
-// one to many
-void compute_commitment()
-{
 }
 
 // compute the amount mask to conceal the amount
