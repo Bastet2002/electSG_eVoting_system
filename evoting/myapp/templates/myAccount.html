@@ -7,12 +7,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>My Account</title>
 </head>
+<<<<<<< HEAD
 
 <body>
     {% block content %}
     <link rel="stylesheet" href="{% static 'css/myaccount.css' %}">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+=======
+
+<body>
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'css/myaccount.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+>>>>>>> a18bafc2682be9ccf3290f1673e75c0ba70b413b
     <style>
     
     @media (max-width: 768px) {
@@ -20,6 +29,7 @@
         padding: 10px;
         margin-top: 25%;
     }
+<<<<<<< HEAD
 
     form {
         padding: -20px;
@@ -76,12 +86,73 @@
                 <button type="button" onclick="validateAndSubmitForm()">Change Password</button>
             </form>
         </div>
+=======
+>>>>>>> a18bafc2682be9ccf3290f1673e75c0ba70b413b
 
-    <div class="section">
-        <h2>WebAuthn Registration</h2>
-        <button id="register-button">Register WebAuthn</button>  
-    </div>
+    form {
+        padding: -20px;
+    }
 
+<<<<<<< HEAD
+=======
+
+    button {
+        width: 50%;
+        margin: 10px auto;
+    }
+
+    #register-button {
+        padding: 15px 20px;
+        width: auto;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        justify-content: flex-start;
+        padding: 10px;
+    }
+
+    .container {
+        padding: 20px;
+    }
+
+    form {
+        padding: 10px;
+    }
+
+    .changepassword-text-field {
+        font-size: 12px;
+        width: 90%;
+    }
+
+    button {
+        width: 50%;
+        padding: 12px;
+        margin: 20px 25% 20px;
+    }
+}
+
+    </style>
+    <div class="container">
+        <h1>My Account</h1>
+
+        <div class="section">
+            <h2>Change Password</h2>
+            <div id="errorPopup" class="popup-alert"></div>
+            <form id="passwordForm" method="post" action="{% url 'change_password' %}" style="text-align: left;">
+                {% csrf_token %}
+                {{ password_form.as_p }}
+                <button type="button" onclick="validateAndSubmitForm()">Change Password</button>
+            </form>
+        </div>
+
+        <div class="section">
+            <h2>WebAuthn Registration</h2>
+            <button id="register-button">Register WebAuthn</button>  
+        </div>
+
+>>>>>>> a18bafc2682be9ccf3290f1673e75c0ba70b413b
         <div class="section">
             <h2>Delete All Credentials</h2>
             <form method="post" action="{% url 'delete_all_credentials_temp' %}">
@@ -90,6 +161,7 @@
                 <button type="submit" onclick="return confirm('Are you sure you want to delete all credentials?');">Delete All Credentials</button>
             </form>
         </div>
+<<<<<<< HEAD
     </div>
 
     <div class="section">
@@ -99,6 +171,8 @@
             <p>This deletes ALL non-master credentials.</p>
             <button type="submit" onclick="return confirm('Are you sure you want to delete all non-master credentials?');">Delete All Non-master Credentials</button>
         </form>
+=======
+>>>>>>> a18bafc2682be9ccf3290f1673e75c0ba70b413b
     </div>
 
     {% if messages %}
