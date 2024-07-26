@@ -11,13 +11,13 @@
     <form method="post" action="{% url 'create_district' 'normal_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" name="create-district">Create District</button>
+        <button type="submit" name="create-district" style="margin-left: 280px;" >Create District</button>
     </form>
 
     <form method="post" enctype="multipart/form-data" action="{% url 'create_district' 'csv_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ csv_form.as_p }}
-        <button type="submit" name="create-district">Create New Districts</button>
+        <button type="submit" name="create-district" style="margin-left: 270px;">Create New Districts</button>
     </form>
 </div>
 

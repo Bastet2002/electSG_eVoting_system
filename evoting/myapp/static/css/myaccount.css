@@ -1,0 +1,81 @@
+body {
+    font-family: Arial, sans-serif;
+    background: linear-gradient(to top, #c53e3e, #ffffff);
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    text-align: center;
+}
+
+form label {
+    display: block;
+    text-align: left;
+    margin-left: 10px;
+}
+
+.container {
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+    width: 800%;
+    max-width: 600px;
+    margin: 120px 0px 20px 0px;
+}
+
+h1 {
+    margin-bottom: 10px;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.section {
+    margin-bottom: 30px;
+}
+
+form {
+    margin: 0 auto;
+    max-width: 350px;
+    padding: 20px 40px 40px 40px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.changepassword-text-field {
+    width: 90%; 
+    padding: 10px; 
+    margin: 5px 0;
+    font-size: 14px;
+    border: 1px solid #ccc; 
+    border-radius: 2px;
+}
+
+#register-button {
+    width: 30%;
+    padding: 15px;
+    font-size: 15px;
+    margin: auto;
+}
+
+button {
+    display: block;
+    width: 50%;
+    padding: 15px;
+    margin: 20px 0px -15px 25%;
+    background-color: #c53e3e;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 15px;
+}
+
+button:hover {
+    background-color: #ff3305;
+}
