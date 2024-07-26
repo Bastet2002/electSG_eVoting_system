@@ -48,12 +48,14 @@ def user_login(request):
             
             return JsonResponse({
                 'status': 'success',
-                'requires_webauthn': has_webauthn
+                'requires_webauthn': has_webauthn,
+                'message': 'Login successful. Proceed with WebAuthn registration.' if not has_webauthn else 'Login successful. Proceed with WebAuthn verification.'
             })
         else:
             return JsonResponse({'status': 'error', 'message': 'Invalid credentials'}, status=400)
     else:
         return render(request, 'login.html')
+
 
 def check_current_password(request):
     data = json.loads(request.body)
@@ -98,14 +100,18 @@ def first_login_password_change(request):
             user.first_login = False
             user.save()
 
+            # Log the user in after setting the password for webaunth registration
             backend = get_backends()[0]
             backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
-            
-            # Log the user in with the specified backend
             login(request, user, backend=backend_path)
 
+            # Set a session variable to indicate the password has been changed
+            request.session['password_changed'] = True
+
             # Return a JSON response indicating success and that WebAuthn registration should be initiated
-            return JsonResponse({'status': 'success', 'prompt_webauthn': True, 'errors': form.errors})
+            return JsonResponse({'status': 'success', 'prompt_webauthn': True})
+        else:
+            return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
     else:
         form = FirstLoginPasswordChangeForm()
 
@@ -913,10 +919,31 @@ def webauthn_register_options(request):
 @require_http_methods(["POST"])
 def webauthn_register_verify(request):
     try:
+        if not request.session.get('password_changed'):
+            return JsonResponse({'status': 'error', 'message': 'Password change not confirmed'}, status=400)
+
         registration = WebauthnRegistration.objects.get(user=request.user)
         data = json.loads(request.body)
         
         print(f"Received registration data: {data}")  # Debug: Print received data
+        
+        # Check if the registration was cancelled
+        if data.get('status') == 'cancelled':
+            # Log the user out
+            logout(request)
+            return JsonResponse({'status': 'error', 'message': 'WebAuthn registration was cancelled'}, status=400)
+        
+        # Check if the user already has 2 devices registered
+        existing_credentials = WebauthnCredentials.objects.filter(user=request.user)
+        if existing_credentials.count() >= 2:
+            return JsonResponse({'status': 'error', 'message': 'Maximum number of devices (2) already registered'}, status=400)
+        
+        # Check if this is a master device
+        is_master = data.get('is_master', False)
+        
+        # If it's a master device, check if a master device already exists
+        if is_master and existing_credentials.filter(is_master=True).exists():
+            return JsonResponse({'status': 'error', 'message': 'A master device is already registered'}, status=400)
         
         # Create the RegistrationCredential object
         credential = RegistrationCredential(
@@ -939,6 +966,7 @@ def webauthn_register_verify(request):
             print(f"Verification successful: {verification}")  # Debug: Print verification result
         except Exception as e:
             print(f"Verification failed: {str(e)}")  # Debug: Print verification error
+            logout(request)  # Log out the user if verification fails
             return JsonResponse({'status': 'error', 'message': f'Verification failed: {str(e)}'}, status=400)
         
         # If no exception is raised, the verification is successful
@@ -949,7 +977,8 @@ def webauthn_register_verify(request):
             user=request.user,
             credential_id=credential_id,
             credential_public_key=credential_public_key,
-            current_sign_count=verification.sign_count
+            current_sign_count=verification.sign_count,
+            is_master=is_master  # Set the is_master flag
         )
         print(f"New credential created: {new_credential}")  # Debug: Print new credential object
         
@@ -959,6 +988,8 @@ def webauthn_register_verify(request):
             print(f"Credential successfully stored in DB: {stored_credential}")  # Debug: Print stored credential
         else:
             print("Error: Credential not found in DB after creation")  # Debug: Print error if not found
+            logout(request)  # Log out the user if credential storage fails
+            return JsonResponse({'status': 'error', 'message': 'Failed to store credential'}, status=500)
         
         # Print all credentials for this user
         all_credentials = WebauthnCredentials.objects.filter(user=request.user)
@@ -970,17 +1001,22 @@ def webauthn_register_verify(request):
         elif request.user.role.profile_name == 'Candidate':
             redirect_url = reverse('candidate_home')
         else:
-            redirect_url = reverse('default_home')  # Make sure to define a default home URL
+            redirect_url = reverse('')  # Make sure to define a default home URL
+        
+        messages.success(request, 'Logged in Successfully.')
 
         return JsonResponse({'status': 'success', 'redirect_url': redirect_url})
     except WebauthnRegistration.DoesNotExist:
         print("Error: WebauthnRegistration not found")  # Debug: Print error if registration not found
+        logout(request)  # Log out the user if registration not found
         return JsonResponse({'status': 'error', 'message': 'Registration not found'}, status=400)
     except json.JSONDecodeError:
         print("Error: Invalid JSON data")  # Debug: Print error if JSON is invalid
+        logout(request)  # Log out the user if JSON data is invalid
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")  # Debug: Print unexpected errors
+        logout(request)  # Log out the user if an unexpected error occurs
         return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
 
 @require_http_methods(["GET"])
@@ -1108,7 +1144,8 @@ def webauthn_login_verify(request):
             
             return JsonResponse({
                 'status': 'success',
-                'user_role': user_role
+                'user_role': user_role,
+                'message': 'WebAuthn login successful!'
             })
         except Exception as e:
             print(f"Verification failed: {str(e)}")
@@ -1149,3 +1186,11 @@ def delete_all_credentials_temp(request):
         WebauthnCredentials.objects.all().delete()
         messages.success(request, "All credentials have been deleted.")
     return redirect('login')  # Redirect to admin index or appropriate page
+
+def delete_non_master_credentials(request):
+    if request.method == 'POST':
+        # Delete all non-master credentials
+        WebauthnCredentials.objects.filter(is_master=False).delete()
+        messages.success(request, "All non-master credentials have been deleted.")
+    
+    return redirect('login')  # Redirect to the login page or appropriate page

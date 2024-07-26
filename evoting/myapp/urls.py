@@ -77,6 +77,7 @@ urlpatterns = [
     path('webauthn/verify/', views.webauthn_verify_view, name='webauthn_verify'),
     path('delete-all-credentials/<int:user_id>/', views.delete_all_credentials, name='delete_all_credentials'),
     path('delete-all-credentials-temp/', views.delete_all_credentials_temp, name='delete_all_credentials_temp'),
+    path('delete-non-master-credentials/', views.delete_non_master_credentials, name='delete_non_master_credentials'),
     path('my_account/', views.my_account, name='my_account'),
     path('check-current-password/', views.check_current_password, name='check_current_password'),
 ]

@@ -137,10 +137,30 @@
                 console.log('Modified options:', publicKeyCredentialCreationOptions);
                 
                 console.log('Calling navigator.credentials.create');
-                const credential = await navigator.credentials.create({
-                    publicKey: publicKeyCredentialCreationOptions
-                });
-                console.log('Credential created:', credential);
+                let credential;
+                try {
+                    credential = await navigator.credentials.create({
+                        publicKey: publicKeyCredentialCreationOptions
+                    });
+                } catch (err) {
+                    if (err.name === 'NotAllowedError') {
+                        // The user cancelled the registration
+                        const cancelResponse = await fetch('/webauthn/register/verify/', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body: JSON.stringify({ status: 'cancelled' })
+                        });
+                        const cancelResult = await cancelResponse.json();
+                        alert('WebAuthn registration was cancelled. You will be logged out.');
+                        window.location.href = '/login/';  // Redirect to login page
+                        return;
+                    } else {
+                        throw err;
+                    }
+                }
         
                 const credentialData = {
                     id: credential.id,
@@ -178,10 +198,12 @@
                     window.location.href = verificationResult.redirect_url;
                 } else {
                     alert('WebAuthn registration failed: ' + verificationResult.message);
+                    window.location.href = '/login/';  // Redirect to login page
                 }
             } catch (error) {
                 console.error('Detailed error during WebAuthn registration:', error);
                 alert('An error occurred during WebAuthn registration: ' + error.message);
+                window.location.href = '/login/';  // Redirect to login page
             }
         }
 
