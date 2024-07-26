@@ -203,6 +203,11 @@ footer {
     .navigation li {
         margin-right: 0.5rem;
     }
+    
+    .navigation a {
+        padding: 3px 4px;
+        font-size: 0.85rem;
+    } 
 
     .main-content {
         padding: 5vh 1rem;

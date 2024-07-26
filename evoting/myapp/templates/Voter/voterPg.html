@@ -22,7 +22,7 @@
                 {% if candidate.profile_picture %}
                 <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
                 {% else %}
-                <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
+                <img src="{% static 'images/profile.png' %}" alt="{{ candidate.candidate.full_name }}">
                 {% endif %}
                 <h3>{{ candidate.candidate.full_name }}</h3>
                 <p>Party: {{ candidate.candidate.party.party_name }}</p>

@@ -4,7 +4,6 @@
 <head>
     <title>{% block title %}Home Page{% endblock %}</title>
     <link rel="stylesheet" href="{% static 'Voter/header.css' %}">
-    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
   <div class="header">
@@ -13,7 +12,12 @@
     </div>
     <nav>
         <ul class="navigation">
-            <li><a href="{% url 'voter_home' %}">Home</a> </li>
+            {% if user.role.profile_name == 'Candidate' %}
+                <li><a href="{% url 'my_account' %}">My Account</a></li>
+                <li><a href="{% url 'candidate_home' %}">Home</a></li>
+            {% else %}
+                <li><a href="{% url 'voter_home' %}">Home</a></li>
+            {% endif %}
             <li><a href="#">About us</a></li>
             <li><a href="{% url 'logout' %}">Log out</a></li>
         </ul>
