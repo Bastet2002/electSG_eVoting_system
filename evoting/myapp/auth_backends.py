@@ -10,20 +10,16 @@ class SingpassBackend(BaseBackend):
             if check_password(password, singpass_user.password):
                 hash_info = self.generate_hash(singpass_user)
                 # Fetch voter with matching district and hash_info
-                voter = Voter.objects.filter(district__district_name=singpass_user.district, hash_from_info=hash_info).first()
-                
+                voter = Voter.objects.filter(district__district_name=singpass_user.district.upper(), hash_from_info=hash_info).first()
                 if not voter:
                     # If no voter found with matching hash_info, fetch voter with empty hash_info
-                    voter = Voter.objects.filter(district__district_name=singpass_user.district, hash_from_info=None).first()
-                    # print(voter.district.district_name)
-                    # print(singpass_user.district)
+                    voter = Voter.objects.filter(district__district_name=singpass_user.district.upper(), hash_from_info=None).first()
                     if voter:
                         # Voter found with empty hash_info, update hash_info and last_login
                         voter.hash_from_info = hash_info
                         voter.last_login = timezone.now()
                         voter.save(update_fields=['last_login', 'hash_from_info'])
                     else:
-                        print("here")
                         # No voter found with either empty or matching hash_info
                         return None
                 else:

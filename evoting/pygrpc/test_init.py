@@ -7,10 +7,9 @@ from ringct_client import (
     GrpcError, 
 )
 
-if __name__ == "__main__":
-    # the singpass mocked data has 26 ppl
-    grpc_generate_user_and_votingcurr_run(1, 26)
-    grpc_generate_user_and_votingcurr_run(2, 26)
+# if __name__ == "__main__":
+    # grpc_generate_user_and_votingcurr_run(1, 10)
+    # grpc_generate_user_and_votingcurr_run(2, 10)
     # grpc_generate_candidate_keys_run(2)
 
     # try: 

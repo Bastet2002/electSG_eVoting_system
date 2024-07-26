@@ -1,21 +1,5 @@
 [
     {
-        "model": "myapp.district",
-        "pk": 1,
-        "fields": {
-            "district_name": "Clementi",
-            "num_of_people": "10"
-        }
-    },
-    {
-        "model": "myapp.district",
-        "pk": 2,
-        "fields": {
-            "district_name": "Jurong East",
-            "num_of_people": "10"
-        }
-    },
-    {
         "model": "myapp.profile",
         "pk": 1,
         "fields": {
