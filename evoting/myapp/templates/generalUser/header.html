@@ -1,0 +1,26 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% block title %}Home Page{% endblock %}</title>
+    
+    
+    <link rel="stylesheet" href="{% static 'Voter/header.css' %}">
+</head>
+<body>
+    <div class="header">
+        <div class="logoImage">
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+        </div>
+        <nav>
+            <ul class="navigation">
+                <li><a href="{% url 'general_user_home' %}">Home</a></li>
+                <li><a href="#">About us</a></li>
+                <li><a href="{% url 'login' %}">Log in</a></li>
+            </ul>
+        </nav>
+    </div>
+  {% block content %}
+  {% endblock %}
+</body>
+</html>

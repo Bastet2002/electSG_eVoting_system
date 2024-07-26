@@ -26,14 +26,16 @@ body {
   list-style: none;
   margin: 0;
   padding: 0;
+  
 }
 
 .navigation li {
   margin-right: 3rem;
+  
 }
 
 .navigation a {
-  text-decoration: none;
+  
   color: black;
   font-weight: bold;
   transition: color 0.3s ease;
@@ -43,8 +45,9 @@ body {
 }
 
 .navigation a:hover {
-  background-color: #575757;
+  background-color: #ef5d5d;
   color: #f1f1f1;
+  text-decoration: none;
 }
 
 /* Sidebar styles */

@@ -1,5 +1,6 @@
-  .header {
+.header {
     display: flex;
+    flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
     padding: 1rem 2rem;
@@ -9,6 +10,7 @@
     width: 100%;
     top: 0;
     left: 0;
+    right:0;
     z-index: 2;
     font-family: "Lato", sans-serif;
 }
@@ -42,9 +44,10 @@
 .navigation a:hover {
     background-color: #e87676;
     color: #f1f1f1;
+    text-decoration: none;
 }
 
-@media screen and (max-width: 768px) {
+@media screen and (max-width: 568px) {
   .header {
       padding: 0.5rem 1rem;
   }
@@ -58,15 +61,17 @@
   }
 
   .navigation {
-      margin-top: 0.5rem; /* Optional: adjust spacing if needed */
+      margin-top: 0.5rem; 
   }
 
   .navigation li {
-      margin-right: 1rem; /* Adjust spacing between items */
+      margin-right: 1rem; 
   }
 
   .navigation a {
-      padding: 10px 12px; /* Adjust padding */
+      padding: 3px 4px;
+      font-size: 0.85rem;
+      
   }
 }
 @media screen and (max-width: 320px) {
