@@ -12,6 +12,13 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
   WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
   RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
+  POSTGRES_DB: mydb
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST: djangodb
+  POSTGRES_PORT: 5432
+  PYTHONPATH: /app:/app/pygrpc
+  DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
 
 .docker-build: &build_configuration
   image: docker:24.0.5
@@ -56,14 +63,6 @@ django-build:
 #   services:
 #   - name: postgres:15
 #     alias: djangodb
-#   variables:
-#     POSTGRES_DB: mydb
-#     POSTGRES_USER: admin
-#     POSTGRES_PASSWORD: password
-#     POSTGRES_HOST: djangodb
-#     POSTGRES_PORT: 5432
-#     PYTHONPATH: /app:/app/pygrpc
-#     DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
 #   <<: *db_config
 #   before_script:
 #     - cd /app
@@ -90,5 +89,13 @@ include:
 container_scanning:
   stage: scan
   image: $WEB_IMAGE_TAG
+  services:
+  - name: postgres:15
+    alias: djangodb
+  <<: *db_config
+  before_script:
+    - cd /app
+    - python manage.py makemigrations
+    - python manage.py migrate
   needs: 
     - django-build
