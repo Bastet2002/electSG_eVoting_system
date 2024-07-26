@@ -19,6 +19,7 @@ variables:
   POSTGRES_PORT: 5432
   PYTHONPATH: /app:/app/pygrpc
   DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
+  RINGCT_URL: ringct-service:50051
 
 .docker-build: &build_configuration
   image: docker:24.0.5
