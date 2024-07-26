@@ -7,11 +7,9 @@ from django.urls import reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.contrib.messages import get_messages
-from django.db.models import Q
-from django.db.models import Sum
+from django.db.models import Q, Sum
 from .forms import CreateNewUser, CSVUploadForm, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm, FirstLoginPasswordChangeForm
 from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter, VoteResults
-from django.db.models import Sum
 from django.contrib.auth.hashers import check_password
 from .decorators import flexible_access
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -85,7 +83,6 @@ def change_password(request):
         form = PasswordChangeForm(request.user)
 
     return render(request, 'changePassword.html', {'form': form})
-
 
 def first_login_password_change(request):
     if 'pending_user_id' not in request.session:
@@ -173,7 +170,7 @@ def handle_user_csv_upload(request):
                         password = make_password(row['password']),
                         date_of_birth = date_of_birth,
                         role = Profile.objects.get(profile_name=row['role']),
-                        district = District.objects.get(district_name=row['district']),
+                        district = District.objects.get(district_name=row['district'].upper()),
                         party = Party.objects.get(party_name=row['party'])
                     )
                 user.save()
@@ -331,7 +328,12 @@ def handle_district_csv_upload(request):
 def handle_single_district_creation(request):
     form = CreateDistrict(request.POST)
     if form.is_valid():
-        form.save()
+        # with transaction.atomic():
+        #     district = form.save()
+        #     transaction.on_commit(lambda: create_additional_voter_data(request, district))
+        district = form.save(commit=False)
+        district.save()
+        create_additional_voter_data(request, district)
         messages.success(request, 'District successfully created.')
         return redirect('create_district')
     else:
@@ -554,12 +556,10 @@ def delete_party(request, party_id):
 @flexible_access('public')
 def singpass_login(request):
     if request.method == 'POST':
-        # auth_backend = SingpassBackend()
         singpass_id = request.POST['singpass_id']
         password = request.POST['password']
         user = authenticate(request, singpass_id=singpass_id, password=password)
         if user is not None:
-            # user.backend = 'myapp.auth_backends.SingpassBackend'
             login(request, user)
             return redirect('voter_home') 
         else:

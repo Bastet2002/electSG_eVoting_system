@@ -82,7 +82,7 @@ class UserAccountViewsTest(TestCase):
             'date_of_birth': '1999-01-01',
             'role': self.candidate_profile.profile_id,
             'district': self.district.district_id
-        }
+        } 
         response = self.client.post(reverse('create_account'), data=form_data)
         
         self.assertEqual(response.status_code, 302)  # Expecting a redirect
