@@ -7,17 +7,17 @@
 <link rel="stylesheet" href="{% static 'district/addDistrict.css' %}">
 
 <div class="main">
-    <h1 style="text-align: center; margin: 100px 0px 50px 0px">Add District</h1>
+    <h1 style="text-align: center; margin: 120px 0px 30px 0px">Add District</h1>
     <form method="post" action="{% url 'create_district' 'normal_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" name="create-district">Create District</button>
+        <button type="submit" name="create-district" style="margin-left: 260px;">Create District</button>
     </form>
 
     <form method="post" enctype="multipart/form-data" action="{% url 'create_district' 'csv_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ csv_form.as_p }}
-        <button type="submit" name="create-district">Create New Districts</button>
+        <button type="submit" name="create-district" style="margin-left: 240px">Create New Districts</button>
     </form>
 </div>
 
