@@ -44,7 +44,18 @@
   padding: 20px;
   padding-top: 100px; /* Ensure there's space for the fixed header */
 }
-  
+
+
+.custom-description {
+  width: calc(70% - 60px);
+  height: 100px; 
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
 
 .btn-disabled,
 .btn.btn-danger:disabled {

@@ -1,11 +1,12 @@
+{% extends "Candidate/header.html" %}
 {% load static %}
+{% block content %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Login - Set Password and Register WebAuthn</title>
-    {% load static %}
     <link rel="stylesheet" href="{% static 'css/firstlogin.css' %}">
 </head>
 <div class="container">
@@ -238,4 +239,5 @@
         }
     </script>
 </body>
+{% endblock %}
 </html>
