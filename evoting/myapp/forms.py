@@ -59,6 +59,9 @@ class CreateProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
         fields = ['profile_name', 'description']
+        widgets = {
+            'description': forms.Textarea(attrs={'class': 'custom-description'})
+        }
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -101,6 +104,9 @@ class CreateAnnouncement(forms.ModelForm):
     class Meta:
         model = Announcement
         fields = ['header', 'content']
+        widgets = {
+            'content': forms.Textarea(attrs={'class': 'custom-content'})
+        }
 
 class CreateParty(forms.ModelForm):
     class Meta:
@@ -121,9 +127,9 @@ class CreateParty(forms.ModelForm):
     #     return party_name
 
 class PasswordChangeForm(forms.Form):
-    current_password = forms.CharField(widget=forms.PasswordInput, label="Current Password")
-    new_password = forms.CharField(widget=forms.PasswordInput, label="New Password")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm New Password")
+    current_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'changepassword-text-field'}), label="Current Password")
+    new_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'changepassword-text-field'}), label="New Password")
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'changepassword-text-field'}), label="Confirm New Password")
 
     def __init__(self, user, *args, **kwargs):
         self.user = user
@@ -162,8 +168,8 @@ class PasswordChangeForm(forms.Form):
         return cleaned_data
 
 class FirstLoginPasswordChangeForm(forms.Form):
-    new_password = forms.CharField(widget=forms.PasswordInput, label="New Password")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirm New Password")
+    new_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'changepassword-text-field'}), label="New Password")
+    confirm_password = forms.CharField(widget=forms.PasswordInput(attrs={'class':'changepassword-text-field'}), label="Confirm New Password")
 
     def clean_new_password(self):
         new_password = self.cleaned_data.get('new_password')

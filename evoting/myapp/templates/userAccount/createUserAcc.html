@@ -21,13 +21,13 @@
     <form method="post" enctype="multipart/form-data" action="{% url 'create_account' 'csv_upload' %}" class="create-new-user-form">
         {% csrf_token %}
         {{ csv_form.as_p }}
-        <button type="submit" name="create_new">Create New Accounts</button>
+        <button type="submit" name="create_new" style="margin-left: 270px;">Create New Accounts</button>
     </form>
 
     <form method="post" enctype="multipart/form-data" action="{% url 'create_account' 'csv_upload' %}" class="create-new-user-form">
         {% csrf_token %}
         {{ csv_form.as_p }}
-        <button type="submit" name="create_new">Create New Accounts</button>
+        <button type="submit" name="create_new" style="margin-left: 270px;">Create New Accounts</button>
     </form>
 </div>
 

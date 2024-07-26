@@ -27,11 +27,21 @@
   display: inline-block; /* Display inputs inline */
 }
 
+.custom-description {
+  width: calc(70% - 60px);
+  height: 100px; /* or any desired height */
+  padding: 10px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  box-sizing: border-box;
+}
+
 /* Set styles for the submit button */
 .create-profile-form button {
   background-color: #d76359; /* Change button color */
   color: #fff; /* Set button text color */
-  padding: 10px 20px; /* Adjust button padding */
+  padding: 15px 25px; /* Adjust button padding */
   border: none; /* Remove button border */
   border-radius: 5px; /* Add border radius */
   cursor: pointer; /* Change cursor to pointer on hover */

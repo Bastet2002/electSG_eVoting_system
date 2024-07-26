@@ -1,3 +1,4 @@
+{% extends 'Voter/header.html' %}
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -6,17 +7,57 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>First Login - Set Password and Register WebAuthn</title>
     {% load static %}
-    <link rel="stylesheet" href="{% static 'css/firstlogin.css' %}">
 </head>
 <div class="container">
     <body>
-        <h2>Set Your Password and Register WebAuthn</h2>
-        <div id="errorPopup" class="error-popup"></div>
-    <form id="passwordForm">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
-        </form>
+    {% block content %}
+    <link rel="stylesheet" href="{% static 'css/firstlogin.css' %}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+    
+    @media (max-width: 480px) {
+
+    body{
+        justify-content: flex-start;
+    }
+
+    h2 {
+        margin: 20px 0px 20px 10%;
+
+    }
+
+    form {
+        padding: 5px;
+        margin: 20px 20px 20px;
+    }
+
+    button {
+        width: 40%;
+        margin-bottom: 20px;
+    }
+
+    .changepassword-text-field {
+        width: 70%;
+        margin-left: 10%;
+    }
+
+    label {
+        margin-left: 10%
+    }
+    }
+
+    </style>
+        <div class="container">
+            <h2>Set Your Password and Register WebAuthn</h2>
+            <div id="errorPopup" class="error-popup"></div>
+            <form id="passwordForm">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
+            </form>
+        </div> 
+
 </div>
 
     <script>
@@ -215,5 +256,6 @@
             return cookieValue;
         }
     </script>
+    {% endblock %}
 </body>
 </html>
