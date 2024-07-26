@@ -32,4 +32,3 @@ class Command(BaseCommand):
                 phase_name='End Election',
                 is_active=False
             )
-            

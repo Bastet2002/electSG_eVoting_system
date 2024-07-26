@@ -5,3 +5,4 @@ evoting/media/
 staticfiles/
 *.gz
 *:Zone.Identifier
+*.log

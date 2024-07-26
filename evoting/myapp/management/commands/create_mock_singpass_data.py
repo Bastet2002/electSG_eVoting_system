@@ -1,11 +1,21 @@
 # myapp/management/commands/insert_singpass_users.py
-
 from django.core.management.base import BaseCommand
 from myapp.models import SingpassUser
 from faker import Faker
 from django.contrib.auth.hashers import make_password
 import random
 import string
+from . import config
+
+# TODO remove the call of function in final live service: for stress test only
+def write_csv(data=list(), file_path='singpass_login.csv'):
+    with open(file_path, 'w') as f:
+        for item in data:
+            # format ["id password district"]
+            f.write(f"{item}\n")
+    f.close()
+
+random.seed(9)
 
 class Command(BaseCommand):
     help = 'Insert mock data into SingpassUser model'
@@ -27,6 +37,7 @@ class Command(BaseCommand):
         # Example usage
         fake = Faker()
         generated_strings = self.generate_strings()
+        singpass_users = []
         for id in generated_strings:
             SingpassUser.objects.create(
                 singpass_id=id,
@@ -34,8 +45,28 @@ class Command(BaseCommand):
                 full_name=fake.name(),
                 date_of_birth='1980-01-01',
                 phone_num='09876543',
-                district='Clementi'
+                district='CLEMENTI'
             )
+            singpass_users.append(f"{id} 123 CLEMENTI")
+
+        # for testing config stress test
+        for district in config.districts_mocked:
+            for _ in range(config.voternum_per_district):
+                id = self.generate_singpass_id()
+                SingpassUser.objects.create(
+                    singpass_id=id,
+                    password=make_password('123'),
+                    full_name=fake.name(),
+                    date_of_birth='1980-01-01',
+                    phone_num='09876543',
+                    district=district
+                )
+                singpass_users.append(f"{id} 123 {district}")
+        write_csv(data=singpass_users)
+
+        # ignore first, for testing purpose
+        self.stdout.write(self.style.SUCCESS(f'Inserted {config.candidate_num_total * len(config.districts_mocked)} voters in {config.districts_mocked}'))
+        return
             
         fake = Faker()
         mock_data = []
