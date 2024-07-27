@@ -9,6 +9,11 @@ class Command(BaseCommand):
         # Create election phase if not already present
         if not ElectionPhase.objects.filter(phase_name='Campaigning Day').exists():
             ElectionPhase.objects.create(
+                phase_name='Not Started',
+                is_active=True
+            )
+        if not ElectionPhase.objects.filter(phase_name='Campaigning Day').exists():
+            ElectionPhase.objects.create(
                 phase_name='Campaigning Day',
                 is_active=False
             )

@@ -7,19 +7,37 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-  <div class="header">
-    <div class="logoImage">
-        <img src="{% static 'images/logo.png' %}" alt="Logo">
+    <div class="header">
+        <div class="logoImage">
+            <img src="{% static 'images/logo.png' %}" alt="Logo">
+        </div>
+        <nav>
+            <ul class="navigation">
+                <li><a href="{% url 'voter_home' %}">Home</a> </li>
+                <li><a href="#">About us</a></li>
+                <li><a href="{% url 'logout' %}">Log out</a></li>
+            </ul>
+        </nav>
     </div>
-    <nav>
-        <ul class="navigation">
-            <li><a href="{% url 'voter_home' %}">Home</a> </li>
-            <li><a href="#">About us</a></li>
-            <li><a href="{% url 'logout' %}">Log out</a></li>
-        </ul>
-    </nav>
-  </div>
-  {% block content %}
-  {% endblock %}
+    {% if messages %}
+        <div id="popupAlert" class="popup-alert show">
+            {% for message in messages %}
+                <p class="{{ message.tags }}">{{ message }}</p>
+            {% endfor %}
+        </div>
+        <script>
+            // Show the alert
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.classList.add('show');
+            
+            // Hide the alert after 3 seconds
+            setTimeout(() => {
+                alertBox.classList.remove('show');
+            }, 3000); // Adjusted to 3 seconds
+        </script>
+    {% endif %}
+    {% block content %}
+    {% endblock %}
 </body>
+
 </html>

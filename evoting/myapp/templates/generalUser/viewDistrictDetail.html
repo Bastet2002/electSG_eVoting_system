@@ -12,11 +12,11 @@
     <div class="status-container">
         {% if phase == 'Polling Day' %}
         <div class="ongoing-result">
-            Ongoing Result: <span id="result-number">{{ result }}</span>
+            Ongoing Result: <span id="result-number">{{ result }}/{{ voters_total }}</span>
         </div>
         {% elif phase == 'End Election' %}
         <div class="final-result">
-            Final Result: <span>{{ result }}</span>
+            Final Result: <span>{{ result }}/{{ voters_total }}</span>
         </div>
         {% endif %}
         <div class="district">
@@ -37,11 +37,11 @@
     <div class="winner-section">
         <h2>Winner</h2>
         <div class="winner-card">
-            {% with winner=candidate_profiles|first %}
+            {% if winner %}
             <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
             <h3>{{ winner.candidate.full_name }}</h3>
             <p>Party: {{ winner.candidate.party.party_name }}</p>
-            {% endwith %}
+            {% endif %}
         </div>
         <div class="celebration">
             <!--decorative elements here-->

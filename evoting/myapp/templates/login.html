@@ -8,7 +8,6 @@
     <link rel="stylesheet" href="{% static 'css/login.css' %}">
 </head>
 <body>
-    {% block content %}
     {% if messages %}
         <div id="popupAlert" class="popup-alert show">
             {% for message in messages %}
@@ -26,7 +25,6 @@
             }, 3000); // Adjusted to 3 seconds
         </script>
     {% endif %}
-    {% endblock %}
     <div class="header">
         <div class="logo-container">
             <img src="{% static 'images/logo.png' %}" alt="Logo">
@@ -36,7 +34,6 @@
                 <li><a href="{% url 'my_account' %}">My Account</a></li>
                 <li><a href="{% url 'general_user_home' %}">Home</a></li>
                 <li><a href="#">About us</a></li>
-                <li><a href="#">Services</a></li>
             </ul>
         </nav>
     </div>
@@ -55,7 +52,6 @@
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
                 <button type="button" id="loginbtn">Login</button>
-                <a href="/change_password">Change password</a>
             </form>
         </div>
     </div>

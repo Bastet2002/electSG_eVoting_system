@@ -502,7 +502,7 @@ void count_write_vote(const int32_t district_id, const int32_t candidate_id, con
     }
 
     pqxx::row d_row = W.exec1("select * from myapp_voteresults where candidate_id = " + to_string(candidate_id) + ";");
-    if (!d_row.size() > 0)
+    if (!!d_row.empty())
     {
         C.prepare("update total vote", "update myapp_voteresults set total_vote = $1 where candidate_id = $2;");
         W.exec_prepared("update total vote", total_vote, candidate_id);
