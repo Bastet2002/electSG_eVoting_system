@@ -8,6 +8,7 @@
 #include "../util/custom_exception.h"
 #include "../test/text/gen_hash.cpp"
 #include "../test/text/gen_add_keys.cpp"
+#include "../test/text/gen_computeSA.cpp"
 #include <filesystem>
 
 using grpc::Server;
@@ -288,6 +289,10 @@ int main(int argc, char **argv)
     // input_path = filesystem::absolute("./test/text/hash_infile");
     // output_path = filesystem::absolute("./test/text/add_keys_base.txt");
     // gen_add_keys_base_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/hash_infile");
+    // string output_path = filesystem::absolute("./test/text/stealth_address.txt");
+    // gen_compute_stealth_address_file(output_path, input_path);
     
     RunServer();
 

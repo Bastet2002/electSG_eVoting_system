@@ -91,6 +91,7 @@ add_executable(rct_server
     "util/custom_exception.cc"
     "src/core.cc"
     "rct/rctOps.cpp"
+    "test/test_util.cc"
     "rct/rangeproof.cpp"
     "rct/commitment.cpp")
 
