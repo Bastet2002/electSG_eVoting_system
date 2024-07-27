@@ -43,12 +43,12 @@
     
                             <form method="post" action="{% url 'delete_account' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete('user')">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-danger" {% if disable_deletion %}disabled{% endif %}>Delete</button>
                             </form>
 
                             <form method="post" action="{% url 'delete_all_credentials' user.user_id %}" style="display:inline;" onsubmit="return confirmDelete('credentials')">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-warning" style="padding-bottom: 30px;">Delete All Credentials</button>
+                                <button type="submit" class="btn btn-danger" style="padding-bottom: 30px;" {% if disable_deletion %}disabled{% endif %}>Delete All Credentials</button>
                             </form>
                         </td>
                     </tr>

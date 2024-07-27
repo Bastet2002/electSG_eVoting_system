@@ -136,6 +136,10 @@ def admin_home(request):
     announcements = Announcement.objects.all().order_by('-date')  # Order by date in descending order
     return render(request, 'adminDashboard/home.html', {'active_phase': active_phase, 'announcements': announcements})
 
+def is_deletion_disabled():
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    disable_deletion = not current_phase or current_phase.phase_name in ['Cooling Off Day', 'Polling Day', 'End Election']
+    return disable_deletion
 # ---------------------------------------UserAccount views------------------------------------------------
 @flexible_access('admin')
 def create_account(request, upload_type=None):
@@ -230,8 +234,9 @@ def view_accounts(request):
         )
     else:
         users = UserAccount.objects.all()
-
-    return render(request, 'userAccount/viewUserAcc.html', {'users': users})
+    
+    disable_deletion = is_deletion_disabled()
+    return render(request, 'userAccount/viewUserAcc.html', {'users': users, 'disable_deletion': disable_deletion})
 
 @flexible_access('admin')
 def edit_account(request, user_id):
@@ -251,8 +256,8 @@ def edit_account(request, user_id):
 
 @flexible_access('admin')
 def delete_account(request, user_id):
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
         messages.error(request, 'You do not have permission to delete the account at this time.')
         return redirect('view_user_accounts')
     
@@ -272,6 +277,7 @@ def activate_election_phase(request, phase_id):
         district_ids = District.objects.values_list('district_id', flat=True)
         compute_final_total_vote(request, district_ids)
     phase.save()
+    messages.success(request, 'Election Phase successfully changed.')
     return redirect('view_election_phases')
 
 @flexible_access('admin')
@@ -361,9 +367,7 @@ def view_districts(request):
         districts = District.objects.all()
 
     if request.user.is_authenticated and request.path == '/admin_home/view_districts/':
-            current_phase = ElectionPhase.objects.filter(is_active=True).first()
-            disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
-
+            disable_deletion = is_deletion_disabled()
             return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
         
     # for general user
@@ -387,8 +391,8 @@ def edit_district(request, district_id):
 
 @flexible_access('admin')
 def delete_district(request, district_id):
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
         messages.error(request, 'You do not have permission to delete the district at this time.')
         return redirect('view_districts')
     
@@ -419,8 +423,7 @@ def create_profile(request):
 @flexible_access('admin')
 def view_profiles(request):
     profiles = Profile.objects.all()
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
+    disable_deletion = is_deletion_disabled()
     not_allow = ['Admin', 'Candidate']
 
     return render(request, 'userProfile/viewProfiles.html', {'profiles': profiles, 'disable_deletion': disable_deletion, "disable_edit_list": not_allow})
@@ -442,8 +445,8 @@ def edit_profile(request, profile_id):
 
 @flexible_access('admin')
 def delete_profile(request, profile_id):
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
         messages.error(request, 'You do not have permission to delete the profile at this time.')
         return redirect('view_profiles')
     
@@ -524,7 +527,8 @@ def create_party(request):
 @flexible_access('admin')
 def view_parties(request):
     parties = Party.objects.all()
-    return render(request, 'party/viewParty.html', {'parties': parties})
+    disable_deletion = is_deletion_disabled()
+    return render(request, 'party/viewParty.html', {'parties': parties, 'disable_deletion': disable_deletion})
 
 @flexible_access('admin')
 def edit_party(request, party_id):
@@ -545,6 +549,10 @@ def edit_party(request, party_id):
 def delete_party(request, party_id):
     party = get_object_or_404(Party, pk=party_id)
     if request.method == 'POST':
+        disable_deletion = is_deletion_disabled()
+        if disable_deletion:
+            messages.error(request, 'You do not have permission to delete the party at this time.')
+            return redirect('view_parties')
         party.delete()
         messages.success(request, 'Party successfully deleted.')
         return redirect('view_parties')
@@ -584,13 +592,17 @@ def voter_home(request):
     candidates = CandidateProfile.objects.filter(candidate__district_id=district_id).select_related('candidate', 'candidate__party')
     user_district = voter.district.district_name if voter.district else "No District"
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_vote = current_phase and current_phase.phase_name not in ['Polling Day']
-    list(messages.get_messages(request))
+    disable_vote = not current_phase or current_phase.phase_name != 'Polling Day'
+    
+    # check if the voter already voted
+    res = grpc_compute_vote_run(candidate_id=candidates[0].candidate_id, voter_id=voter.voter_id, is_voting=False)
+    voting_status = "Voted" if res.has_voted else "Haven't Voted"
+
     return render(request, 'Voter/voterPg.html', {
         'candidates': candidates,
         'user_district': user_district,
-        'disable_vote': disable_vote
-        #'voting_status':...
+        'disable_vote': disable_vote, 
+        'voting_status': voting_status
     })
 
 @flexible_access('voter')
@@ -608,24 +620,26 @@ def ballot_paper(request):
         return redirect('login')
 
     candidates = CandidateProfile.objects.filter(candidate__district_id=district_id).select_related('candidate', 'candidate__party')
-    
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    disable_vote = not current_phase or current_phase.phase_name != 'Polling Day'
+
     # Also ensure session messages are cleared
     if 'messages' in request.session:
         del request.session['messages']
     request.session.modified = True
 
-    # check if the voter already voted, for demo purpose
-    res = grpc_compute_vote_run(candidate_id=candidates[0].candidate_id, voter_id=voter.voter_id, is_voting=False)
-    if res.has_voted:
-        messages.error(request, 'You have already voted.')
-
-    return render(request, 'Voter/votingPg.html', {'candidates': candidates})
+    return render(request, 'Voter/votingPg.html', {'candidates': candidates, 'disable_vote': disable_vote})
 
 @flexible_access('voter')
 def cast_vote(request):
     if request.method == 'POST':
-        selected_candidates = request.POST.getlist('candidate')
+
+        current_phase = ElectionPhase.objects.filter(is_active=True).first()
+        if not current_phase or current_phase.phase_name != 'Polling Day':
+            messages.error(request, 'Sorry, you can not vote at this time around.')
+            return redirect('voter_home')
         
+        selected_candidates = request.POST.getlist('candidate')
         if isinstance(request.user, Voter):
             voter = request.user
         else:
@@ -671,7 +685,6 @@ def cast_vote(request):
         return render(request, 'Voter/votingPg.html', {'candidates': candidates})
 
 # ---------------------------------------Candidate views------------------------------------------------
-
 from .forms import ElectionPosterForm, ProfilePictureForm, CandidateStatementForm
 
 @flexible_access('public', 'voter', 'candidate')
@@ -689,8 +702,7 @@ def candidate_home(request, candidate_id=None):
     candidate_statement_form = CandidateStatementForm()
     candidate_statement_form.fields['candidate_statement'].initial = candidate_profile.candidate_statement
 
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_deletion = current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']
+    disable_deletion = is_deletion_disabled()
 
     return render(request, 'Candidate/candidatePg.html', {
         'profile_picture_form': profile_picture_form,
@@ -703,8 +715,8 @@ def candidate_home(request, candidate_id=None):
 
 @flexible_access('candidate')
 def upload_election_poster(request):
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
         messages.error(request, 'You do not have permission to upload the election poster this time.')
         return redirect('candidate_home')
     
@@ -722,8 +734,12 @@ def upload_election_poster(request):
     
 @flexible_access('candidate')
 def delete_election_poster(request, candidate_id):
-    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
+        messages.error(request, 'You do not have permission to delete the election poster at this time.')
+        return redirect('candidate_home')
 
+    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
     if candidate_profile.election_poster:
         candidate_profile.election_poster.delete(save=False)
         candidate_profile.save()
@@ -735,8 +751,8 @@ def delete_election_poster(request, candidate_id):
 
 @flexible_access('candidate')
 def upload_profile_picture(request):
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
         messages.error(request, 'You do not have permission to upload the profile picture at this time.')
         return redirect('candidate_home')
     
@@ -754,8 +770,12 @@ def upload_profile_picture(request):
 
 @flexible_access('candidate')
 def delete_profile_picture(request, candidate_id):
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
+        messages.error(request, 'You do not have permission to delete the profile picture at this time.')
+        return redirect('candidate_home')
+    
     candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
-
     if candidate_profile.profile_picture:
         candidate_profile.profile_picture.delete(save=False)
         candidate_profile.save()
@@ -767,8 +787,8 @@ def delete_profile_picture(request, candidate_id):
 
 @flexible_access('candidate')
 def upload_candidate_statement(request):
-    current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    if current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
         messages.error(request, 'You do not have permission to upload the candidate statement at this time.')
         return redirect('candidate_home')
     
@@ -786,8 +806,12 @@ def upload_candidate_statement(request):
 
 @flexible_access('candidate')
 def delete_candidate_statement(request, candidate_id):
+    disable_deletion = is_deletion_disabled()
+    if disable_deletion:
+        messages.error(request, 'You do not have permission to delete the candidate statement at this time.')
+        return redirect('candidate_home')
+    
     candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
-
     if candidate_profile.candidate_statement:
         candidate_profile.candidate_statement = None
         candidate_profile.save()
@@ -812,8 +836,7 @@ def general_user_home(request):
 @flexible_access('public')
 def view_district_detail(request, district_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    # if current_phase and current_phase.phase_name == 'End Election':
-    #     compute_final_total_vote(request, district_id)
+    
 
     phase_name = current_phase.phase_name if current_phase and current_phase.phase_name else 'Not Available'
     
@@ -825,10 +848,14 @@ def view_district_detail(request, district_id):
     candidate_names = [candidate.full_name for candidate in candidates]
     total_votes = [candidate.total_vote for candidate in vote_results]
 
+    winner = None
+    if current_phase and current_phase.phase_name == 'End Election':
+        winner = vote_results.order_by('-total_vote').first()
+        print(winner.candidate.full_name)
+
     total_votes_sum = VoteResults.objects.filter(candidate__in=candidates).aggregate(Sum('total_vote'))['total_vote__sum']
     if total_votes_sum is None:
         total_votes_sum = 0
-    print(total_votes_sum)
 
     return render(request, 'generalUser/viewDistrictDetail.html', {
         'phase': phase_name,
@@ -836,7 +863,9 @@ def view_district_detail(request, district_id):
         'candidate_profiles': candidate_profiles,
         'candidate_names': candidate_names,
         'total_votes': total_votes,
-        'result': total_votes_sum 
+        'voters_total': district.num_of_people,
+        'result': total_votes_sum,
+        'winner': winner
     })
 
 def get_ongoing_result(request, district_id):
@@ -851,10 +880,10 @@ def compute_final_total_vote(request, district_ids):
         grpc_calculate_total_vote_run(district_ids=district_ids)
     except GrpcError as e:
         print(f"Error in gRPC call: {e}")
-        messages.error(request, f"Error in calculating vote result for {district_id}: {e}")
+        messages.error(request, f"Error in calculating vote results: {e}")
     except Exception as e:
         print(f"Unexpected error: {e}")
-        messages.error(request, f"Unexpected error in calculating vote result for {district_id}: {e}")
+        messages.error(request, f"Unexpected error in calculating vote results: {e}")
 
 #------------------------------------------------- WebAuthn------------------------------------------------------
 from django.http import JsonResponse, HttpResponse

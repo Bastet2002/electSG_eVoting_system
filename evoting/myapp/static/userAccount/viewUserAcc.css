@@ -82,8 +82,17 @@ th {
     background-color: #0056b3;
 }
 
+.btn-disabled,
+.btn.btn-danger:disabled {
+    background-color: #ccc !important;
+    color: #666 !important;
+    cursor: not-allowed !important;
+    pointer-events: none !important;
+    border: 1px solid #aaa !important;
+}
+
   /* Popup Alert styles */
-  .popup-alert {
+.popup-alert {
     position: fixed;
     top: 70px; /* Adjust to be below the header */
     left: 50%;
@@ -95,8 +104,8 @@ th {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     z-index: 1000;
     display: none;
-  }
+}
   
-  .popup-alert.show {
+.popup-alert.show {
     display: block;
-  }
+}

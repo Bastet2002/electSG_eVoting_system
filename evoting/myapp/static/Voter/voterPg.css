@@ -24,7 +24,7 @@ body {
   border-radius: 8px;
 }
 
-.ongoing-result, .final-result, .district {
+.ongoing-result, .final-result, .district, .status {
   font-weight: bold;
   font-size: 25px;
   color: #000000;

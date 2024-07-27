@@ -25,7 +25,7 @@
                             <a href="{% url 'edit_party' party.party_id %}"><button class="btn btn-danger">Update</button></a>
                             <form method="post" action="{% url 'delete_party' party.party_id %}" style="display:inline;" onsubmit="return confirmDelete()">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn-danger">Delete</button>
+                                <button type="submit" class="btn btn-danger" {% if disable_deletion %}disabled{% endif %}>Delete</button>
                             </form>
                         </td>
                     </tr>
