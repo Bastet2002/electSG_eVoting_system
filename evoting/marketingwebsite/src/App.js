@@ -7,6 +7,7 @@ import Info from "./components/Info";
 import Contact from "./components/Contact";
 import Vote from "./components/Vote";
 import Newsletter from "./components/Newsletter";
+import Documentation from "./components/Documentation";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
       <Info />
       <Contact />
       <Vote />
+      <Documentation />
       <Newsletter />
     </div>
   );

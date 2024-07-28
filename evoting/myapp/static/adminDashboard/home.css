@@ -1,5 +1,9 @@
 /* static/adminDashboard/css/phaseDetails.css */
 
+body{
+    font-family: Arial, sans-serifs
+}
+
 .container {
     margin: 20px auto 0; /* Updated to remove top margin */
     background-color: #ffffff;
