@@ -10,9 +10,14 @@ from . import config
 from pygrpc.ringct_client import (
     grpc_generate_candidate_keys_run
 )
+import random
 import logging
 
 logger = logging.getLogger(__name__)
+
+random.seed(config.randomseed)
+
+candidate_users = []
 
 class Command(BaseCommand):
     help = 'Create initial candidate accounts'
@@ -61,5 +66,7 @@ class Command(BaseCommand):
             VoteResults.objects.create(candidate=candidate, total_vote=0)
             grpc_generate_candidate_keys_run(candidate_id=candidate_id)
             logger.info(f'Called gRPC service for candidate: {candidate.full_name}')
+            candidate_users.append(f"{candidate_id} {candidate.district.district_name}")
         
+        config.write_csv(candidate_users, 'candidate_id.csv')
         logger.info('Candidate RingCT key generation completed')

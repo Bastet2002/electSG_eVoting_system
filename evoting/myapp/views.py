@@ -579,17 +579,27 @@ def delete_party(request, party_id):
 # ---------------------------------------Voter views------------------------------------------------
 @flexible_access('public')
 def singpass_login(request):
+    # print(f"Request method: {request.method}")
+    # print(f"Request POST data: {request.POST}")
+    # print(f"Request headers: {request.headers}")
+
     if request.method == 'POST':
         singpass_id = request.POST['singpass_id']
         password = request.POST['password']
+        # print(f'Login attempt with Singpass ID: {singpass_id} with password: {password}')
+        # TODO it fail at the authenticate function
         user = authenticate(request, singpass_id=singpass_id, password=password)
         if user is not None:
+            # print(f'Authentication successful for Singpass ID: {singpass_id}, Now logging in...')
             login(request, user)
             messages.success(request, 'Log in successful.')
             return redirect('voter_home') 
         else:
+            # print(f'Login failed for Singpass ID: {singpass_id}')
             return render(request, 'singpassLogin.html', {'error': 'Invalid username or password.'})
     else:
+        # print(f'Request method is not POST...')
+        # print(f'Request method is {request.method}')
         return render(request, 'singpassLogin.html')
 
 @flexible_access('voter')
