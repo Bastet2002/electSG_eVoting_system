@@ -99,6 +99,11 @@ class EditDistrict(forms.ModelForm):
     class Meta:
         model = District
         fields = ['district_name']
+        widgets = {
+            'district_name': forms.Textarea(attrs={'class': 'custom-content'})
+        }
+
+
 
 class CreateAnnouncement(forms.ModelForm):
     class Meta:

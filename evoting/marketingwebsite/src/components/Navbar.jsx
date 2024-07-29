@@ -32,6 +32,9 @@ const handleNav = () => {
         <li>
           <a href='#vote'>How to Vote</a>
         </li>
+        <li>
+          <a href='#documentation'>Documentation</a>
+        </li>
       </ul>
       <div className='flex justify-between'>
         <FaFacebookF className='mx-4' />
@@ -65,6 +68,9 @@ const handleNav = () => {
           </li>
           <li className='text-xl py-8'>
             <a href='#vote'>How to Vote</a>
+          </li>
+          <li className='text-xl py-8'>
+            <a href='#documentation'>Documentation</a>
           </li>
         </ul>
         </div>

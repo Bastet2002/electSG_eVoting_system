@@ -39,9 +39,10 @@ const Info = () => {
             <VideoPlayer />
         </div>
             <div className='mt-12 p-[50px]'>
-                <h2 className='text-4xl mb-4'>Simple. Safe. Secure.</h2>
-                <p className='text-xl font-semibold'>Singapore's first E-Voting platform with RingCT implementation</p>
-                <button className='bg-red-500/80 rounded-md font-medium w-[200px] ml-20 mt-8 p-4 text-white' onClick={handleDownload}>User Manual</button>
+                <h2 className='text-4xl mb-4 ml-4 text-stone-800/80'>Simple. Safe. Secure.</h2>
+                <h3 className='text-xl font-semibold mx-4'>Singapore's first E-Voting platform with RingCT implementation</h3>
+                <h4 className='mt-4 ml-4 font-weight italic text-m'>Empowering Your Vote with Cutting-Edge Privacy</h4>
+                <button className='bg-red-500/80 text-white mt-12 mx-32 py-4 px-2 hover:bg-red-700 rounded-md' onClick={handleDownload}>Click here for more information</button>
             </div>
         </div>
         </div>

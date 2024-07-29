@@ -44,6 +44,16 @@
     padding: 20px;
 }
 
+.custom-description {
+    width: calc(70% - 60px);
+    height: 100px; 
+    padding: 10px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
 .popup-alert {
   position: fixed;
   top: 70px; /* Adjust to be below the header */
