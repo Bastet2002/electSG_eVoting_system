@@ -309,6 +309,7 @@ class Voter(models.Model):
     voter_id = models.AutoField(primary_key=True)
     district = models.ForeignKey('District', on_delete=models.CASCADE)
     hash_from_info = models.CharField(max_length=128, unique=True, null=True)
+    salt = models.CharField(max_length=64, null=True)
     pkv = models.CharField(max_length=64)
     last_login = models.DateTimeField(null=True, blank=True)  # Add this field
 
