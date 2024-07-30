@@ -35,26 +35,6 @@ class EditUser(forms.ModelForm):
             self.fields['district'].disabled = True
             self.fields['party'].disabled = True
 
-    # def clean_username(self):
-    #     username = self.cleaned_data.get('username')
-    #     instance = getattr(self, 'instance', None)
-    #     if instance and instance.pk:
-    #         # Check if the username is being updated and if it's already taken by another user
-    #         if username and username != instance.username and UserAccount.objects.filter(username=username).exists():
-    #             raise ValidationError("User account with this Username already exists.")
-    #     if len(username) > 15:
-    #         raise ValidationError("Username cannot exceed 15 characters.")
-    #     return username
-
-    # def clean(self):
-    #     cleaned_data = super().clean()
-    #     date_of_birth = cleaned_data.get('date_of_birth')
-    #     role = cleaned_data.get('role')
-    #     if role and role.profile_name.lower() == 'candidate':
-    #         if date_of_birth > date.today() - relativedelta(years=45):
-    #             self.add_error('date_of_birth', "Candidate must be at least 45 years old.")
-    #     return cleaned_data
-
 class CreateProfileForm(forms.ModelForm):
     class Meta:
         model = Profile
@@ -74,27 +54,6 @@ class CreateDistrict(forms.ModelForm):
         model = District
         fields = ['district_name', 'num_of_people']
 
-    # district_names = forms.CharField(
-    #     widget=forms.Textarea(attrs={'placeholder': 'Enter district names separated by semicolons (;)'}),
-    # )
-
-    # def clean_district_names(self):
-    #     district_names = self.cleaned_data.get('district_names')
-        
-    #     district_list = [name.strip() for name in district_names.split(';') if name.strip()]
-    #     for name in district_list:
-    #         if len(name) > 30:
-    #             raise ValidationError(f"District name '{name}' exceeds 30 characters limit.")
-
-    #     existing_districts = []
-    #     for name in district_list:
-    #         if District.objects.filter(district_name__iexact=name).exists():
-    #             existing_districts.append(name)
-    #     if existing_districts:
-    #         raise ValidationError(f"District(s) already exist: {', '.join(existing_districts)}")
-        
-    #     return district_names
-
 class EditDistrict(forms.ModelForm):
     class Meta:
         model = District
@@ -113,25 +72,10 @@ class CreateAnnouncement(forms.ModelForm):
             'content': forms.Textarea(attrs={'class': 'custom-content'})
         }
 
-
 class CreateParty(forms.ModelForm):
     class Meta:
         model = Party
-        fields = ['party_name']
-        
-
-    # def clean_party_name(self):
-    #     party_name = self.cleaned_data.get('party_name')
-    #     if len(party_name) > 50:
-    #         raise ValidationError("Party name cannot exceed 50 characters.")
-    #     if not self.instance.pk:
-    #         if Party.objects.filter(party_name=party_name).exists():
-    #             raise ValidationError("A party with this name already exists.")
-    #     else:
-    #         existing_party = Party.objects.filter(party_name=party_name).exclude(pk=self.instance.pk)
-    #         if existing_party.exists():
-    #             raise ValidationError("A party with this name already exists.")
-    #     return party_name
+        fields = ['party_name', 'description']
 
 class PasswordChangeForm(forms.Form):
     current_password = forms.CharField(widget=forms.PasswordInput(attrs={'class': 'changepassword-text-field'}), label="Current Password")
@@ -207,8 +151,6 @@ class FirstLoginPasswordChangeForm(forms.Form):
             self.add_error('confirm_password', "Confirm password does not match new password.")
 
         return cleaned_data
-
-
 
 #--------------------------------Candidate Forms---------------------------------------- 
 class ElectionPosterForm(forms.ModelForm):
