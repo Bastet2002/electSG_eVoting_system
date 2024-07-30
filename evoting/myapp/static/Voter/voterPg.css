@@ -63,6 +63,7 @@ body {
 
 .candidate:hover {
   transform: scale(1.08);
+  text-decoration: none;
 }
 
 .candidate img {
@@ -74,6 +75,12 @@ body {
 }
 
 .candidate-link{
+  text-decoration: none;
+  color: inherit;
+}
+
+.candidate-link:hover h3,
+.candidate-link:hover p {
   text-decoration: none;
 }
 
@@ -108,10 +115,11 @@ button {
   font-size: 25px;
   border: 2px solid #c53e3e;
   transition: transform 0.2s;
+  border-radius: 10%;
 }
 
 button:hover {
-  background-color: #161313;
+  background-color: #3892d3;
   color: #ffffff;
   transform: scale(1.05);
 }

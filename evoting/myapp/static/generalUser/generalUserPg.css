@@ -1,10 +1,9 @@
 /* General Styles */
 body {
-    font-family: Arial, sans-serif;
+    font-family: 'Lato', sans-serif;
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    /* background: url('/static/images/redFlag2.jpeg') no-repeat center center fixed; */
     background-color: #a82121;
     background-size: cover;
     color: #333;
@@ -34,13 +33,16 @@ h1 {
 }
 .status {
     background-color: #ffffff00;
-   
     display: flex;
     justify-content: center;
     align-items: center;
-    
-    
-   
+}
+.view-all{
+    font-size: 20px;
+}
+
+.view-all a:hover{
+    color: #d03f3f;
 }
 
 

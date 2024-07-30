@@ -6,6 +6,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'generalUser/viewDistrictDetail.css' %}"> 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <div class="main">
@@ -25,20 +26,24 @@
     </div>
 
     {% if phase == 'End Election' %}
-    <div style="display: flex; justify-content: space-around;">
-        <div class="pie-chart-container" style="width: 30%; height: 30%; padding: 100px;">
+    <div class="chart-container" style="display: flex; justify-content: space-around;">
+        <div class="pie-chart-container">
             <canvas id="pieChart" class="chart"></canvas>
         </div>
-        <div class="histrogram-chart-container" style="width: 40%; height: 50%; padding: 160px;">
+        <div class="histrogram-chart-container">
             <canvas id="histogram" class="chart"></canvas>
         </div>
     </div>
 
     <div class="winner-section">
-        <h2>Winner</h2>
+        <h1>Winner</h1>
         <div class="winner-card">
             {% if winner %}
-            <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
+            {% if winner.profile_picture %}
+            <img src="{{ winner.profile_picture.url }}" alt="{{ winner.candiate.full_name }}">
+            {% else %}
+            <img src="{% static 'images/profile.png' %}" alt="{{ winner.candiate.full_name }}">
+            {% endif %}
             <h3>{{ winner.candidate.full_name }}</h3>
             <p>Party: {{ winner.candidate.party.party_name }}</p>
             {% endif %}
@@ -51,7 +56,7 @@
 
     <div class="candidates-container {% if phase == 'End Election' %}other-candidates{% endif %}">
         {% for candidate in candidate_profiles %}
-        {% if phase != 'End Election' or not forloop.first %}
+        {% if winner != candidate %}
         <div class="candidate {% if phase == 'End Election' %}runner-up{% endif %}">
             {% if candidate.profile_picture %}
             <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
@@ -110,6 +115,39 @@
                 }
             }
         }
+    });
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        const celebrationContainer = document.querySelector('.celebration');
+        const itemTypes = ['confetti', 'confetti', 'confetti', 'confetti', 'confetti'];
+        const colors = ['#ff6b6b', '#feca57', '#48dbfb', '#ff9ff3', '#54a0ff', '#5f27cd'];
+    
+        function createCelebrationItem() {
+            const item = document.createElement('div');
+            item.className = `celebration-item ${itemTypes[Math.floor(Math.random() * itemTypes.length)]}`;
+            item.style.left = `${Math.random() * 100}%`;
+            item.style.animationDuration = `${Math.random() * 3 + 3}s`; // 3-6s duration
+            item.style.animationDelay = `${Math.random() * 5}s`; // 0-5s delay
+    
+            if (item.classList.contains('confetti') || item.classList.contains('ribbon')) {
+                item.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+            }
+    
+            celebrationContainer.appendChild(item);
+    
+            // Remove the item after animation completes
+            setTimeout(() => {
+                item.remove();
+            }, parseFloat(item.style.animationDuration) * 1000 + parseFloat(item.style.animationDelay) * 1000);
+        }
+    
+        // Create initial batch of items
+        for (let i = 0; i < 100; i++) {
+            createCelebrationItem();
+        }
+    
+        // Continuously add new items
+        setInterval(createCelebrationItem, 100);
     });
 </script>
 {% elif phase == 'Polling Day' %}

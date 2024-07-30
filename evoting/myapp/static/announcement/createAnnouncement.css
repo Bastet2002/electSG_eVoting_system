@@ -36,6 +36,9 @@
   cursor: pointer; /* Change cursor to pointer on hover */
   margin-top: 10px; /* Add space above the button */
 }
+.create-announcement-form button:hover {
+  background-color: #0056b3;
+}
 
 /* Main content styles */
 .main {

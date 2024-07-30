@@ -11,7 +11,7 @@
         <form method="post" action="{% url 'create_profile' %}" class="create-profile-form">
             {% csrf_token %}
             {{ form.as_p }}
-            <button type="submit" name="create_profile" style="margin-left: 280px">Create</button>
+            <button type="submit" name="create_profile" style="margin-left: 280px" {% if disable_creation %}disabled{% endif %}>Create</button>
         </form>
     </div>
 
