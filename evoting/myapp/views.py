@@ -250,7 +250,7 @@ def edit_account(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
     if request.method == 'POST':
-        form = EditUser(request.POST, instance=user)
+        form = EditUser(request.POST, instance=user, user=user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Account successfully updated.')
@@ -258,7 +258,7 @@ def edit_account(request, user_id):
         else:
             messages.error(request, 'Invalid form submission.')
     else:
-        form = EditUser(instance=user)
+        form = EditUser(instance=user, user=user)
     return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase, 'user': user})
 
 @flexible_access('admin')

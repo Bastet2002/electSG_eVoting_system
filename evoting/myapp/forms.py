@@ -23,15 +23,19 @@ class CSVUploadForm(forms.Form):
 class EditUser(forms.ModelForm):
     class Meta:
         model = UserAccount
-        exclude = ['password', 'role', 'last_login']
+        exclude = ['password', 'role', 'last_login', 'first_login']
         widgets = {
             'date_of_birth': forms.DateInput(format="%Y-%m-%d", attrs={"type": "date"})
         }
 
     def __init__(self, *args, **kwargs):
+        user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         current_phase = ElectionPhase.objects.filter(is_active=True).first()
-        if current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day']:
+        if user and user.role.profile_name == 'Admin':
+            del self.fields['district']
+            del self.fields['party']
+        elif current_phase and current_phase.phase_name in ['Cooling Off Day', 'Polling Day', 'End Election']:
             self.fields['district'].disabled = True
             self.fields['party'].disabled = True
 
@@ -61,8 +65,6 @@ class EditDistrict(forms.ModelForm):
         widgets = {
             'district_name': forms.Textarea(attrs={'class': 'custom-content'})
         }
-
-
 
 class CreateAnnouncement(forms.ModelForm):
     class Meta:
