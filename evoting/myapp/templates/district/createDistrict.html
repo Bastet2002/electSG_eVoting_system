@@ -11,13 +11,13 @@
     <form method="post" action="{% url 'create_district' 'normal_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ form.as_p }}
-        <button type="submit" name="create-district" style="margin-left: 280px;" >Create District</button>
+        <button type="submit" name="create-district" style="margin-left: 280px;" {% if disable_creation %}disabled{% endif %} >Create District</button>
     </form>
-
+    <h6 style="text-align: center; margin: 20px 0px 8px 0px">Or</h6>
     <form method="post" enctype="multipart/form-data" action="{% url 'create_district' 'csv_upload' %}" class="add-district-form">
         {% csrf_token %}
         {{ csv_form.as_p }}
-        <button type="submit" name="create-district" style="margin-left: 270px;">Create New Districts</button>
+        <button type="submit" name="create-district" style="margin-left: 270px;" {% if disable_creation %}disabled{% endif %}>Create Districts</button>
     </form>
 </div>
 

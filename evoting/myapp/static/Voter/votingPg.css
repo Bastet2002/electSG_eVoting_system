@@ -10,7 +10,7 @@ body {
 
 .main {
     flex-grow: 1;
-    padding-top: 100px;
+    padding-top: 120px;
     text-align: center;
     position: relative;
 }
@@ -46,6 +46,7 @@ body {
     border-radius: 10px;
     padding: 10px;
     background-color: #fff;
+    gap: 10px;
 }
 
 .candidate img {
@@ -57,17 +58,36 @@ body {
 
 .party-name {
     font-weight: bold;
-    flex-grow: 1;
-    text-align: center;
 }
 
+.candidate-name {
+    font-size: 1.1em;
+    margin-bottom: 5px;
+}
+
+.info{
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    align-items: center;
+}
 .candidate input[type="checkbox"] {
-    width: 25px;
-    height: 25px;
+    width: 30px;
+    height: 30px;
+    margin:0;
+    flex-shrink: 0;
+}
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    width: 70px; /* Adjust as needed */
 }
 
 .vote-button-container {
     margin-top: 20px;
+    margin-bottom: 20px;
 }
 
 .vote-button-container button {
@@ -80,42 +100,7 @@ body {
 }
 
 .vote-button-container button:hover {
-    background-color: #140a0a;
+    background-color: #4f8bc4;
     color :white;
 }
-
-.pie-chart-container {
-    padding-top: 1000px;
-}
-/* 
-.chart-container {
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    margin-top: 20px;
-}
-
-
-.chart {
-    width: 50vw !important;
-    height: 50vh !important;
-}
-canvas {
-    width: 100px !important;
-    height: 400px !important;
-    max-width: 10px !important;
-    max-height: 100% !important;
-}
-
-.chart-container canvas {
-    width: 400px !important;
-    height: 400px !important;
-    max-width: 100% !important;
-    max-height: 100% !important;
-}
-
-#pieChart, #histogram {
-    width: 400px !important;
-    height: 400px !important;
-} */
 

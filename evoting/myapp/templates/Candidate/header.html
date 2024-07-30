@@ -12,11 +12,11 @@
     </div>
     <nav>
         <ul class="navigation">
+            <li><a href="{% url 'my_account' %}">My Account</a></li>
             {% if user.role.profile_name == 'Candidate' %}
-                <li><a href="{% url 'my_account' %}">My Account</a></li>
                 <li><a href="{% url 'candidate_home' %}">Home</a></li>
-            {% else %}
-                <li><a href="{% url 'voter_home' %}">Home</a></li>
+            {% elif user.role.profile_name == 'Admin'%}
+                <li><a href="{% url 'admin_home' %}">Home</a></li>
             {% endif %}
             <li><a href="#">About us</a></li>
             <li><a href="{% url 'logout' %}">Log out</a></li>

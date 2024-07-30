@@ -6,6 +6,7 @@
 {% block content %}
 <link rel="stylesheet" href="{% static 'Voter/votingPg.css' %}">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <div class="main">
     <h2>Digital Ballot Paper</h2>
     <form method="post" action="{% url 'cast_vote' %}" id="ballotForm" onsubmit="return validateForm()">
@@ -18,24 +19,45 @@
                         {% if candidate.profile_picture %}
                         <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candidate.full_name }}">
                         {% else %}
-                        <img src="{% static 'images/default_candidate.jpg' %}" alt="{{ candidate.candidate.full_name }}">
+                        <img src="{% static 'images/profile.png' %}" alt="{{ candidate.candidate.full_name }}">
                         {% endif %}
                     </label>
-                    <span class="party-name">{{ candidate.candidate.full_name }}</span>
-                    <span class="party-name">{{ candidate.candidate.party.party_name }}</span>
-                    <input type="checkbox" name="candidate" value="{{ candidate.candidate.user_id }}" class="candidate-checkbox">
+                    <div class="info">
+                        <span class="party-name">{{ candidate.candidate.full_name }}</span>
+                        <span class="party-name">({{ candidate.candidate.party.party_name }})</span>
+                    </div>
+                    <div class="checkbox-container">
+                        <input type="checkbox" name="candidate" value="{{ candidate.candidate.user_id }}" class="candidate-checkbox">
+                    </div>
                 </div>
             </div>
             {% endfor %}
         </div>
         <div class="vote-button-container">
-            <button type="submit" {% if disable_vote %}disabled{% endif %}>Submit</button>
+            <button type="submit">Submit</button>
         </div>
     </form>
+
+    {% if messages %}
+        <div class="errors" id="messages">
+            {% for message in messages %}
+            {% if message %}
+            <p class="error">{{ message }}</p>
+            {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
+        const messagesContainer = document.getElementById("messages");
+        if (messagesContainer) {
+            setTimeout(() => {
+                messagesContainer.innerHTML = "";
+            }, 3000);
+        }
+
         // Limit selection to one checkbox
         const checkboxes = document.querySelectorAll('.candidate-checkbox');
         checkboxes.forEach(checkbox => {

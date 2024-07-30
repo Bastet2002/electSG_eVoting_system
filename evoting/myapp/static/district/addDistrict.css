@@ -42,6 +42,16 @@
   cursor: pointer; /* Change cursor to pointer on hover */
 }
 
+.add-district-form button:hover {
+  background-color: #0056b3;
+}
+
+.add-district-form button:disabled {
+  background-color: #908b8b;
+  cursor: not-allowed;
+}
+
+
 /* Add space between label and input */
 .add-district-form label {
   margin-right: 20px; /* Add space between label and input */

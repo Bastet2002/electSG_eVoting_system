@@ -17,7 +17,7 @@
     </div>
     <div class="candidates-container">
         {% for candidate in candidates %}
-        <a href="{% url 'view_candidate' candidate.candidate.user_id %}" class="candidate-link">
+        <a href="{% url 'view_candidate' candidate.candidate.user_id %}" class="candidate-link" style="text-decoration:none;">
             <div class="candidate">
                 {% if candidate.profile_picture %}
                 <img src="{{ candidate.profile_picture.url }}" alt="{{ candidate.candiate.full_name }}">
@@ -30,10 +30,12 @@
         </a>
         {% endfor %}
     </div>
+    {% if not disable_vote %}
     <div class="vote-button-container">
         <a href="{% if not disable_vote %}{% url 'ballot_paper' %}{% endif %}" class="button-link {% if disable_vote %}btn-disabled{% endif %}">
             <button {% if disable_vote %}disabled{% endif %}>Vote</button>
         </a>
     </div>
+    {% endif %}
 </div>
 {% endblock %}

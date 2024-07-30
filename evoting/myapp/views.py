@@ -136,14 +136,18 @@ def admin_home(request):
     announcements = Announcement.objects.all().order_by('-date')  # Order by date in descending order
     return render(request, 'adminDashboard/home.html', {'active_phase': active_phase, 'announcements': announcements})
 
-def is_deletion_disabled():
+def is_creation_deletion_disabled():
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    disable_deletion = not current_phase or current_phase.phase_name in ['Cooling Off Day', 'Polling Day', 'End Election']
-    return disable_deletion
+    disable_create_delete = not current_phase or current_phase.phase_name in ['Cooling Off Day', 'Polling Day', 'End Election']
+    return disable_create_delete
 # ---------------------------------------UserAccount views------------------------------------------------
 @flexible_access('admin')
 def create_account(request, upload_type=None):
+    disable_creation = is_creation_deletion_disabled()
     if request.method == 'POST':
+        if disable_creation:
+            messages.error(request, 'You do not have permission to create the account at this time.')
+            return redirect('create_account')
         if upload_type == 'csv_upload':
             return handle_user_csv_upload(request)
         else:
@@ -151,7 +155,8 @@ def create_account(request, upload_type=None):
     else:
         return render(request, 'userAccount/createUserAcc.html', {
             'form': CreateNewUser(),
-            'csv_form': CSVUploadForm()
+            'csv_form': CSVUploadForm(),
+            'disable_creation': disable_creation
         })
     
 def handle_user_csv_upload(request):
@@ -235,7 +240,7 @@ def view_accounts(request):
     else:
         users = UserAccount.objects.all()
     
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     return render(request, 'userAccount/viewUserAcc.html', {'users': users, 'disable_deletion': disable_deletion})
 
 @flexible_access('admin')
@@ -256,7 +261,7 @@ def edit_account(request, user_id):
 
 @flexible_access('admin')
 def delete_account(request, user_id):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the account at this time.')
         return redirect('view_user_accounts')
@@ -288,7 +293,11 @@ def list_election_phases(request):
 # ---------------------------------------District views-----------------------------------------------------
 @flexible_access('admin')
 def create_district(request, upload_type=None):
+    disable_creation = is_creation_deletion_disabled()
     if request.method == 'POST':
+        if disable_creation:
+            messages.error(request, 'You do not have permission to create the districts at this time.')
+            return redirect('create_district')
         # csv_form = CSVUploadForm(request.POST, request.FILES)
         # form = CreateDistrict(request.POST)
         if upload_type == 'csv_upload':
@@ -298,7 +307,8 @@ def create_district(request, upload_type=None):
     else:
         return render(request, 'district/createDistrict.html', {
             'form': CreateDistrict(),
-            'csv_form': CSVUploadForm()
+            'csv_form': CSVUploadForm(),
+            'disable_creation': disable_creation
         })
     
 def handle_district_csv_upload(request):
@@ -367,7 +377,7 @@ def view_districts(request):
         districts = District.objects.all()
 
     if request.user.is_authenticated and request.path == '/admin_home/view_districts/':
-            disable_deletion = is_deletion_disabled()
+            disable_deletion = is_creation_deletion_disabled()
             return render(request, 'district/viewDistrict.html', {'districts': districts, 'disable_deletion': disable_deletion})
         
     # for general user
@@ -391,7 +401,7 @@ def edit_district(request, district_id):
 
 @flexible_access('admin')
 def delete_district(request, district_id):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the district at this time.')
         return redirect('view_districts')
@@ -408,7 +418,11 @@ def delete_district(request, district_id):
 # ---------------------------------------Profile view-----------------------------------------------------
 @flexible_access('admin')
 def create_profile(request):
+    disable_creation = is_creation_deletion_disabled()
     if request.method == 'POST':
+        if disable_creation:
+            messages.error(request, 'You do not have permission to create the profile at this time.')
+            return redirect('create_profile')
         form = CreateProfileForm(request.POST)
         if form.is_valid():
             form.save()
@@ -418,12 +432,12 @@ def create_profile(request):
             messages.error(request, 'Invalid form submission.')
     else:
         form = CreateProfileForm()
-    return render(request, 'userProfile/createProfile.html', {'form': form})
+    return render(request, 'userProfile/createProfile.html', {'form': form, 'disable_creation': disable_creation})
 
 @flexible_access('admin')
 def view_profiles(request):
     profiles = Profile.objects.all()
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     not_allow = ['Admin', 'Candidate']
 
     return render(request, 'userProfile/viewProfiles.html', {'profiles': profiles, 'disable_deletion': disable_deletion, "disable_edit_list": not_allow})
@@ -445,7 +459,7 @@ def edit_profile(request, profile_id):
 
 @flexible_access('admin')
 def delete_profile(request, profile_id):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the profile at this time.')
         return redirect('view_profiles')
@@ -512,7 +526,11 @@ def delete_announcement(request, announcement_id):
 # ---------------------------------------Party views------------------------------------------------
 @flexible_access('admin')
 def create_party(request):
+    disable_creation = is_creation_deletion_disabled()
     if request.method == 'POST':
+        if disable_creation:
+            messages.error(request, 'You do not have permission to create the party at this time.')
+            return redirect('create_party')
         form = CreateParty(request.POST)
         if form.is_valid():
             form.save()
@@ -522,12 +540,12 @@ def create_party(request):
             messages.error(request, 'Invalid form submission.')
     else:
         form = CreateParty()
-    return render(request, 'party/createParty.html', {'form': form})
+    return render(request, 'party/createParty.html', {'form': form,'disable_creation': disable_creation })
 
 @flexible_access('admin')
 def view_parties(request):
     parties = Party.objects.all()
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     return render(request, 'party/viewParty.html', {'parties': parties, 'disable_deletion': disable_deletion})
 
 @flexible_access('admin')
@@ -549,7 +567,7 @@ def edit_party(request, party_id):
 def delete_party(request, party_id):
     party = get_object_or_404(Party, pk=party_id)
     if request.method == 'POST':
-        disable_deletion = is_deletion_disabled()
+        disable_deletion = is_creation_deletion_disabled()
         if disable_deletion:
             messages.error(request, 'You do not have permission to delete the party at this time.')
             return redirect('view_parties')
@@ -702,7 +720,7 @@ def candidate_home(request, candidate_id=None):
     candidate_statement_form = CandidateStatementForm()
     candidate_statement_form.fields['candidate_statement'].initial = candidate_profile.candidate_statement
 
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
 
     return render(request, 'Candidate/candidatePg.html', {
         'profile_picture_form': profile_picture_form,
@@ -715,7 +733,7 @@ def candidate_home(request, candidate_id=None):
 
 @flexible_access('candidate')
 def upload_election_poster(request):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to upload the election poster this time.')
         return redirect('candidate_home')
@@ -734,7 +752,7 @@ def upload_election_poster(request):
     
 @flexible_access('candidate')
 def delete_election_poster(request, candidate_id):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the election poster at this time.')
         return redirect('candidate_home')
@@ -751,7 +769,7 @@ def delete_election_poster(request, candidate_id):
 
 @flexible_access('candidate')
 def upload_profile_picture(request):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to upload the profile picture at this time.')
         return redirect('candidate_home')
@@ -770,7 +788,7 @@ def upload_profile_picture(request):
 
 @flexible_access('candidate')
 def delete_profile_picture(request, candidate_id):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the profile picture at this time.')
         return redirect('candidate_home')
@@ -787,7 +805,7 @@ def delete_profile_picture(request, candidate_id):
 
 @flexible_access('candidate')
 def upload_candidate_statement(request):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to upload the candidate statement at this time.')
         return redirect('candidate_home')
@@ -806,7 +824,7 @@ def upload_candidate_statement(request):
 
 @flexible_access('candidate')
 def delete_candidate_statement(request, candidate_id):
-    disable_deletion = is_deletion_disabled()
+    disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the candidate statement at this time.')
         return redirect('candidate_home')
@@ -836,8 +854,6 @@ def general_user_home(request):
 @flexible_access('public')
 def view_district_detail(request, district_id):
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
-    
-
     phase_name = current_phase.phase_name if current_phase and current_phase.phase_name else 'Not Available'
     
     district = get_object_or_404(District, pk=district_id)
@@ -845,13 +861,13 @@ def view_district_detail(request, district_id):
     candidates = UserAccount.objects.filter(district=district)
     vote_results = VoteResults.objects.filter(candidate__district=district)
 
-    candidate_names = [candidate.full_name for candidate in candidates]
+    candidate_names = [candidate.candidate.full_name for candidate in vote_results]
     total_votes = [candidate.total_vote for candidate in vote_results]
 
-    winner = None
+    winner_profile = None
     if current_phase and current_phase.phase_name == 'End Election':
         winner = vote_results.order_by('-total_vote').first()
-        print(winner.candidate.full_name)
+        winner_profile = CandidateProfile.objects.get(candidate=winner.candidate)
 
     total_votes_sum = VoteResults.objects.filter(candidate__in=candidates).aggregate(Sum('total_vote'))['total_vote__sum']
     if total_votes_sum is None:
@@ -865,7 +881,7 @@ def view_district_detail(request, district_id):
         'total_votes': total_votes,
         'voters_total': district.num_of_people,
         'result': total_votes_sum,
-        'winner': winner
+        'winner': winner_profile
     })
 
 def get_ongoing_result(request, district_id):

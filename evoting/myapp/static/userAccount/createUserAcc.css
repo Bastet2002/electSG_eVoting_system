@@ -43,6 +43,15 @@ cursor: pointer;
 border-radius: 5px;
 }
 
+.create-new-user-form button:hover {
+  background-color: #0056b3;
+}
+
+.create-new-user-form button:disabled {
+  background-color: #908b8b;
+  cursor: not-allowed;
+}
+
 /* Main content styles */
 .main {
 margin-left: 240px; /* Adjusted to accommodate the sidebar */
