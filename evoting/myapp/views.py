@@ -9,7 +9,7 @@ from django.contrib import messages
 from django.contrib.messages import get_messages
 from django.db.models import Q, Sum
 from .forms import CreateNewUser, CSVUploadForm, EditUser, CreateDistrict, EditDistrict, CreateAnnouncement, CreateParty, CreateProfileForm, PasswordChangeForm, FirstLoginPasswordChangeForm
-from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter, VoteResults
+from .models import UserAccount, District, ElectionPhase, Announcement, Party, Profile, CandidateProfile, Voter, VoteResults, SingpassUser
 from django.contrib.auth.hashers import check_password
 from .decorators import flexible_access
 from django.core.exceptions import ValidationError, ObjectDoesNotExist
@@ -23,6 +23,7 @@ from pygrpc.ringct_client import (
     grpc_generate_candidate_keys_run,
     grpc_compute_vote_run,
     grpc_calculate_total_vote_run,
+    grpc_filter_non_voter_run,
     GrpcError,
 )
 
@@ -1251,3 +1252,56 @@ def delete_non_master_credentials(request):
         messages.success(request, "All non-master credentials have been deleted.")
     
     return redirect('login')  # Redirect to the login page or appropriate page
+
+
+# ---------------------------------------Filter non-voter views------------------------------------------------
+@flexible_access('admin')
+def filter_non_voter(request):
+    # check the election phase
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    if not current_phase or current_phase.phase_name != 'End Election':
+        messages.error(request, 'Error: Not in End Election phase.')
+        return redirect('view_election_phases')
+
+    from .auth_backends import SingpassBackend
+    # to be output as csv
+    non_voter = []
+
+    # for the voter login but not voter
+    district_ids = District.objects.values_list('district_id', flat=True)
+    try:
+        res = grpc_filter_non_voter_run(district_ids=district_ids)
+    except GrpcError as e:
+        print(f"Error in gRPC call: {e}")
+        messages.error(request, f"Error in filtering non-voters: {e}")
+
+    print(f"Filter non-voter result: {res.voter_ids}")
+    login_non_voter_grpc = set(res.voter_ids)
+
+    singpass_users = SingpassUser.objects.all()
+    for user in singpass_users:
+        # for the voter never login
+        hash_info = SingpassBackend.generate_hash(user)
+        voter = Voter.objects.filter(district__district_name=user.district.upper(), hash_from_info=hash_info).first()
+        if not voter:
+            print(f"Singpass user {user.singpass_id} has never login")
+            non_voter.append([user.singpass_id, user.full_name, user.district])
+        else:
+            # for the voter login but not voter
+            if voter.voter_id in login_non_voter_grpc:
+                print(f"Singpass user {user.singpass_id} has login but not vote")
+                non_voter.append([user.singpass_id, user.full_name, user.district])
+    
+    response = HttpResponse(content_type='text/csv',
+                            headers={'Content-Disposition': 'attachment; filename="non_voter.csv"'})
+    
+    # what if no non-voter
+    writer = csv.writer(response)
+    if non_voter:
+        writer.writerow(['Singpass_ID', 'Full_Name', 'District'])
+        for row in non_voter:
+            writer.writerow(row)
+    else:
+        writer.writerow(['No non-voter found'])
+
+    return response

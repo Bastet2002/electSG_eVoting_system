@@ -28,6 +28,12 @@ struct Compute_Total_Vote{
     string test_output; // TODO temporary for testing
 };
 
+struct Filter_voter{
+    vector<int32_t> district_ids;
+    vector<int32_t> voter_ids;
+    string test_output; // TODO temporary for testing
+};
+
 #endif
 
 // table draft

@@ -62,6 +62,12 @@ def grpc_construct_calculate_total_vote_request(district_ids):
         calculate_total_vote_request.district_ids.append(district_id)
     return calculate_total_vote_request
 
+def grpc_construct_filter_non_voter_request(district_ids):
+    filter_non_voter_request = ringct_pb2.Filter_Non_Voter_Request()
+    for district_id in district_ids:
+        filter_non_voter_request.district_ids.append(district_id)
+    return filter_non_voter_request
+
 # ----------------- grpc client functions -----------------
 # assume the django backend only need to call these functions
 # the other functions are suppliment to this function
@@ -161,6 +167,34 @@ def grpc_calculate_total_vote_run(district_ids):
         raise GrpcError(f"Grpc error: {e.details()}")
 
     return calculate_total_vote_response
+
+def grpc_filter_non_voter_run(district_ids):
+    if not district_ids:
+        raise ValueError("Input error: district_ids cannot be empty")
+    
+    filter_non_voter_request = grpc_construct_filter_non_voter_request(district_ids)
+
+    print('filter_non_voter_request', filter_non_voter_request)
+
+    try:
+        print("-------------- FilterNonVoter --------------")
+        filter_non_voter_response = stub.Filter_Non_Voter(filter_non_voter_request)
+
+        print("Filter Non Voter Request: ", filter_non_voter_request)
+        print("Filter Non Voter Response: ", filter_non_voter_response)
+
+        if len(filter_non_voter_response.district_ids) != len(filter_non_voter_request.district_ids):
+            raise grpc.RpcError("Input output mismatch: district_ids not matching in grpc_filter_non_voter_run")
+        
+        for id in filter_non_voter_response.district_ids:
+            if id not in filter_non_voter_request.district_ids:
+                raise grpc.RpcError("Input output mismatch: district_ids not matching in grpc_filter_non_voter_run")
+    
+    except grpc.RpcError as e:
+        raise GrpcError(f"Grpc error: {e.details()}")
+    
+    return filter_non_voter_response
+
 
 # ----------------- test run function -----------------
 

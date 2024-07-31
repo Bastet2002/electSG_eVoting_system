@@ -27,6 +27,10 @@
             {% endfor %}
         </table>
     </div>
+
+    <div class="container">
+        <a href="{% url 'filter_non_voter' %}" class="btn btn-primary">Filter Login Non-voter</a>
+    </div>
 </div>
 {% if messages %}
     <div id="popupAlert" class="popup-alert show">

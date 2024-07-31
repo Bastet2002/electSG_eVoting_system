@@ -4,14 +4,11 @@ from ringct_client import (
     grpc_generate_candidate_keys_run,
     grpc_compute_vote_run,
     grpc_calculate_total_vote_run,
+    grpc_filter_non_voter_run,
     GrpcError, 
 )
 
-from myapp.models import ElectionPhase
-
-# if __name__ == "__main__":
-    phase = ElectionPhase.objects.filter(phase_name='Polling Day')[0]
-    phase.is_active = True
+if __name__ == "__main__":
     # # grpc_generate_user_and_votingcurr_run(1, 10)
     # # grpc_generate_user_and_votingcurr_run(2, 10)
     # grpc_generate_candidate_keys_run(2)
@@ -31,3 +28,8 @@ from myapp.models import ElectionPhase
     #     grpc_calculate_total_vote_run([1, 2])
     # except GrpcError as e:   
     #     print(e)
+
+    try:
+        grpc_filter_non_voter_run([1, 2, 3])
+    except GrpcError as e:
+        print(e)

@@ -256,9 +256,8 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     }
 }
 
-void CA_filter_non_voter()
+void CA_filter_non_voter(Filter_voter &filter_non_voter)
 {
-    vector<int32_t> non_voter_ids;
     vector<int32_t> district_ids = get_district_ids();
 
     if (district_ids.size() == 0)
@@ -270,6 +269,7 @@ void CA_filter_non_voter()
 
         for (const int32_t &voter_id : voter_ids)
         {
+            cout << "Checking for is_non_voter for voter " << voter_id << " in district " << district_id << endl;
             User voter = get_voter(voter_id);
             StealthAddress voterSA;
             Commitment receivedCmt;
@@ -290,9 +290,11 @@ void CA_filter_non_voter()
 
             compute_key_image(blsagSig, voterSA);
 
-            if (!verify_double_voting(district_id, blsagSig.key_image))
+            // if the key image is not found in the voted table, then it is a non-voter
+            if (verify_double_voting(district_id, blsagSig.key_image))
             {
-                non_voter_ids.push_back(voter_id);
+                cout << "Voter " << voter_id << " is a non voter" << endl;
+                filter_non_voter.voter_ids.push_back(voter_id);
             }
         }
     }
