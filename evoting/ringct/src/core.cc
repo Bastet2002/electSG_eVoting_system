@@ -131,12 +131,14 @@ void voter_cast_vote(Vote &vote)
     compute_key_image(blsagSig, receivedSA);
 
     // for printing the status early
-    if (!vote.is_voting){
+    if (!vote.is_voting)
+    {
         vote.has_voted = false;
-        if (!verify_double_voting(district_id, blsagSig.key_image)){
+        if (!verify_double_voting(district_id, blsagSig.key_image))
+        {
             vote.has_voted = true;
         }
-        return; 
+        return;
     }
 
     if (!verify_double_voting(district_id, blsagSig.key_image))
@@ -220,10 +222,11 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
     if (district_ids.size() == 0)
         return;
 
-    for (const int32_t &district_id :district_ids){
+    for (const int32_t &district_id : district_ids)
+    {
         vector<int32_t> candidate_ids = get_candidate_ids(district_id);
 
-        // TODO remove 
+        // TODO remove
         cout << "I have gotten all the candidate ids for district " << district_id << endl;
         cout << "The candidate ids are: ";
 
@@ -233,12 +236,14 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
         }
         cout << endl;
 
-        for (const int32_t &candidate_id :candidate_ids){
+        for (const int32_t &candidate_id : candidate_ids)
+        {
             int32_t test_district_id;
             User candidate = get_candidate_s(test_district_id, candidate_id);
 
-            if (test_district_id != district_id){
-                cerr <<"Candidate " + to_string(candidate_id) + " is not in district " + to_string(district_id) << endl;
+            if (test_district_id != district_id)
+            {
+                cerr << "Candidate " + to_string(candidate_id) + " is not in district " + to_string(district_id) << endl;
             }
 
             cout << "Counting the total vote of candidate " << candidate_id << " in district " << district_id << endl;
@@ -249,6 +254,46 @@ void CA_compute_result(Compute_Total_Vote &compute_total_vote)
         //     throw logic_error("Total vote does not match with the number of vote record in district " + to_string(district_id));
         // }
     }
+}
 
-    // TODO remove test output
+void CA_filter_non_voter()
+{
+    vector<int32_t> non_voter_ids;
+    vector<int32_t> district_ids = get_district_ids();
+
+    if (district_ids.size() == 0)
+        return;
+
+    for (const int32_t &district_id : district_ids)
+    {
+        vector<int32_t> voter_ids = get_voter_ids(district_id);
+
+        for (const int32_t &voter_id : voter_ids)
+        {
+            User voter = get_voter(voter_id);
+            StealthAddress voterSA;
+            Commitment receivedCmt;
+            blsagSig blsagSig;
+
+            try
+            {
+                scan_for_stealthaddress(receivedCmt, voterSA, district_id, voter);
+            }
+            catch (pqxx::sql_error &e)
+            {
+                throw runtime_error("SQL error: " + string(e.what()));
+            }
+            catch (exception &e)
+            {
+                throw runtime_error(e.what());
+            }
+
+            compute_key_image(blsagSig, voterSA);
+
+            if (!verify_double_voting(district_id, blsagSig.key_image))
+            {
+                non_voter_ids.push_back(voter_id);
+            }
+        }
+    }
 }

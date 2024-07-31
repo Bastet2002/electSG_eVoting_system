@@ -2,6 +2,7 @@ import time
 from locust import HttpUser, task, between
 from locust.exception import StopUser
 import random
+import time
 
 def get_voter_credentials():
     with open("./singpass_login.csv") as f:
@@ -57,7 +58,7 @@ district_num =len(CANDIDATE_IN_DISTRICT.keys())
 
 class SingpassUser(HttpUser):
     has_voted = False
-    wait_time = between(5, 10)
+    wait_time = between(10, 30)
 
     def get_csrf_token(self, url):
         return self.client.get(url).cookies['csrftoken']
@@ -99,19 +100,8 @@ class SingpassUser(HttpUser):
             print(f'Login success for user {self.singpass_id} in district {self.district}')
         else:
             print(f'Login failed for user {self.singpass_id} in district {self.district}')
-            # print(f"Status code: {response.status_code}")
-            # print(f"Cookies: {dict(response.cookies)}")
-            # print(f"Headers: {dict(response.headers)}")
-            # print(f"Content: {response.text[:200]}...")
             return
-
-        # self.session_cookies = dict(response.cookies)
-        # print(f'Session cookies after login: {self.session_cookies}')        
-        # print(f"Status code: {response.status_code}")
-        # print(f"Cookies: {dict(response.cookies)}")
-        # print(f"Headers: {dict(response.headers)}")
-        # print(f"Content: {response.text}")
-
+    
     @task(20)
     def voter_actions(self):
         if not self.has_voted:
@@ -126,51 +116,52 @@ class SingpassUser(HttpUser):
         if response.status_code == 200 and 'Ballot Paper' in response.text:
             print(f'Voter {self.singpass_id} in district {self.district} is viewing ballot paper')
 
-        # print(f"Status code: {response.status_code}")
-        # print(f"Cookies: {dict(response.cookies)}")
-        # print(f"Headers: {dict(response.headers)}")
-        # print(f"Content: {response.text[:200]}...")
+            # time.sleep(random.randint(15, 60))
 
-        # print(f'Ballot cookies {response.cookies}')
+            csrf_token = get_csrfmiddlewaretoken(response)
+            voting_csrf_token = csrf_token
 
-        csrf_token = get_csrfmiddlewaretoken(response)
-        voting_csrf_token = csrf_token
+            self.client.headers.update({"X-CSRFToken":voting_csrf_token})
+            self.client.cookies.update({"csrftoken":voting_csrf_token})
 
-        # if not csrf_token:
-        #     print(f'Failed to get CSRF token for user {self.singpass_id} in district {self.district}')
-        #     return
+            # # print(f'After update cookies: {self.client.cookies}')
 
-        self.client.headers.update({"X-CSRFToken":voting_csrf_token})
-        self.client.cookies.update({"csrftoken":voting_csrf_token})
+            candidate_choice = random.choice(CANDIDATE_IN_DISTRICT[self.district])
+            header = {"X-CSRFToken":voting_csrf_token, "Referer": self.client.base_url + "/voter_home/ballot_paper/",\
+                    "Origin": self.client.base_url, "X-Locust-Test":"true"}
+            data = {"csrfmiddlewaretoken":voting_csrf_token, "candidate": [candidate_choice]}
 
-        # # print(f'After update cookies: {self.client.cookies}')
+            # # print(f'Header in cast vote for {self.singpass_id}: {header}')
+            # # print(f'Data in cast vote for {self.singpass_id}: {data}')
 
-        candidate_choice = random.choice(CANDIDATE_IN_DISTRICT[self.district])
-        header = {"X-CSRFToken":voting_csrf_token, "Referer": self.client.base_url + "/voter_home/ballot_paper/",\
-                   "Origin": self.client.base_url, "X-Locust-Test":"true"}
-        data = {"csrfmiddlewaretoken":voting_csrf_token, "candidate": [candidate_choice]}
-
-        # # print(f'Header in cast vote for {self.singpass_id}: {header}')
-        # # print(f'Data in cast vote for {self.singpass_id}: {data}')
-
-        response = self.client.post("/voter_home/ballot_paper/cast_vote/",\
-                                     data=data, headers=header, allow_redirects=True)
+            response = self.client.post("/voter_home/ballot_paper/cast_vote/",\
+                                        data=data, headers=header, allow_redirects=True)
         
-        # # the problem right now is cast vote func not call
-        if response.status_code == 200 and 'Ballot Paper' in response.text:
-            print(f'Voted for user {self.singpass_id} to vote for {candidate_choice} in district {self.district}')
-            self.has_voted = True
-            self.client.get("/logout") 
+            if response.status_code == 200 and 'Ballot Paper' in response.text:
+                # if not voted, try again
+                if not self.check_vote_status(response, candidate_choice):
+                    response = self.client.post("/voter_home/ballot_paper/cast_vote/",\
+                                                data=data, headers=header, allow_redirects=True)
+                    if response.status_code == 200 and 'Ballot Paper' in response.text:
+                        if not self.check_vote_status(response, candidate_choice):
+                            print(f'Failed to vote for user {self.singpass_id} to vote for {candidate_choice} in district {self.district}')
+                            return
         else:
-            print(f'Failed to vote for user {self.singpass_id} to vote for {candidate_choice} in district {self.district}')
-            # print(f"Status code: {response.status_code}")
-            # print(f"Cookies: {dict(response.cookies)}")
-            # print(f"Headers: {dict(response.headers)}")
-            # print(f"Content: {response.text[:200]}...")
+            print(f'Failed to view ballot paper for user {self.singpass_id} in district {self.district}')
             return
         
         # need to logout to view result
         # raise StopUser()
+    
+    def check_vote_status(self, response, candidate_choice):
+        response = self.client.get("/voter_home/")
+        if response.status_code == 200 and "Haven't Voted" not in response.text:
+            print(f'Voted for user {self.singpass_id} to vote for {candidate_choice} in district {self.district}')
+            self.has_voted = True
+            self.client.get("/logout") 
+            return True
+        return False
+        
     
     def general_user_actions(self):
         action = random.choice(["home_page", "view_announcements", "view_districts", "view_district_ongoing"])
@@ -198,4 +189,5 @@ class SingpassUser(HttpUser):
         
     
     def on_stop(self):
-        self.client.get("/logout") # kill the session (we dont have auto kill session)
+        # self.client.get("/logout") # kill the session (we dont have auto kill session)
+        self.client.cookies.clear()

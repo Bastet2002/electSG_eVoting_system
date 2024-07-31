@@ -7,6 +7,8 @@ import random
 import string
 from . import config
 from django.db import transaction
+import os
+import base64
 
 random.seed(config.randomseed)
 
@@ -33,16 +35,16 @@ class Command(BaseCommand):
         singpass_users = []
         SINGPASS_USERS = []
         with transaction.atomic():
-            for id in generated_strings:
-                SINGPASS_USERS.append(SingpassUser(
-                    singpass_id=id,
-                    password=make_password('123'),
-                    full_name=fake.name(),
-                    date_of_birth='1980-01-01',
-                    phone_num='09876543',
-                    district='CLEMENTI'
-                ))
-                singpass_users.append(f"{id} 123 CLEMENTI")
+            # for id in generated_strings:
+            #     SINGPASS_USERS.append(SingpassUser(
+            #         singpass_id=id,
+            #         password=make_password('123'),
+            #         full_name=fake.name(),
+            #         date_of_birth='1980-01-01',
+            #         phone_num='09876543',
+            #         district='CLEMENTI'
+            #     ))
+            #     singpass_users.append(f"{id} 123 CLEMENTI")
 
             # for testing config stress test
             for district in config.districts_mocked:
@@ -54,7 +56,8 @@ class Command(BaseCommand):
                         full_name=fake.name(),
                         date_of_birth='1980-01-01',
                         phone_num='09876543',
-                        district=district
+                        district=district,
+                        salt=base64.b64encode(os.urandom(32)).decode('utf-8')
                     ))
                     singpass_users.append(f"{id} 123 {district}")
             SingpassUser.objects.bulk_create(SINGPASS_USERS)

@@ -11,7 +11,8 @@ class SingpassBackend(BaseBackend):
         try:
             singpass_user = SingpassUser.objects.get(singpass_id=singpass_id)
             if check_password(password, singpass_user.password):
-                hash_info, salt = self.generate_hash(singpass_user)
+                salt = singpass_user.salt
+                hash_info = self.generate_hash(singpass_user)
                 # Fetch voter with matching district and hash_info
                 voter = Voter.objects.filter(district__district_name=singpass_user.district.upper(), hash_from_info=hash_info).first()
                 if not voter:
@@ -20,9 +21,8 @@ class SingpassBackend(BaseBackend):
                     if voter:
                         # Voter found with empty hash_info, update hash_info and last_login
                         voter.hash_from_info = hash_info
-                        voter.salt = salt
                         voter.last_login = timezone.now()
-                        voter.save(update_fields=['last_login', 'hash_from_info', 'salt'])
+                        voter.save(update_fields=['last_login', 'hash_from_info'])
                     else:
                         # No voter found with either empty or matching hash_info
                         return None
@@ -43,8 +43,7 @@ class SingpassBackend(BaseBackend):
             return None
 
     def generate_hash(self, singpass_user):
-        salt = base64.b64encode(os.urandom(32)).decode('utf-8')
-        hash_input = f"{singpass_user.singpass_id}{singpass_user.full_name}{singpass_user.date_of_birth}{singpass_user.phone_num}{singpass_user.district}{salt}"
+        hash_input = f"{singpass_user.singpass_id}{singpass_user.full_name}{singpass_user.date_of_birth}{singpass_user.phone_num}{singpass_user.district}{singpass_user.salt}"
         hash_value = hashlib.sha256(hash_input.encode()).hexdigest()
         print(hash_value)
-        return hash_value, salt
+        return hash_value

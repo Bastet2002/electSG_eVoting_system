@@ -5,9 +5,27 @@ from pygrpc import ringct_pb2_grpc, ringct_pb2
 
 import logging
 import os
+import json
 
 # global variable for the channel
-channel = grpc.insecure_channel(os.getenv("RINGCT_URL"))
+service_config = {
+    "methodConfig": [{
+        "name": [{"service": "YourServiceName"}],
+        "retryPolicy": {
+            "maxAttempts": 5,
+            "initialBackoff": "0.1s",
+            "maxBackoff": "1s",
+            "backoffMultiplier": 2,
+            "retryableStatusCodes": [
+                "UNAVAILABLE"
+            ]
+        }
+    }]
+}
+
+# Convert the service configuration to JSON string
+service_config_json = json.dumps(service_config)
+channel = grpc.insecure_channel(os.getenv("RINGCT_URL"), options=[('grpc.service_config', service_config_json)])
 stub = ringct_pb2_grpc.RingCT_ServiceStub(channel)
 
 class GrpcError(Exception):
