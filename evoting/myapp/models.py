@@ -18,6 +18,7 @@ class SingpassUser(models.Model):
     date_of_birth = models.DateField()
     phone_num = models.CharField(max_length=20)
     district = models.CharField(max_length=20)
+    salt = models.CharField(max_length=64, null=True)
 
 # PROFILE Model
 class Profile(models.Model):

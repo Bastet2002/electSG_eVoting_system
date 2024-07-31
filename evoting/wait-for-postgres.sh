@@ -43,15 +43,19 @@ command python manage.py migrate
 command python manage.py loaddata ./dbinit/initial_data.json
 command python manage.py create_election_phase
 command python manage.py create_admin_acc
+command python manage.py create_district_data
 command python manage.py create_mock_singpass_data
+command python manage.py create_candidate_data
 
-python ./pygrpc/test_init.py # this required the ringct database to be up
+# python ./pygrpc/test_init.py # TODO: remove this line after testing, activate pooling day now
 
 # production grade deployment 
 if [ "$ENVIRONMENT" = "dev" ]; then 
   echo "Running in aws development"
-  command python manage.py collectstatic --noinput && gunicorn --bind 0.0.0.0:8000 evoting.wsgi:application 
+  # TODO need to change after i reduce the config
+  command python manage.py collectstatic --noinput && gunicorn --workers=4 --threads=2 --bind 0.0.0.0:8000 evoting.wsgi:application 
 else
   echo "Running in local development"
-  command python manage.py collectstatic --noinput && python manage.py runsslserver 0.0.0.0:8000 --certificate /app/ssl/localhost.crt --key /app/ssl/localhost.key
+  # command python manage.py collectstatic --noinput && python manage.py runsslserver 0.0.0.0:8000 --certificate /app/ssl/localhost.crt --key /app/ssl/localhost.key
+  command python manage.py collectstatic --noinput && gunicorn --certfile=/app/ssl/localhost.crt --keyfile=/app/ssl/localhost.key evoting.wsgi:application --bind 0.0.0.0:8000
 fi

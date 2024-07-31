@@ -2,6 +2,9 @@
 from django.core.management.base import BaseCommand
 from django.contrib.auth.hashers import make_password
 from myapp.models import UserAccount, Profile
+import logging
+
+logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
     help = 'Create initial admin account'
@@ -28,4 +31,5 @@ class Command(BaseCommand):
 
         
        
+        logger.info('Admin account creation completed')
             

@@ -74,3 +74,19 @@ class Vote_Response(_message.Message):
     has_voted: bool
     test_output: str
     def __init__(self, candidate_id: _Optional[int] = ..., voter_id: _Optional[int] = ..., key_image: _Optional[str] = ..., has_voted: bool = ..., test_output: _Optional[str] = ...) -> None: ...
+
+class Filter_Non_Voter_Request(_message.Message):
+    __slots__ = ("district_ids",)
+    DISTRICT_IDS_FIELD_NUMBER: _ClassVar[int]
+    district_ids: _containers.RepeatedScalarFieldContainer[int]
+    def __init__(self, district_ids: _Optional[_Iterable[int]] = ...) -> None: ...
+
+class Filter_Non_Voter_Response(_message.Message):
+    __slots__ = ("district_ids", "voter_ids", "test_output")
+    DISTRICT_IDS_FIELD_NUMBER: _ClassVar[int]
+    VOTER_IDS_FIELD_NUMBER: _ClassVar[int]
+    TEST_OUTPUT_FIELD_NUMBER: _ClassVar[int]
+    district_ids: _containers.RepeatedScalarFieldContainer[int]
+    voter_ids: _containers.RepeatedScalarFieldContainer[int]
+    test_output: str
+    def __init__(self, district_ids: _Optional[_Iterable[int]] = ..., voter_ids: _Optional[_Iterable[int]] = ..., test_output: _Optional[str] = ...) -> None: ...

@@ -25,6 +25,8 @@ using ringct::Gen_VoterCurr_Response;
 using ringct::RingCT_Service;
 using ringct::Vote_Request;
 using ringct::Vote_Response;
+using ringct::Filter_Non_Voter_Request;
+using ringct::Filter_Non_Voter_Response;
 
 using namespace std;
 
@@ -82,6 +84,20 @@ void compute_total_vote_to_compute_total_vote_response(Calculate_Total_Vote_Resp
     for (int id : compute_total_vote.district_ids)
         response.add_district_ids(id);
     response.set_test_output(compute_total_vote.test_output);
+}
+
+void filter_non_voter_request_to_filter_non_voter(Filter_voter &filter_non_voter, const Filter_Non_Voter_Request &request)
+{
+    filter_non_voter.district_ids.insert(filter_non_voter.district_ids.end(), request.district_ids().begin(), request.district_ids().end());
+}
+
+void filter_non_voter_to_filter_non_voter_response(Filter_Non_Voter_Response &response, const Filter_voter &filter_non_voter)
+{
+    for (int id : filter_non_voter.district_ids)
+        response.add_district_ids(id);
+    for (int id : filter_non_voter.voter_ids)
+        response.add_voter_ids(id);
+    response.set_test_output(filter_non_voter.test_output);
 }
 
 // ------------------------------ server class logic ------------------------------
@@ -196,6 +212,29 @@ public:
         compute_total_vote_to_compute_total_vote_response(*response, compute_total_vote);
         return Status::OK;
     }
+
+    Status Filter_Non_Voter(ServerContext *context, const Filter_Non_Voter_Request *request, Filter_Non_Voter_Response *response) override
+    {
+        if (request->district_ids().empty())
+        {
+            return Status(grpc::INVALID_ARGUMENT, "district_ids is empty");
+        }
+
+        Filter_voter filter_non_voter;
+        filter_non_voter_request_to_filter_non_voter(filter_non_voter, *request);
+
+        try
+        {
+            CA_filter_non_voter(filter_non_voter);
+        }
+        catch (const std::exception &e)
+        {
+            return Status(grpc::INTERNAL, e.what());
+        }
+
+        filter_non_voter_to_filter_non_voter_response(*response, filter_non_voter);
+        return Status::OK;
+    }
 };
 
 // ------------------------------ server run ------------------------------
@@ -226,6 +265,7 @@ int main(int argc, char **argv)
         cout << "sodium_init failed" << endl;
         return 1;
     }
+
     // RangeProof rp;
     // BYTE bf[32];
     // crypto_core_ed25519_scalar_random(bf);

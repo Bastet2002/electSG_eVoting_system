@@ -25,4 +25,5 @@ vector<int32_t> get_district_ids();
 vector<int32_t> get_candidate_ids(const int32_t &district_id);
 void count_write_vote(const int32_t district_id, const int32_t candidate_id, const User &candidate);
 vector<StealthAddress> grab_decoys(const int32_t district_id, const StealthAddress& signerSA);
+vector<int32_t> get_voter_ids(const int32_t district_id);
 #endif

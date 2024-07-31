@@ -2,13 +2,16 @@ from django.contrib.auth.backends import BaseBackend
 from myapp.models import SingpassUser, Voter
 from django.utils import timezone
 from django.contrib.auth.hashers import check_password
+import hashlib
+import base64
+import os
 
 class SingpassBackend(BaseBackend):
     def authenticate(self, request, singpass_id=None, password=None, **kwargs):
         try:
             singpass_user = SingpassUser.objects.get(singpass_id=singpass_id)
             if check_password(password, singpass_user.password):
-                hash_info = self.generate_hash(singpass_user)
+                hash_info = SingpassBackend.generate_hash(singpass_user)
                 # Fetch voter with matching district and hash_info
                 voter = Voter.objects.filter(district__district_name=singpass_user.district.upper(), hash_from_info=hash_info).first()
                 if not voter:
@@ -38,10 +41,9 @@ class SingpassBackend(BaseBackend):
         except Voter.DoesNotExist:
             return None
 
-    def generate_hash(self, singpass_user):
-        import hashlib
-        hash_input = f"{singpass_user.singpass_id}{singpass_user.full_name}{singpass_user.date_of_birth}{singpass_user.phone_num}{singpass_user.district}"
+    @staticmethod
+    def generate_hash(singpass_user):
+        hash_input = f"{singpass_user.singpass_id}{singpass_user.full_name}{singpass_user.date_of_birth}{singpass_user.phone_num}{singpass_user.district}{singpass_user.salt}"
         hash_value = hashlib.sha256(hash_input.encode()).hexdigest()
         print(hash_value)
         return hash_value
-

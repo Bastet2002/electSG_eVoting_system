@@ -80,4 +80,7 @@ urlpatterns = [
     path('delete-non-master-credentials/', views.delete_non_master_credentials, name='delete_non_master_credentials'),
     path('my_account/', views.my_account, name='my_account'),
     path('check-current-password/', views.check_current_password, name='check_current_password'),
+
+    # Filter non voter
+    path('admin_home/filter_non_voter/', views.filter_non_voter, name='filter_non_voter')
 ]

@@ -515,3 +515,22 @@ void count_write_vote(const int32_t district_id, const int32_t candidate_id, con
     cout << "Total vote for candidate in district " << " is " << total_vote << endl;
     W.commit();
 }
+
+vector<int32_t> get_voter_ids(const int32_t district_id){
+    pqxx::connection C(cnt_django);
+    if (!C.is_open())
+    {
+        throw runtime_error("Failed to open connection to " + string(C.dbname()));
+    }
+    pqxx::work W(C);
+
+    C.prepare("get voter ids in district", "select * from myapp_voter where district_id=$1 and hash_from_info<>'' and hash_from_info is not null;");
+    pqxx::result r = W.exec_prepared("get voter ids in district", district_id);
+
+    vector<int32_t> voter_ids;
+    for (const auto &row : r)
+    {
+        voter_ids.push_back(row["voter_id"].as<int32_t>());
+    }
+    return voter_ids;
+}

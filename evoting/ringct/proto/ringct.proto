@@ -9,6 +9,7 @@ service RingCT_Service {
     rpc Generate_CandidateKeys (Gen_Candidate_Request) returns (Gen_Candidate_Response) {}
     rpc Compute_Vote(Vote_Request) returns (Vote_Response) {}
     rpc Calculate_Total_Vote(Calculate_Total_Vote_Request) returns (Calculate_Total_Vote_Response) {}
+    rpc Filter_Non_Voter(Filter_Non_Voter_Request) returns (Filter_Non_Voter_Response) {}
 }
 
 message Gen_VoterCurr_Request{
@@ -53,4 +54,14 @@ message Vote_Response{
     string key_image = 3;
     bool has_voted = 4;
     string test_output = 5; // TODO temporary for printing
+}
+
+message Filter_Non_Voter_Request{
+    repeated int32 district_ids = 1;
+}
+
+message Filter_Non_Voter_Response{
+    repeated int32 district_ids = 1;
+    repeated int32 voter_ids =2;
+    string test_output = 3; // TODO temporary for printing
 }
