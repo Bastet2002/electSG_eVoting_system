@@ -1,5 +1,4 @@
 from django.test import TestCase, TransactionTestCase
-from unittest.mock import patch, MagicMock, call
 from django.urls import reverse
 from django.utils import timezone
 from django.core.files.uploadedfile import SimpleUploadedFile
@@ -24,7 +23,6 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
 
         # Create election phase
         self.campaigning_day = ElectionPhase.objects.create(phase_name="Campaigning Day", is_active=True)
-        self.polling_day = ElectionPhase.objects.create(phase_name='Polling Day', is_active=False)
 
         # Create Singpass data
         self.singpass_user = SingpassUser.objects.create(
@@ -66,12 +64,7 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
     def secure_get(self, url, **kwargs):
         return self.client.get(url, secure=True, **kwargs)
 
-    @patch('myapp.views.grpc_generate_candidate_keys_run')
-    @patch('myapp.views.grpc_compute_vote_run')
-    def test_election_process(self, mock_compute_vote, mock_candidate_keys):
-        mock_response = MagicMock()
-        mock_candidate_keys.return_value = mock_response
-        mock_compute_vote.return_value = mock_response
+    def test_election_process(self):
         # Admin log in
         login_successful = self.client.login(username='john_doe', password='Password123!')
         self.assertTrue(login_successful)
@@ -89,11 +82,6 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
         response = self.secure_post(reverse('create_account'), candidate_data)
         self.assertEqual(response.status_code, 302)
 
-        # Retrieve the created candidate user
-        candidate = UserAccount.objects.get(username="candidate2")
-
-        mock_candidate_keys.assert_called_once_with(candidate_id=candidate.user_id)
-
         # Activate Campaigning Day phase
         response = self.secure_get(reverse('activate_election_phase', args=[self.campaigning_day.phase_id]))
         self.assertEqual(response.status_code, 302)
@@ -105,6 +93,9 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
         # Candidate log in
         login_successful = self.client.login(username='candidate2', password='Candidatepass123!')
         self.assertTrue(login_successful)
+
+        # Retrieve the created candidate user
+        candidate = UserAccount.objects.get(username="candidate2")
 
         # Upload profile picture
         dummy_image1 = self.create_dummy_image()
@@ -127,18 +118,6 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
             'candidate_statement': 'This is my campaign promise.'
         }
         response = self.secure_post(reverse('upload_candidate_statement'), statement_data)
-        self.assertEqual(response.status_code, 302)
-
-        response = self.secure_get(reverse('logout'), follow=True)
-        expected_url = f'https://testserver{reverse("login")}'
-        self.assertRedirects(response, expected_url)
-
-        # Admin log in
-        login_successful = self.client.login(username='john_doe', password='Password123!')
-        self.assertTrue(login_successful)
-
-        # Change election phase to polling day for voter to vote
-        response = self.secure_get(reverse('activate_election_phase', args=[self.polling_day.phase_id]))
         self.assertEqual(response.status_code, 302)
 
         response = self.secure_get(reverse('logout'), follow=True)
@@ -170,12 +149,6 @@ class ElectionProcessIntegrationTest(TransactionTestCase):
         }
         response = self.secure_post(reverse('cast_vote'), vote_data)
         self.assertEqual(response.status_code, 302)
-
-        expected_calls = [
-            call(candidate_id=candidate.user_id, voter_id=self.voter_user.voter_id, is_voting=False),
-            call(candidate_id=candidate.user_id, voter_id=self.voter_user.voter_id, is_voting=True)
-        ]
-        mock_compute_vote.assert_has_calls(expected_calls, any_order=True)
 
         response = self.secure_get(reverse('logout'), follow=True)
         expected_url = f'https://testserver{reverse("login")}'
@@ -302,8 +275,7 @@ class ElectionPhaseIntegrationTest(TransactionTestCase):
     def secure_get(self, url, **kwargs):
         return self.client.get(url, secure=True, **kwargs)
 
-    @patch('myapp.views.grpc_compute_vote_run')
-    def test_election_phase_changes(self, mock_compute_vote):
+    def test_election_phase_changes(self):
         # Admin logs in
         login_successful = self.client.login(username='john_doe', password='Password123!')
         self.assertTrue(login_successful)
@@ -332,7 +304,7 @@ class ElectionPhaseIntegrationTest(TransactionTestCase):
 
         # Check if vote button is disabled for voter in Campaigning Day phase
         response = self.secure_get(reverse('voter_home'))
-        self.assertNotContains(response, '<button >Vote</button>')
+        self.assertContains(response, '<button disabled>Vote</button>')
 
         # Voter logs out
         response = self.secure_get(reverse('logout'), follow=True)

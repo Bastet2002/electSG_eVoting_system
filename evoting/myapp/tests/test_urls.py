@@ -3,6 +3,22 @@ from django.urls import reverse, resolve
 from myapp import views
 
 class TestUrls(SimpleTestCase):
+    def test_login_url(self):
+        url = reverse('login')
+        self.assertEquals(resolve(url).func, views.user_login)
+
+    def test_logout_url(self):
+        url = reverse('logout')
+        self.assertEquals(resolve(url).func, views.user_logout)
+
+    def test_change_password_url(self):
+        url = reverse('change_password')
+        self.assertEquals(resolve(url).func, views.change_password)
+
+    def test_first_login_password_change_url(self):
+        url = reverse('first_login_password_change')
+        self.assertEquals(resolve(url).func, views.first_login_password_change)
+        
     def test_admin_home_url(self):
         url = reverse('admin_home')
         self.assertEquals(resolve(url).func, views.admin_home)
@@ -146,3 +162,51 @@ class TestUrls(SimpleTestCase):
     def test_view_all_announcements_url(self):
         url = reverse('view_all_announcements')
         self.assertEquals(resolve(url).func, views.view_announcements)
+
+    def test_webauthn_register_view_url(self):
+        url = reverse('webauthn_register_view')
+        self.assertEquals(resolve(url).func, views.webauthn_register_view)
+
+    def test_webauthn_register_options_url(self):
+        url = reverse('webauthn_register_options')
+        self.assertEquals(resolve(url).func, views.webauthn_register_options)
+
+    def test_webauthn_register_verify_url(self):
+        url = reverse('webauthn_register_verify')
+        self.assertEquals(resolve(url).func, views.webauthn_register_verify)
+
+    def test_webauthn_login_view_url(self):
+        url = reverse('webauthn_login_view')
+        self.assertEquals(resolve(url).func, views.webauthn_login_view)
+
+    def test_webauthn_login_options_url(self):
+        url = reverse('webauthn_login_options')
+        self.assertEquals(resolve(url).func, views.webauthn_login_options)
+
+    def test_webauthn_login_verify_url(self):
+        url = reverse('webauthn_login_verify')
+        self.assertEquals(resolve(url).func, views.webauthn_login_verify)
+
+    def test_webauthn_verify_view_url(self):
+        url = reverse('webauthn_verify')
+        self.assertEquals(resolve(url).func, views.webauthn_verify_view)
+
+    def test_delete_all_credentials_url(self):
+        url = reverse('delete_all_credentials', args=[1])
+        self.assertEquals(resolve(url).func, views.delete_all_credentials)
+
+    def test_delete_all_credentials_temp_url(self):
+        url = reverse('delete_all_credentials_temp')
+        self.assertEquals(resolve(url).func, views.delete_all_credentials_temp)
+
+    def test_delete_non_master_credentials_url(self):
+        url = reverse('delete_non_master_credentials')
+        self.assertEquals(resolve(url).func, views.delete_non_master_credentials)
+
+    def test_my_account_url(self):
+        url = reverse('my_account')
+        self.assertEquals(resolve(url).func, views.my_account)
+
+    def test_check_current_password_url(self):
+        url = reverse('check_current_password')
+        self.assertEquals(resolve(url).func, views.check_current_password)
