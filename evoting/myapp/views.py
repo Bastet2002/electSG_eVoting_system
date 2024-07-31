@@ -54,7 +54,6 @@ def user_login(request):
     else:
         return render(request, 'login.html')
 
-
 def check_current_password(request):
     data = json.loads(request.body)
     current_password = data.get('current_password')
@@ -78,7 +77,9 @@ def change_password(request):
                 return redirect('admin_home')
             elif user.role.profile_name == 'Candidate':
                 return redirect('candidate_home')
-            messages.success(request, 'Your password has been set.')
+            messages.success(request, 'Password changed successfully.')
+        else:
+            return render(request, 'changePassword.html', {'form': form})
     else:
         form = PasswordChangeForm(request.user)
 
@@ -204,7 +205,8 @@ def handle_single_user_creation(request):
         user = form.save(commit=False)
         user.password = make_password(form.cleaned_data['password'])
         user.save()
-        create_additional_candidate_data(request, user)
+        if user.role.profile_name == 'Candidate':
+            create_additional_candidate_data(request, user)
         messages.success(request, 'Account successfully created.')
         return redirect('create_account')
     else:
@@ -248,15 +250,15 @@ def edit_account(request, user_id):
     user = get_object_or_404(UserAccount, pk=user_id)
     current_phase = ElectionPhase.objects.filter(is_active=True).first()
     if request.method == 'POST':
-        form = EditUser(request.POST, instance=user)
+        form = EditUser(request.POST, instance=user, user=user)
         if form.is_valid():
             form.save()
             messages.success(request, 'Account successfully updated.')
-            return redirect('view_user_accounts')
+            return redirect('view_accounts')
         else:
             messages.error(request, 'Invalid form submission.')
     else:
-        form = EditUser(instance=user)
+        form = EditUser(instance=user, user=user)
     return render(request, 'userAccount/updateUserAcc.html', {'form': form, 'current_phase': current_phase, 'user': user})
 
 @flexible_access('admin')
@@ -264,12 +266,12 @@ def delete_account(request, user_id):
     disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the account at this time.')
-        return redirect('view_user_accounts')
+        return redirect('view_accounts')
     
     user = get_object_or_404(UserAccount, pk=user_id)
     if request.method == 'POST':
         user.delete()
-        return redirect('view_user_accounts')
+        return redirect('view_accounts')
     return HttpResponse(status=405)
 
 # ---------------------------------------Election phase views------------------------------------------------
@@ -298,8 +300,7 @@ def create_district(request, upload_type=None):
         if disable_creation:
             messages.error(request, 'You do not have permission to create the districts at this time.')
             return redirect('create_district')
-        # csv_form = CSVUploadForm(request.POST, request.FILES)
-        # form = CreateDistrict(request.POST)
+        
         if upload_type == 'csv_upload':
             return handle_district_csv_upload(request)
         else:
@@ -344,9 +345,6 @@ def handle_district_csv_upload(request):
 def handle_single_district_creation(request):
     form = CreateDistrict(request.POST)
     if form.is_valid():
-        # with transaction.atomic():
-        #     district = form.save()
-        #     transaction.on_commit(lambda: create_additional_voter_data(request, district))
         district = form.save(commit=False)
         district.save()
         create_additional_voter_data(request, district)
@@ -587,6 +585,7 @@ def singpass_login(request):
         user = authenticate(request, singpass_id=singpass_id, password=password)
         if user is not None:
             login(request, user)
+            messages.success(request, 'Log in successful.')
             return redirect('voter_home') 
         else:
             return render(request, 'singpassLogin.html', {'error': 'Invalid username or password.'})
@@ -613,8 +612,11 @@ def voter_home(request):
     disable_vote = not current_phase or current_phase.phase_name != 'Polling Day'
     
     # check if the voter already voted
-    res = grpc_compute_vote_run(candidate_id=candidates[0].candidate_id, voter_id=voter.voter_id, is_voting=False)
-    voting_status = "Voted" if res.has_voted else "Haven't Voted"
+    if candidates:
+        res = grpc_compute_vote_run(candidate_id=candidates[0].candidate_id, voter_id=voter.voter_id, is_voting=False)
+        voting_status = "Voted" if res.has_voted else "Haven't Voted"
+    else:
+        voting_status = "Haven't Voted"
 
     return render(request, 'Voter/voterPg.html', {
         'candidates': candidates,
