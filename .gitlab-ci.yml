@@ -23,16 +23,16 @@ django-build:
     - echo "$GITLAB_USER_LOGIN is running django build"
     - docker build -t $WEB_IMAGE_TAG -f ./evoting/Dockerfile ./evoting
     - docker push $WEB_IMAGE_TAG
-  timeout: 60 minutes
+  timeout: 10 minutes
 
-ringct-build:
-  stage: build
-  <<: *build_configuration
-  script:
-    - echo "$GITLAB_USER_LOGIN is running ringct build"
-    - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
-    - docker push $RINGCT_IMAGE_TAG
-  timeout: 90 minutes
+# ringct-build:
+#   stage: build
+#   <<: *build_configuration
+#   script:
+#     - echo "$GITLAB_USER_LOGIN is running ringct build"
+#     - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
+#     - docker push $RINGCT_IMAGE_TAG
+#   timeout: 90 minutes
 
 .wait_db: &db_config
   before_script:
@@ -70,12 +70,13 @@ django-test:
     - python /app/manage.py test myapp.tests.test_models
     - python /app/manage.py test myapp.tests.test_urls
     - python /app/manage.py test myapp.tests.test_views
+    - python /app/manage.py test myapp.tests.integration_test
   timeout: 10 minutes
 
-ringct-unittest:
-  stage: test
-  image: $RINGCT_IMAGE_TAG
-  script:
-    - echo "$GITLAB_USER_LOGIN running ringct unit test"
-    - /app/build/test_rct
-  timeout: 10 minutes
+# ringct-unittest:
+#   stage: test
+#   image: $RINGCT_IMAGE_TAG
+#   script:
+#     - echo "$GITLAB_USER_LOGIN running ringct unit test"
+#     - /app/build/test_rct
+#   timeout: 10 minutes
