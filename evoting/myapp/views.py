@@ -293,7 +293,8 @@ def activate_election_phase(request, phase_id):
 @flexible_access('admin')
 def list_election_phases(request):
     phases = ElectionPhase.objects.all()
-    return render(request, 'electionPhase/listPhases.html', {'phases': phases})
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    return render(request, 'electionPhase/listPhases.html', {'phases': phases, 'current_phase':current_phase})
 
 # ---------------------------------------District views-----------------------------------------------------
 @flexible_access('admin')

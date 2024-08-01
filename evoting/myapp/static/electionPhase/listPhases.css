@@ -83,3 +83,21 @@ tr:hover {
 .popup-alert.show {
     display: block;
 }
+
+.button-container{
+    margin: 0 auto; 
+    width: 65%; 
+    padding: 20px; 
+    margin-top: 40px;
+    background-color: #f1f1f1; 
+    border-radius: 8px; 
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+    display: flex;
+    align-items: center;
+    
+}
+
+.button-container p{
+    padding: auto;
+    margin: 0;
+}
