@@ -116,6 +116,10 @@ class UserAccount(AbstractBaseUser):
         if self.date_of_birth and self.role and self.role.profile_name.lower() == 'candidate':
             if self.date_of_birth > date.today() - relativedelta(years=45):
                 raise ValidationError({"date_of_birth": "Candidate must be at least 45 years old."})
+            if not self.party:
+                raise ValidationError({'party': 'Party is required for Candidates'})
+            if not self.district:
+                raise ValidationError({'district': 'District is required for Candidates'})
 
     def clean_username(self):
         if self.username:

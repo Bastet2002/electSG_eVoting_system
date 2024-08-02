@@ -27,11 +27,14 @@
             {% endfor %}
         </table>
     </div>
-
-    <div class="container">
-        <a href="{% url 'filter_non_voter' %}" class="btn btn-primary">Filter Login Non-voter</a>
+    {% if current_phase.phase_name == 'End Election' %}
+    <div class="button-container">
+        <p> Download a list of voters who did not vote: </p>
+        <a href="{% url 'filter_non_voter' %}">Download</a>
     </div>
+    {% endif %}
 </div>
+
 {% if messages %}
     <div id="popupAlert" class="popup-alert show">
         {% for message in messages %}

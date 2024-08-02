@@ -61,6 +61,7 @@ def check_current_password(request):
     is_valid = request.user.check_password(current_password)
     return JsonResponse({'is_valid': is_valid})
 
+@flexible_access('admin', 'candidate')
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
@@ -116,6 +117,7 @@ def first_login_password_change(request):
 
     return render(request, 'firstLogin.html', {'form': form})
 
+@flexible_access('admin', 'candidate')
 def my_account(request):
     password_form = PasswordChangeForm(request.user)
     return render(request, 'myAccount.html', {'password_form': password_form})
@@ -291,7 +293,8 @@ def activate_election_phase(request, phase_id):
 @flexible_access('admin')
 def list_election_phases(request):
     phases = ElectionPhase.objects.all()
-    return render(request, 'electionPhase/listPhases.html', {'phases': phases})
+    current_phase = ElectionPhase.objects.filter(is_active=True).first()
+    return render(request, 'electionPhase/listPhases.html', {'phases': phases, 'current_phase':current_phase})
 
 # ---------------------------------------District views-----------------------------------------------------
 @flexible_access('admin')
@@ -664,7 +667,6 @@ def ballot_paper(request):
 @flexible_access('voter')
 def cast_vote(request):
     if request.method == 'POST':
-
         current_phase = ElectionPhase.objects.filter(is_active=True).first()
         if not current_phase or current_phase.phase_name != 'Polling Day':
             messages.error(request, 'Sorry, you can not vote at this time around.')
@@ -684,7 +686,6 @@ def cast_vote(request):
             return redirect('voter_home')
 
         double_voting_detected = False  # Flag to check if double voting error occurred
-
         for candidate_id in selected_candidates:
             try:
                 grpc_compute_vote_run(candidate_id=int(candidate_id), voter_id=voter.voter_id, is_voting=True)
