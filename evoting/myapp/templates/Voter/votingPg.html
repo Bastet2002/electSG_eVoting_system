@@ -37,27 +37,10 @@
             <button type="submit">Submit</button>
         </div>
     </form>
-
-    {% if messages %}
-        <div class="errors" id="messages">
-            {% for message in messages %}
-            {% if message %}
-            <p class="error">{{ message }}</p>
-            {% endif %}
-            {% endfor %}
-        </div>
-    {% endif %}
 </div>
 
 <script>
     document.addEventListener("DOMContentLoaded", function() {
-        const messagesContainer = document.getElementById("messages");
-        if (messagesContainer) {
-            setTimeout(() => {
-                messagesContainer.innerHTML = "";
-            }, 3000);
-        }
-
         // Limit selection to one checkbox
         const checkboxes = document.querySelectorAll('.candidate-checkbox');
         checkboxes.forEach(checkbox => {
