@@ -22,18 +22,20 @@ SCENARIO("Test the consistency of the compute stealth address function", "[steal
         {
             vector<string> tokens = tokeniser(aline);
 
-            REQUIRE(tokens.size() == 5); // pkS, pkV, r, rG, pk
+            REQUIRE(tokens.size() == 7); // pkS, pkV, skS, skV, r, rG, pk
 
-            string pkV = tokens[1];
             string pkS = tokens[0];
-            User user(tokens[1], tokens[0]); // pkV, pkS
+            string pkV = tokens[1];
+            string skS = tokens[2];
+            string skV = tokens[3];
+            User user(tokens[1], tokens[0]); // Use the constructor that takes all four parameters
 
             BYTE expected_r[32];
             BYTE expected_rG[32];
             BYTE expected_pk[32];
-            hex_to_bytearray(expected_r, tokens[2]);
-            hex_to_bytearray(expected_rG, tokens[3]);
-            hex_to_bytearray(expected_pk, tokens[4]);
+            hex_to_bytearray(expected_r, tokens[4]);
+            hex_to_bytearray(expected_rG, tokens[5]);
+            hex_to_bytearray(expected_pk, tokens[6]);
 
             i++;
 

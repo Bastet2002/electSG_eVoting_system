@@ -32,11 +32,13 @@ void gen_compute_stealth_address_file(const string &output_file, const string &i
 
                 User user;
 
-                string pkS, pkV;
+                string pkS, pkV, skS, skV;
                 to_string(pkS, user.pkS, 32);
                 to_string(pkV, user.pkV, 32);
-                
-                outfile <<  pkS << " " << pkV << " ";
+                to_string(skS, user.skS, 64);
+                to_string(skV, user.skV, 64);
+
+                outfile <<  pkS << " " << pkV << " " << skS << " " << skV << " ";
 
                 memset(fixed_random_seed, 0x4f, sizeof(fixed_random_seed)); // you can set whatever you want for the seed
                 counter = 0;

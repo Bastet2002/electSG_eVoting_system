@@ -9,6 +9,22 @@
 #include "../test/text/gen_hash.cpp"
 #include "../test/text/gen_add_keys.cpp"
 #include "../test/text/gen_computeSA.cpp"
+#include "../test/text/gen_compute_message.cpp"
+#include "../test/text/gen_compute_key_image.cpp"
+#include "../test/text/gen_XOR_signer.cpp"
+#include "../test/text/gen_XOR_receiver.cpp"
+#include "../test/text/gen_receiver_test_stealth_address.cpp"
+#include "../test/text/gen_compute_commitment_mask.cpp"
+#include "../test/text/gen_pseudoBF.cpp"
+#include "../test/text/gen_bool_verify_commitment_balancing.cpp"
+#include "../test/text/gen_voting_currency.cpp"
+#include "../test/text/gen_compute_commitment_simple.cpp"
+#include "../test/text/gen_blindingFactors.cpp"
+#include "../test/text/gen_c1c2.cpp"
+#include "../test/text/gen_borromean.cpp"
+
+
+
 #include <filesystem>
 
 using grpc::Server;
@@ -293,6 +309,74 @@ int main(int argc, char **argv)
     // string input_path = filesystem::absolute("./test/text/hash_infile");
     // string output_path = filesystem::absolute("./test/text/stealth_address.txt");
     // gen_compute_stealth_address_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/hash_infile");
+    // string output_path = filesystem::absolute("./test/text/messages.txt");
+    // gen_compute_message_file(output_path, input_path); // not done
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address.txt");
+    // string output_path = filesystem::absolute("./test/text/XOR_signer.txt");
+    // gen_XOR_amount_mask_signer_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address.txt");
+    // string output_path = filesystem::absolute("./test/text/receiver_test_SA.txt");
+    // gen_receiver_test_stealth_address_file(output_path, input_path);
+    
+    // string input_path = filesystem::absolute("./test/text/stealth_address.txt");
+    // string output_path = filesystem::absolute("./test/text/commitment_mask.txt");
+    // gen_compute_commitment_mask_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address.txt");
+    // string output_path = filesystem::absolute("./test/text/XOR_receiver.txt");
+    // gen_XOR_amount_mask_receiver_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/commitment_mask.txt");
+    // string output_path = filesystem::absolute("./test/text/pseudoBF.txt");
+    // gen_pseudo_bfs_file(output_path, input_path);
+
+    // string stealth_address_file = "./test/text/stealth_address.txt";
+    // string bf_file = "./test/text/pseudoBF.txt";
+    // string output_file = "./test/text/commitment_balancing.txt";
+    // gen_verify_commitment_balancing_file(output_file, stealth_address_file, bf_file);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address.txt");
+    // string output_path = filesystem::absolute("./test/text/voting_currency.txt");
+    // gen_CA_generate_voting_currency_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/hash_infile");
+    // string output_path = filesystem::absolute("./test/text/stealth_address_signer.txt");
+    // gen_compute_stealth_address_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address_signer.txt");
+    // string output_path = filesystem::absolute("./test/text/receiver_test_SA_signer.txt");
+    // gen_receiver_test_stealth_address_file(output_path, input_path);
+    
+    // string input_path = filesystem::absolute("./test/text/receiver_test_SA_signer.txt");
+    // string output_path = filesystem::absolute("./test/text/key_image.txt");
+    // gen_compute_key_image_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address_signer.txt");
+    // string output_path = filesystem::absolute("./test/text/voting_currency.txt");
+    // gen_CA_generate_voting_currency_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address_signer.txt");
+    // string input_path2 = filesystem::absolute("./test/text/stealth_address.txt");
+    // string input_path3 = filesystem::absolute("./test/text/voting_currency.txt");
+    // string output_path = filesystem::absolute("./test/text/commitment_simple.txt");
+    // gen_compute_commitment_simple_file(output_path, input_path, input_path2, input_path3);
+
+    // string input_path = filesystem::absolute("./test/text/commitment_simple.txt");
+    // string output_path = filesystem::absolute("./test/text/blinding_factor.txt");
+    // gen_blinding_factors_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/blinding_factor.txt");
+    // string output_path = filesystem::absolute("./test/text/c1c2.txt");
+    // gen_compute_C1C2_file(output_path, input_path);
+
+    string input_path = filesystem::absolute("./test/text/blinding_factor.txt");
+    string input_path2 = filesystem::absolute("./test/text/c1c2.txt");
+    string output_path = filesystem::absolute("./test/text/borromean.txt");
+    gen_borromean_file(output_path, input_path, input_path2);
     
     RunServer();
 

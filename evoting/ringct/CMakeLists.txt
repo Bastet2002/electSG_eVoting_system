@@ -113,7 +113,8 @@ add_executable(test_rct
     "test/test_hash.cpp"
     "test/test_util.cc"
     "test/test_compute_stealth_address.cpp"
-    "test/test_add_keys.cpp")
+    "test/test_compute_commitment_simple.cpp"
+    )
 
 target_link_libraries(test_rct
     sodium
