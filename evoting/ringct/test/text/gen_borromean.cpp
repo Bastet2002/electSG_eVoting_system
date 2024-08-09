@@ -3,10 +3,21 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-#include <filesystem>
-#include <bitset>
+#include <sstream>
 #include <vector>
+#include <bitset>
 #include "../test_util.h"
+
+// Function to split a string by spaces
+std::vector<std::string> split_string(const std::string& str) {
+    std::vector<std::string> result;
+    std::istringstream iss(str);
+    std::string token;
+    while (iss >> token) {
+        result.push_back(token);
+    }
+    return result;
+}
 
 void gen_borromean_file(const string &output_file, const string &blinding_factors_file, const string &C1C2_file)
 {
@@ -20,28 +31,39 @@ void gen_borromean_file(const string &output_file, const string &blinding_factor
         {
             cout << "Successfully opened input files and output file" << endl;
 
-            string bf1_str, bf2_str;
-            string C1_str, C2_str;
+            string bf_str;
+            string C1C2_str;
             int line_count = 0;
 
-            while (getline(infile_bf, bf1_str) && getline(infile_bf, bf2_str) &&
-                   getline(infile_C1C2, C1_str) && getline(infile_C1C2, C2_str))
+            while (getline(infile_bf, bf_str) && getline(infile_C1C2, C1C2_str))
             {
                 line_count++;
                 cout << "Processing line " << line_count << endl;
 
                 try {
-                    // Convert blinding factors to BYTE arrays
-                    vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> x(8);
-                    hex_to_bytearray(x[0].data(), bf1_str);
-                    hex_to_bytearray(x[1].data(), bf2_str);
+                    // Split the input strings into components
+                    auto bf_components = split_string(bf_str);
+                    auto C1C2_components = split_string(C1C2_str);
+
+                    // Debugging output for component counts
+                    cout << "bf_components: " << bf_components.size() << endl;
+                    cout << "C1C2_components: " << C1C2_components.size() << endl;
+
+                    // Ensure each component has the expected length
+                    if (bf_components.size() != 2 || C1C2_components.size() != 16) {
+                        throw std::invalid_argument("Incorrect number of components in input strings");
+                    }
+
+                    // Convert blinding factor to BYTE array
+                    array<BYTE, crypto_core_ed25519_SCALARBYTES> x;
+                    hex_to_bytearray(x.data(), bf_components[0]);
 
                     // Convert C1 and C2 to BYTE arrays
                     vector<array<BYTE, crypto_core_ed25519_BYTES>> C1(8);
                     vector<array<BYTE, crypto_core_ed25519_BYTES>> C2(8);
                     for (int i = 0; i < 8; ++i) {
-                        hex_to_bytearray(C1[i].data(), C1_str.substr(i * 64, 64));
-                        hex_to_bytearray(C2[i].data(), C2_str.substr(i * 64, 64));
+                        hex_to_bytearray(C1[i].data(), C1C2_components[2 * i]);
+                        hex_to_bytearray(C2[i].data(), C1C2_components[2 * i + 1]);
                     }
 
                     // Hardcode the amount to 30, and set indices accordingly
@@ -54,7 +76,7 @@ void gen_borromean_file(const string &output_file, const string &blinding_factor
                     vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> bbs1(8);
 
                     // Generate Borromean ring signature
-                    generate_Borromean(x, C1, C2, indices, bbee, bbs0, bbs1);
+                    generate_Borromean({x}, C1, C2, indices, bbee, bbs0, bbs1);
 
                     // Convert results to strings and write to output file
                     string bbee_str;
