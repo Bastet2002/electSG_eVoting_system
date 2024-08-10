@@ -1,6 +1,6 @@
-# workflow:
-#   rules:
-#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 stages:
   - build
@@ -30,14 +30,14 @@ django-build:
     - docker push $WEB_IMAGE_TAG
   timeout: 60 minutes
 
-# ringct-build:
-#   stage: build
-#   <<: *build_configuration
-#   script:
-#     - echo "$GITLAB_USER_LOGIN is running ringct build"
-#     - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
-#     - docker push $RINGCT_IMAGE_TAG
-#   timeout: 90 minutes
+ringct-build:
+  stage: build
+  <<: *build_configuration
+  script:
+    - echo "$GITLAB_USER_LOGIN is running ringct build"
+    - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
+    - docker push $RINGCT_IMAGE_TAG
+  timeout: 90 minutes
 
 .wait_db: &db_config
   before_script:
@@ -69,21 +69,18 @@ django-test:
     PYTHONPATH: /app:/app/pygrpc
     DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
   <<: *db_config
-  # before_script:
-  #   - cd /app
-  #   - python manage.py makemigrations
-  #   - python manage.py migrate
   script:
     - echo "$GITLAB_USER_LOGIN running django unit test"
-    - python /app/manage.py test myapp.tests.test_models
-    - python /app/manage.py test myapp.tests.test_urls
-    - python /app/manage.py test myapp.tests.test_views
+    # wait-for-postgres.sh run the test automatically
+    # - python /app/manage.py test myapp.tests.test_models
+    # - python /app/manage.py test myapp.tests.test_urls
+    # - python /app/manage.py test myapp.tests.test_views
   timeout: 10 minutes
 
-# ringct-unittest:
-#   stage: test
-#   image: $RINGCT_IMAGE_TAG
-#   script:
-#     - echo "$GITLAB_USER_LOGIN running ringct unit test"
-#     - /app/build/test_rct
-#   timeout: 10 minutes
+ringct-test:
+  stage: test
+  image: $RINGCT_IMAGE_TAG
+  script:
+    - echo "$GITLAB_USER_LOGIN running ringct unit test"
+    - /app/build/test_rct
+  timeout: 10 minutes
