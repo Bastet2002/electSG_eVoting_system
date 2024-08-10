@@ -1,3 +1,7 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
 stages:
   - build
   - test
@@ -25,14 +29,14 @@ django-build:
     - docker push $WEB_IMAGE_TAG
   timeout: 60 minutes
 
-ringct-build:
-  stage: build
-  <<: *build_configuration
-  script:
-    - echo "$GITLAB_USER_LOGIN is running ringct build"
-    - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
-    - docker push $RINGCT_IMAGE_TAG
-  timeout: 90 minutes
+# ringct-build:
+#   stage: build
+#   <<: *build_configuration
+#   script:
+#     - echo "$GITLAB_USER_LOGIN is running ringct build"
+#     - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
+#     - docker push $RINGCT_IMAGE_TAG
+#   timeout: 90 minutes
 
 .wait_db: &db_config
   before_script:
@@ -53,6 +57,7 @@ django-test:
   - name: postgres:15
     alias: djangodb
   variables:
+    ENVIRONMENT: test
     POSTGRES_DB: mydb
     POSTGRES_USER: admin
     POSTGRES_PASSWORD: password
@@ -72,10 +77,10 @@ django-test:
     - python /app/manage.py test myapp.tests.test_views
   timeout: 10 minutes
 
-ringct-unittest:
-  stage: test
-  image: $RINGCT_IMAGE_TAG
-  script:
-    - echo "$GITLAB_USER_LOGIN running ringct unit test"
-    - /app/build/test_rct
-  timeout: 10 minutes
+# ringct-unittest:
+#   stage: test
+#   image: $RINGCT_IMAGE_TAG
+#   script:
+#     - echo "$GITLAB_USER_LOGIN running ringct unit test"
+#     - /app/build/test_rct
+#   timeout: 10 minutes

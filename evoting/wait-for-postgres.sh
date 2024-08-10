@@ -41,13 +41,16 @@ command psql $DATABASE_URL -f ./ringct/dbinit/db_init.sql
 command python manage.py makemigrations 
 command python manage.py migrate 
 command python manage.py loaddata ./dbinit/initial_data.json
-command python manage.py create_election_phase
-command python manage.py create_admin_acc
-command python manage.py create_district_data
-command python manage.py create_mock_singpass_data
-command python manage.py create_candidate_data
 
-# python ./pygrpc/test_init.py # TODO: remove this line after testing, activate pooling day now
+if [ "$ENVIRONMENT" = "dev" ] || [ "$ENVIRONMENT" = "local" ]; then 
+  echo "Running in non cicd env"
+  command psql $DATABASE_URL -f ./ringct/dbinit/create_index.sql
+  command python manage.py create_election_phase
+  command python manage.py create_admin_acc
+  command python manage.py create_district_data
+  command python manage.py create_mock_singpass_data
+  command python manage.py create_candidate_data
+fi
 
 # production grade deployment 
 if [ "$ENVIRONMENT" = "dev" ]; then 
@@ -56,6 +59,6 @@ if [ "$ENVIRONMENT" = "dev" ]; then
   command python manage.py collectstatic --noinput && gunicorn --workers=4 --threads=2 --bind 0.0.0.0:8000 evoting.wsgi:application 
 else
   echo "Running in local development"
-  # command python manage.py collectstatic --noinput && python manage.py runsslserver 0.0.0.0:8000 --certificate /app/ssl/localhost.crt --key /app/ssl/localhost.key
-  command python manage.py collectstatic --noinput && gunicorn --certfile=/app/ssl/localhost.crt --keyfile=/app/ssl/localhost.key evoting.wsgi:application --bind 0.0.0.0:8000
+  command python manage.py collectstatic --noinput && python manage.py runsslserver 0.0.0.0:8000 --certificate /app/ssl/localhost.crt --key /app/ssl/localhost.key
+  # command python manage.py collectstatic --noinput && gunicorn --certfile=/app/ssl/localhost.crt --keyfile=/app/ssl/localhost.key evoting.wsgi:application --bind 0.0.0.0:8000
 fi
