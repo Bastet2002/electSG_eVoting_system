@@ -41,7 +41,7 @@ command psql $DATABASE_URL -f ./ringct/dbinit/db_init.sql
 command python manage.py makemigrations 
 command python manage.py migrate 
 
-if ["$ENVIRONMENT" = "test"]; then 
+if [ "$ENVIRONMENT" = "test" ]; then 
   echo "Running in cicd env"
   command python /app/manage.py test myapp.tests.test_models
   command python /app/manage.py test myapp.tests.test_urls
