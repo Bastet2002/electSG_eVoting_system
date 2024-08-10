@@ -40,10 +40,10 @@ export PYTHONPATH=/app:$PYTHONPATH
 command psql $DATABASE_URL -f ./ringct/dbinit/db_init.sql
 command python manage.py makemigrations 
 command python manage.py migrate 
-command python manage.py loaddata ./dbinit/initial_data.json
 
 if [ "$ENVIRONMENT" = "dev" ] || [ "$ENVIRONMENT" = "local" ]; then 
   echo "Running in non cicd env"
+  command python manage.py loaddata ./dbinit/initial_data.json
   command psql $DATABASE_URL -f ./ringct/dbinit/create_index.sql
   command python manage.py create_election_phase
   command python manage.py create_admin_acc

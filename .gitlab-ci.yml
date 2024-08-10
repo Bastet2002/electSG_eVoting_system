@@ -12,6 +12,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
   WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
   RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
+  RINGCT_URL: "ring-ct:50051"
 
 .docker-build: &build_configuration
   image: docker:24.0.5
@@ -56,6 +57,8 @@ django-test:
   services:
   - name: postgres:15
     alias: djangodb
+  - name: $RINGCT_IMAGE_TAG
+    alias: ring-ct
   variables:
     ENVIRONMENT: test
     POSTGRES_DB: mydb
