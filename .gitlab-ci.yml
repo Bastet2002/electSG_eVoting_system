@@ -1,6 +1,6 @@
-workflow:
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+# workflow:
+#   rules:
+#     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 stages:
   - build
@@ -69,10 +69,10 @@ django-test:
     PYTHONPATH: /app:/app/pygrpc
     DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
   <<: *db_config
-  before_script:
-    - cd /app
-    - python manage.py makemigrations
-    - python manage.py migrate
+  # before_script:
+  #   - cd /app
+  #   - python manage.py makemigrations
+  #   - python manage.py migrate
   script:
     - echo "$GITLAB_USER_LOGIN running django unit test"
     - python /app/manage.py test myapp.tests.test_models
