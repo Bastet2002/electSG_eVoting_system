@@ -7,6 +7,7 @@ ENV DJANGO_SETTINGS_MODULE evoting.settings
 
 # Prepare grpc
 RUN apt-get update && apt-get install -y git
+RUN python -m pip install --upgrade setuptools==70.0.0
 RUN python -m pip install grpcio grpcio-tools 
 WORKDIR /grpc
 RUN git clone -b v1.64.0 --depth 1 --shallow-submodules https://github.com/grpc/grpc
