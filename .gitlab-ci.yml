@@ -90,4 +90,3 @@ container_scanning:
   stage: scan
   variables:
     CS_IMAGE: $WEB_IMAGE_TAG
-    CS_IMAGE: $RINGCT_IMAGE_TAG
