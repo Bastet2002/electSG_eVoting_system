@@ -86,6 +86,9 @@ ringct-test:
     - /app/build/test_rct
   timeout: 10 minutes
 
+include:
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  
 container_scanning:
   stage: scan
   variables:
