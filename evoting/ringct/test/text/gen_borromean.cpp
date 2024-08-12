@@ -76,7 +76,11 @@ void gen_borromean_file(const string &output_file, const string &blinding_factor
                     vector<array<BYTE, crypto_core_ed25519_SCALARBYTES>> bbs1(8);
 
                     // Generate Borromean ring signature
+                    memset(fixed_random_seed, 0x4f, sizeof(fixed_random_seed)); // you can set whatever you want for the seed
+                    counter = 0;
+                    randombytes_set_implementation(&deterministic_implementation);
                     generate_Borromean({x}, C1, C2, indices, bbee, bbs0, bbs1);
+                    randombytes_set_implementation(NULL);
 
                     // Convert results to strings and write to output file
                     string bbee_str;
