@@ -1,6 +1,11 @@
+workflow:
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+
 stages:
   - build
   - test
+  - scan
 
 variables:
   # for build image
@@ -8,6 +13,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
   WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
   RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
+  RINGCT_URL: "ring-ct:50051"
 
 .docker-build: &build_configuration
   image: docker:24.0.5
@@ -52,7 +58,10 @@ django-test:
   services:
   - name: postgres:15
     alias: djangodb
+  - name: $RINGCT_IMAGE_TAG
+    alias: ring-ct
   variables:
+    ENVIRONMENT: test
     POSTGRES_DB: mydb
     POSTGRES_USER: admin
     POSTGRES_PASSWORD: password
@@ -61,21 +70,26 @@ django-test:
     PYTHONPATH: /app:/app/pygrpc
     DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
   <<: *db_config
-  before_script:
-    - cd /app
-    - python manage.py makemigrations
-    - python manage.py migrate
   script:
-    - echo "$GITLAB_USER_LOGIN running django unit test"
-    - python /app/manage.py test myapp.tests.test_models
-    - python /app/manage.py test myapp.tests.test_urls
-    - python /app/manage.py test myapp.tests.test_views
+    - echo "$GITLAB_USER_LOGIN running django unit and integration test"
+    # wait-for-postgres.sh run the test automatically
+    # - python /app/manage.py test myapp.tests.test_models
+    # - python /app/manage.py test myapp.tests.test_urls
+    # - python /app/manage.py test myapp.tests.test_views
   timeout: 10 minutes
 
-ringct-unittest:
+ringct-test:
   stage: test
   image: $RINGCT_IMAGE_TAG
   script:
-    - echo "$GITLAB_USER_LOGIN running ringct unit test"
+    - echo "$GITLAB_USER_LOGIN running ringct unit and integration test"
     - /app/build/test_rct
   timeout: 10 minutes
+
+include:
+  - template: Jobs/Container-Scanning.gitlab-ci.yml
+  
+container_scanning:
+  stage: scan
+  variables:
+    CS_IMAGE: $WEB_IMAGE_TAG

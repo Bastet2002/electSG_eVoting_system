@@ -175,19 +175,5 @@ class SingpassUser(HttpUser):
             self.client.get(f"/districts/{random.randint(1, district_num)}")
         
     
-    # def view_live_result(self):
-    #     response = self.client.get(f"/districts/{random.randint(1, district_num)}")
-    #     if response.status_code == 200 and 'Ongoing Result' in response.text:
-    #         print(f'User {self.singpass_id} in district {self.district} is viewing ongoing result')
-    #     else:
-    #         print(f'Failed to view ongoing result for user {self.singpass_id} in district {self.district}')
-    #         # print(f"Status code: {response.status_code}")
-    #         # print(f"Cookies: {dict(response.cookies)}")
-    #         # print(f"Headers: {dict(response.headers)}")
-    #         # print(f"Content: {response.text[:200]}...")
-    #         return
-        
-    
     def on_stop(self):
-        # self.client.get("/logout") # kill the session (we dont have auto kill session)
         self.client.cookies.clear()

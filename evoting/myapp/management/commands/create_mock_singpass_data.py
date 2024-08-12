@@ -60,6 +60,21 @@ class Command(BaseCommand):
                         salt=base64.b64encode(os.urandom(32)).decode('utf-8')
                     ))
                     singpass_users.append(f"{id} 123 {district}")
+            
+            # for add csv to district and candidate
+            # for district in ['SEMBAWANG', 'ANG MO KIO']:
+            #     for _ in range(config.voternum_per_district):
+            #         id = self.generate_singpass_id()
+            #         SINGPASS_USERS.append(SingpassUser(
+            #             singpass_id=id,
+            #             password=make_password('123'),
+            #             full_name=fake.name(),
+            #             date_of_birth='1980-01-01',
+            #             phone_num='09876543',
+            #             district=district,
+            #             salt=base64.b64encode(os.urandom(32)).decode('utf-8')
+            #         ))
+            #         singpass_users.append(f"{id} 123 {district}")
             SingpassUser.objects.bulk_create(SINGPASS_USERS)
 
         config.write_csv(data=singpass_users)

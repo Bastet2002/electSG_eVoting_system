@@ -117,7 +117,7 @@ def first_login_password_change(request):
 
     return render(request, 'firstLogin.html', {'form': form})
 
-@flexible_access('admin', 'candidate')
+# @flexible_access('admin', 'candidate')
 def my_account(request):
     password_form = PasswordChangeForm(request.user)
     return render(request, 'myAccount.html', {'password_form': password_form})

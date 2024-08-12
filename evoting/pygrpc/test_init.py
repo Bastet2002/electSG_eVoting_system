@@ -29,7 +29,13 @@ if __name__ == "__main__":
     # except GrpcError as e:   
     #     print(e)
 
-    try:
-        grpc_filter_non_voter_run([1, 2, 3])
-    except GrpcError as e:
-        print(e)
+    for i in range(1, 1500):
+        try:
+            grpc_compute_vote_run(2, i)
+        except GrpcError as e:
+            print(e)
+
+    # try:
+    #     grpc_filter_non_voter_run([1, 2, 3])
+    # except GrpcError as e:
+    #     print(e)

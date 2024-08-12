@@ -10,7 +10,7 @@ class Command(BaseCommand):
         if not ElectionPhase.objects.filter(phase_name='Campaigning Day').exists():
             ElectionPhase.objects.create(
                 phase_name='Not Started',
-                is_active=False
+                is_active=True
             )
         if not ElectionPhase.objects.filter(phase_name='Campaigning Day').exists():
             ElectionPhase.objects.create(
@@ -25,7 +25,7 @@ class Command(BaseCommand):
         if not ElectionPhase.objects.filter(phase_name='Polling Day').exists():
             ElectionPhase.objects.create(
                 phase_name='Polling Day',
-                is_active=True
+                is_active=False
             )
         if not ElectionPhase.objects.filter(phase_name='End Election').exists():
             ElectionPhase.objects.create(
