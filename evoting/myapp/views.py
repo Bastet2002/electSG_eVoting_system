@@ -117,10 +117,20 @@ def first_login_password_change(request):
 
     return render(request, 'firstLogin.html', {'form': form})
 
-# @flexible_access('admin', 'candidate')
+@flexible_access('admin', 'candidate', 'voter')
 def my_account(request):
-    password_form = PasswordChangeForm(request.user)
-    return render(request, 'myAccount.html', {'password_form': password_form})
+    if isinstance(request.user, UserAccount):
+        user_role = 'admin' if request.user.role.profile_name == 'Admin' else 'candidate' if request.user.role.profile_name == 'Candidate' else 'user'
+    else:
+        user_role = 'voter'
+
+    password_form = PasswordChangeForm(request.user) if user_role in ['admin', 'candidate'] else None
+    
+    return render(request, 'myAccount.html', {
+        'password_form': password_form,
+        'user_role': user_role,
+    })
+
 
 @flexible_access('admin', 'candidate', 'voter')
 def user_logout(request):
@@ -583,28 +593,35 @@ def delete_party(request, party_id):
 # ---------------------------------------Voter views------------------------------------------------
 @flexible_access('public')
 def singpass_login(request):
-    # print(f"Request method: {request.method}")
-    # print(f"Request POST data: {request.POST}")
-    # print(f"Request headers: {request.headers}")
-
     if request.method == 'POST':
         singpass_id = request.POST['singpass_id']
         password = request.POST['password']
-        # print(f'Login attempt with Singpass ID: {singpass_id} with password: {password}')
-        # TODO it fail at the authenticate function
+
+        # Authenticate the user using Singpass credentials
         user = authenticate(request, singpass_id=singpass_id, password=password)
         if user is not None:
-            # print(f'Authentication successful for Singpass ID: {singpass_id}, Now logging in...')
+            # Check if the authenticated user is a Voter and has WebAuthn credentials
+            if isinstance(user, Voter) and WebauthnCredentials.objects.filter(voter=user).exists():
+                # Store the user's ID in the session for WebAuthn verification
+                print(f"User authenticated via Singpass: {user}")
+                request.session['pending_voter_id'] = user.voter_id
+                print(f"Set pending_voter_id for Singpass user: {request.session['pending_voter_id']}")
+                
+                # Redirect to WebAuthn login options (which will prompt the WebAuthn login)
+                return redirect('webauthn_login_options')
+
+            # If the user doesn't have WebAuthn credentials, proceed with normal login
             login(request, user)
             messages.success(request, 'Log in successful.')
-            return redirect('voter_home') 
+            request.session['singpass_id'] = singpass_id
+            return redirect('voter_home')
         else:
-            # print(f'Login failed for Singpass ID: {singpass_id}')
+            # If authentication fails, return an error message
+            print("Singpass authentication failed.")
             return render(request, 'singpassLogin.html', {'error': 'Invalid username or password.'})
     else:
-        # print(f'Request method is not POST...')
-        # print(f'Request method is {request.method}')
         return render(request, 'singpassLogin.html')
+
 
 @flexible_access('voter')
 def voter_home(request):
@@ -940,34 +957,55 @@ rp_name = "electsg"
 @require_http_methods(["GET"])
 def webauthn_register_options(request):
     try:
-        print(f"User ID: {request.user.user_id}")
-        print(f"Username: {request.user.username}")
-        print(f"Full Name: {request.user.full_name}")
-        
+        user = request.user
+
+        if isinstance(user, Voter):
+            user_id = f"voter-{user.voter_id}"  # Unique identifier for Voter
+            username = user.hash_from_info
+        elif isinstance(user, UserAccount):
+            user_id = user.user_id
+            username = user.username
+        else:
+            return JsonResponse({'error': 'Unsupported user type'}, status=400)
+
+        print(f"User ID: {user_id}")
+        print(f"Username: {username}")
+
+        # Generate WebAuthn registration options
         options = generate_registration_options(
-            rp_id=rp_id,
-            rp_name=rp_name,
-            user_id=str(request.user.user_id).encode('utf-8'),
-            user_name=request.user.username,
-            user_display_name=request.user.full_name
+            rp_id='localhost',
+            rp_name='myapp',
+            user_id=str(user_id).encode('utf-8'),
+            user_name=username,
         )
-        
+
         print("Options generated successfully")
 
+        # Encode the challenge
         challenge_b64 = base64.urlsafe_b64encode(options.challenge).rstrip(b'=').decode('ascii')
-        
-        WebauthnRegistration.objects.update_or_create(
-            user=request.user,
-            defaults={'challenge': challenge_b64}
-        )
+
+        # Store the challenge in the database
+        if isinstance(user, Voter):
+            WebauthnRegistration.objects.update_or_create(
+                voter=user,
+                defaults={'challenge': challenge_b64}
+            )
+        elif isinstance(user, UserAccount):
+            WebauthnRegistration.objects.update_or_create(
+                user=user,
+                defaults={'challenge': challenge_b64}
+            )
+
         print(f"Stored challenge: {options.challenge}")
         print("WebauthnRegistration updated/created successfully")
-        
+
+        # Prepare the JSON response
         json_options = options_to_json(options)
         json_options = json.loads(json_options)
         json_options['challenge'] = challenge_b64  # Replace with properly encoded challenge
-      
+
         return JsonResponse(json_options, safe=False)
+
     except Exception as e:
         print(f"Error in webauthn_register_options: {str(e)}")
         import traceback
@@ -978,32 +1016,44 @@ def webauthn_register_options(request):
 @require_http_methods(["POST"])
 def webauthn_register_verify(request):
     try:
-        if not request.session.get('password_changed'):
-            return JsonResponse({'status': 'error', 'message': 'Password change not confirmed'}, status=400)
+        # Check if the user is a UserAccount and enforce password change confirmation
+        if isinstance(request.user, UserAccount):
+            if not request.session.get('password_changed'):
+                return JsonResponse({'status': 'error', 'message': 'Password change not confirmed'}, status=400)
 
-        registration = WebauthnRegistration.objects.get(user=request.user)
+        # Retrieve the registration object for the user (UserAccount or Voter)
+        if isinstance(request.user, UserAccount):
+            registration = WebauthnRegistration.objects.get(user=request.user)
+        elif isinstance(request.user, Voter):
+            registration = WebauthnRegistration.objects.get(voter=request.user)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'Unsupported user type'}, status=400)
+
         data = json.loads(request.body)
-        
         print(f"Received registration data: {data}")  # Debug: Print received data
-        
+
         # Check if the registration was cancelled
         if data.get('status') == 'cancelled':
-            # Log the user out
-            logout(request)
+            logout(request)  # Log the user out
             return JsonResponse({'status': 'error', 'message': 'WebAuthn registration was cancelled'}, status=400)
-        
+
+        # Determine the appropriate filter for existing credentials based on user type
+        if isinstance(request.user, UserAccount):
+            existing_credentials = WebauthnCredentials.objects.filter(user=request.user)
+        elif isinstance(request.user, Voter):
+            existing_credentials = WebauthnCredentials.objects.filter(voter=request.user)
+
         # Check if the user already has 2 devices registered
-        existing_credentials = WebauthnCredentials.objects.filter(user=request.user)
         if existing_credentials.count() >= 2:
             return JsonResponse({'status': 'error', 'message': 'Maximum number of devices (2) already registered'}, status=400)
-        
+
         # Check if this is a master device
         is_master = data.get('is_master', False)
-        
+
         # If it's a master device, check if a master device already exists
         if is_master and existing_credentials.filter(is_master=True).exists():
             return JsonResponse({'status': 'error', 'message': 'A master device is already registered'}, status=400)
-        
+
         # Create the RegistrationCredential object
         credential = RegistrationCredential(
             id=data['id'],
@@ -1014,8 +1064,9 @@ def webauthn_register_verify(request):
             ),
             type=data['type']
         )
-        
+
         try:
+            # Verify the registration response
             verification = verify_registration_response(
                 credential=credential,
                 expected_challenge=base64.urlsafe_b64decode(registration.challenge + '=='),
@@ -1027,41 +1078,62 @@ def webauthn_register_verify(request):
             print(f"Verification failed: {str(e)}")  # Debug: Print verification error
             logout(request)  # Log out the user if verification fails
             return JsonResponse({'status': 'error', 'message': f'Verification failed: {str(e)}'}, status=400)
-        
-        # If no exception is raised, the verification is successful
+
+        # If verification is successful, create a new credential
         credential_id = base64.urlsafe_b64encode(verification.credential_id).rstrip(b'=').decode('ascii')
         credential_public_key = base64.urlsafe_b64encode(verification.credential_public_key).rstrip(b'=').decode('ascii')
-        
-        new_credential = WebauthnCredentials.objects.create(
-            user=request.user,
-            credential_id=credential_id,
-            credential_public_key=credential_public_key,
-            current_sign_count=verification.sign_count,
-            is_master=is_master  # Set the is_master flag
-        )
+
+        # Determine the appropriate user field for the new credential based on user type
+        if isinstance(request.user, UserAccount):
+            new_credential = WebauthnCredentials.objects.create(
+                user=request.user,
+                credential_id=credential_id,
+                credential_public_key=credential_public_key,
+                current_sign_count=verification.sign_count,
+                is_master=is_master  # Set the is_master flag
+            )
+        elif isinstance(request.user, Voter):
+            new_credential = WebauthnCredentials.objects.create(
+                voter=request.user,
+                credential_id=credential_id,
+                credential_public_key=credential_public_key,
+                current_sign_count=verification.sign_count,
+                is_master=is_master  # Set the is_master flag
+            )
+
         print(f"New credential created: {new_credential}")  # Debug: Print new credential object
-        
+
+
         # Verify the credential was stored
-        stored_credential = WebauthnCredentials.objects.filter(user=request.user, credential_id=credential_id).first()
+        if isinstance(request.user, UserAccount):
+            stored_credential = WebauthnCredentials.objects.filter(user=request.user, credential_id=credential_id).first()
+        elif isinstance(request.user, Voter):
+            stored_credential = WebauthnCredentials.objects.filter(voter=request.user, credential_id=credential_id).first()
+
         if stored_credential:
             print(f"Credential successfully stored in DB: {stored_credential}")  # Debug: Print stored credential
         else:
             print("Error: Credential not found in DB after creation")  # Debug: Print error if not found
             logout(request)  # Log out the user if credential storage fails
             return JsonResponse({'status': 'error', 'message': 'Failed to store credential'}, status=500)
-        
+
         # Print all credentials for this user
-        all_credentials = WebauthnCredentials.objects.filter(user=request.user)
-        print(f"All credentials for user {request.user.username}: {list(all_credentials.values())}")  # Debug: Print all user credentials
-        
-        # Determine the redirect URL based on user role
-        if request.user.role.profile_name == 'Admin':
-            redirect_url = reverse('admin_home')
-        elif request.user.role.profile_name == 'Candidate':
-            redirect_url = reverse('candidate_home')
-        else:
-            redirect_url = reverse('')  # Make sure to define a default home URL
-        
+        if isinstance(request.user, UserAccount):
+            all_credentials = WebauthnCredentials.objects.filter(user=request.user)
+        elif isinstance(request.user, Voter):
+            all_credentials = WebauthnCredentials.objects.filter(voter=request.user)
+
+        # Determine the redirect URL based on user role (only for UserAccount)
+        if isinstance(request.user, UserAccount) and hasattr(request.user, 'role'):
+            if request.user.role.profile_name == 'Admin':
+                redirect_url = reverse('admin_home')
+            elif request.user.role.profile_name == 'Candidate':
+                redirect_url = reverse('candidate_home')
+            else:
+                redirect_url = reverse('')
+        elif isinstance(request.user, Voter):
+            redirect_url = reverse('voter_home')  # Redirect voters to their home page
+
         messages.success(request, 'Logged in Successfully.')
 
         return JsonResponse({'status': 'success', 'redirect_url': redirect_url})
@@ -1075,29 +1147,47 @@ def webauthn_register_verify(request):
         return JsonResponse({'status': 'error', 'message': 'Invalid JSON data'}, status=400)
     except Exception as e:
         print(f"Unexpected error: {str(e)}")  # Debug: Print unexpected errors
+        import traceback
+        print(traceback.format_exc())
         logout(request)  # Log out the user if an unexpected error occurs
         return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
 
 @require_http_methods(["GET"])
 def webauthn_login_options(request):
     try:
-        # Get the pending user from the session
+        # Attempt to retrieve the Voter or UserAccount based on session data
+        pending_voter_id = request.session.get('pending_voter_id')
         pending_user_id = request.session.get('pending_user_id')
-        if not pending_user_id:
+        
+        if not pending_voter_id and not pending_user_id:
             return JsonResponse({'error': 'No pending login'}, status=400)
         
-        user = User.objects.get(user_id=pending_user_id)  # Changed from 'id' to 'user_id'
+        if pending_voter_id:
+            user = Voter.objects.get(voter_id=pending_voter_id)
+        elif pending_user_id:
+            user = UserAccount.objects.get(user_id=pending_user_id)
+        else:
+            return JsonResponse({'error': 'User not found'}, status=404)
+        
+        print(f"User retrieved: {user}")  # Debugging line
         
         allow_credentials = []
-        for cred in user.webauthn_credentials.all():
+        credentials = user.webauthn_credentials.all()
+        print(f"Fetched credentials: {credentials}")  # Debugging line
+        
+        for cred in credentials:
+            print(f"Processing credential: {cred.credential_id}")  # Debugging line
             try:
                 decoded_id = base64.urlsafe_b64decode(cred.credential_id + '==')
                 allow_credentials.append({
                     'type': 'public-key',
                     'id': decoded_id
                 })
+                print(f"Added credential ID: {cred.credential_id}")  # Debugging line
             except Exception as e:
                 print(f"Error processing credential {cred.credential_id}: {str(e)}")
+        
+        print(f"Allow credentials: {allow_credentials}")  # Debugging line
         
         options = generate_authentication_options(
             rp_id=rp_id,
@@ -1122,10 +1212,7 @@ def webauthn_login_options(request):
             ],
             'userVerification': options.user_verification
         }
-        
         return JsonResponse(json_options)
-    except User.DoesNotExist:
-        return JsonResponse({'error': 'User not found'}, status=404)
     except Exception as e:
         print(f"Error in webauthn_login_options: {str(e)}")
         import traceback
@@ -1161,16 +1248,24 @@ def webauthn_login_verify(request):
             user_credential = WebauthnCredentials.objects.get(credential_id=credential_id)
         except WebauthnCredentials.DoesNotExist:
             print(f"Credential not found: {credential_id}")
-            print(f"Available credentials: {list(WebauthnCredentials.objects.values_list('credential_id', flat=True))}")
             return JsonResponse({'status': 'error', 'message': 'Credential not found'}, status=400)
-        
-        user = user_credential.user
-        
+
+        # Determine if the user is a UserAccount or Voter
+        user = user_credential.user if user_credential.user else user_credential.voter
+
         # Ensure the user matches the pending user
         pending_user_id = request.session.get('pending_user_id')
-        if not pending_user_id or user.user_id != pending_user_id:
-            return JsonResponse({'status': 'error', 'message': 'User mismatch'}, status=400)
-        
+        pending_voter_id = request.session.get('pending_voter_id')
+
+        if isinstance(user, UserAccount):
+            if not pending_user_id or user.user_id != pending_user_id:
+                return JsonResponse({'status': 'error', 'message': 'User mismatch'}, status=400)
+        elif isinstance(user, Voter):
+            if not pending_voter_id or user.voter_id != pending_voter_id:
+                return JsonResponse({'status': 'error', 'message': 'User mismatch'}, status=400)
+        else:
+            return JsonResponse({'status': 'error', 'message': 'User type mismatch'}, status=400)
+
         origin = os.environ.get("EXPECTED_ORIGIN", 'https://localhost:8000')
         rp_id = os.environ.get("EXPECTED_RP_ID", 'localhost')
 
@@ -1184,19 +1279,21 @@ def webauthn_login_verify(request):
                 credential_current_sign_count=user_credential.current_sign_count,
                 require_user_verification=True
             )
-            
+            print(f"Verification successful: {verification}")
             # Update the sign count
             user_credential.current_sign_count = verification.new_sign_count
             user_credential.save()
             
-            # Get the first authentication backend
-            backend = get_backends()[0]
-            
-            # Get the dotted path string for the backend
+            # Determine the correct backend for login
+            if isinstance(user, UserAccount):
+                backend = get_backends()[0]  # Default backend
+            else:  # Voter
+                backend = get_backends()[1]
             backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
             
             # Log the user in with the specified backend
             login(request, user, backend=backend_path)
+            messages.success(request, 'Log in successful.')
             
             # Include the user's role in the response
             user_role = user.role.profile_name if hasattr(user, 'role') and hasattr(user.role, 'profile_name') else 'Unknown'
@@ -1214,6 +1311,8 @@ def webauthn_login_verify(request):
     except Exception as e:
         print(f"Unexpected error: {str(e)}")
         return JsonResponse({'status': 'error', 'message': f'Unexpected error: {str(e)}'}, status=500)
+
+
 
 def webauthn_register_view(request):
     return render(request, 'webauthn_register.html')
@@ -1239,12 +1338,34 @@ def delete_all_credentials(request, user_id):
     
     return redirect('view_user_accounts')
 
-def delete_all_credentials_temp(request):
+def delete_my_credentials(request):
     if request.method == 'POST':
-        # Delete all credentials in the system
-        WebauthnCredentials.objects.all().delete()
-        messages.success(request, "All credentials have been deleted.")
-    return redirect('login')  # Redirect to admin index or appropriate page
+        try:
+            if isinstance(request.user, UserAccount):
+                user_credentials = WebauthnCredentials.objects.filter(user=request.user)
+            elif isinstance(request.user, Voter):
+                user_credentials = WebauthnCredentials.objects.filter(voter=request.user)
+            else:
+                messages.error(request, 'User type not recognized.')
+                return redirect('login')
+            
+            credentials_count = user_credentials.count()
+            if credentials_count > 0:
+                user_credentials.delete()
+                messages.success(request, f'{credentials_count} credential(s) deleted successfully.')
+            else:
+                messages.error(request, 'No credentials found to delete.')
+
+            logout(request)
+            return redirect('login')
+
+        except Exception as e:
+            print(f"Error in delete_my_credentials: {str(e)}")
+            messages.error(request, f'An error occurred: {str(e)}')
+            return redirect('login')
+
+    # If the request method is not POST, redirect to the login page or appropriate page
+    return redirect('login')
 
 def delete_non_master_credentials(request):
     if request.method == 'POST':

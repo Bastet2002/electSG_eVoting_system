@@ -91,6 +91,7 @@ add_executable(rct_server
     "util/custom_exception.cc"
     "src/core.cc"
     "rct/rctOps.cpp"
+    "test/test_util.cc"
     "rct/rangeproof.cpp"
     "rct/commitment.cpp")
 
@@ -112,7 +113,9 @@ add_executable(test_rct
     "test/test_hash.cpp"
     "test/test_util.cc"
     "test/test_compute_stealth_address.cpp"
-    "test/test_add_keys.cpp")
+    "test/test_borromean.cpp"
+
+    )
 
 target_link_libraries(test_rct
     sodium

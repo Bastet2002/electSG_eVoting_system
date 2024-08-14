@@ -54,9 +54,19 @@ void compute_commitment_simple(Commitment &commitment, const StealthAddress &sa,
 
     XOR_amount_mask_receiver(amount_byte, received_commitment.amount_masks[0].data(), 0, received_sa, signer);
 
+    cout << "In the compute_commitment_simple "<< endl;
+    cout << "amount mask" << endl;
+    print_hex(received_commitment.amount_masks[0].data(), 8);
+    cout << "received_sa.rg" << endl;
+    print_hex(received_sa.rG, 32);
+    cout << "signer skV" << endl;
+    print_hex(signer.skV, 64);
+
     // extract amount from mask
     long long amount;
     byte_to_int(amount, amount_byte, 8);
+
+    cout << " The amount is " << amount << endl;
 
     if (static_cast<int>(amount) != c)
         throw logic_error("The amount is not equal to currency given in compute commitment simple.");
