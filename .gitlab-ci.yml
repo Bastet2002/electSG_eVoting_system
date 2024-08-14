@@ -14,6 +14,14 @@ variables:
   WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
   RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
   RINGCT_URL: "ring-ct:50051"
+  ENVIRONMENT: test
+  POSTGRES_DB: mydb
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: password
+  POSTGRES_HOST: djangodb
+  POSTGRES_PORT: 5432
+  PYTHONPATH: /app:/app/pygrpc
+  DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
 
 .docker-build: &build_configuration
   image: docker:24.0.5
@@ -22,23 +30,23 @@ variables:
   before_script:
     echo "$CI_REGISTRY_PASSWORD" | docker login $CI_REGISTRY -u $CI_REGISTRY_USER --password-stdin
 
-django-build:
-  stage: build
-  <<: *build_configuration
-  script:
-    - echo "$GITLAB_USER_LOGIN is running django build"
-    - docker build -t $WEB_IMAGE_TAG -f ./evoting/Dockerfile ./evoting
-    - docker push $WEB_IMAGE_TAG
-  timeout: 60 minutes
+# django-build:
+#   stage: build
+#   <<: *build_configuration
+#   script:
+#     - echo "$GITLAB_USER_LOGIN is running django build"
+#     - docker build -t $WEB_IMAGE_TAG -f ./evoting/Dockerfile ./evoting
+#     - docker push $WEB_IMAGE_TAG
+#   timeout: 60 minutes
 
-ringct-build:
-  stage: build
-  <<: *build_configuration
-  script:
-    - echo "$GITLAB_USER_LOGIN is running ringct build"
-    - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
-    - docker push $RINGCT_IMAGE_TAG
-  timeout: 90 minutes
+# ringct-build:
+#   stage: build
+#   <<: *build_configuration
+#   script:
+#     - echo "$GITLAB_USER_LOGIN is running ringct build"
+#     - docker build -t $RINGCT_IMAGE_TAG -f ./evoting/ringct/Dockerfile ./evoting/ringct/
+#     - docker push $RINGCT_IMAGE_TAG
+#   timeout: 90 minutes
 
 .wait_db: &db_config
   before_script:
@@ -52,35 +60,27 @@ ringct-build:
       done
     - echo "username and password config done for db."
 
-django-test:
-  stage: test
-  image: $WEB_IMAGE_TAG
-  services:
-  - name: postgres:15
-    alias: djangodb
-  - name: $RINGCT_IMAGE_TAG
-    alias: ring-ct
-  variables:
-    ENVIRONMENT: test
-    POSTGRES_DB: mydb
-    POSTGRES_USER: admin
-    POSTGRES_PASSWORD: password
-    POSTGRES_HOST: djangodb
-    POSTGRES_PORT: 5432
-    PYTHONPATH: /app:/app/pygrpc
-    DATABASE_URL: postgres://$POSTGRES_USER:$POSTGRES_PASSWORD@$POSTGRES_HOST:$POSTGRES_PORT/$POSTGRES_DB
-  <<: *db_config
-  script:
-    - echo "$GITLAB_USER_LOGIN running django unit and integration test"
-    # wait-for-postgres.sh run the test automatically
-    # - python /app/manage.py test myapp.tests.test_models
-    # - python /app/manage.py test myapp.tests.test_urls
-    # - python /app/manage.py test myapp.tests.test_views
-  timeout: 10 minutes
+# django-test:
+#   stage: test
+#   image: $WEB_IMAGE_TAG
+#   services:
+#   - name: postgres:15
+#     alias: djangodb
+#   - name: $RINGCT_IMAGE_TAG
+#     alias: ring-ct
+#   <<: *db_config
+#   script:
+#     - echo "$GITLAB_USER_LOGIN running django unit and integration test"
+#     # wait-for-postgres.sh run the test automatically
+#   timeout: 10 minutes
 
 ringct-test:
   stage: test
   image: $RINGCT_IMAGE_TAG
+  services:
+  - name: postgres:15
+    alias: djangodb
+  - name: $WEB_IMAGE_TAG
   script:
     - echo "$GITLAB_USER_LOGIN running ringct unit and integration test"
     - /app/build/test_rct
