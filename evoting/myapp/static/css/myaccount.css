@@ -6,7 +6,7 @@ body {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 100%;
+    min-height: 100vh;
     text-align: center;
 }
 
@@ -45,6 +45,15 @@ form {
     background-color: #fff;
     border-radius: 8px;
     box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+}
+.sections{
+    margin: 0 auto;
+    max-width: 350px;
+    padding: 20px 40px 40px 40px;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
 }
 
 .changepassword-text-field {
