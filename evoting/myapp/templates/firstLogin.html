@@ -12,22 +12,24 @@
 <div class="container">
     <body>
         <h2>Set Your Password and Register WebAuthn</h2>
-        <div id="errorPopup" class="error-popup"></div>
+        <!-- <div id="errorPopup" class="error-popup"></div> -->
+        <div id="popupAlert" class="popup-alert"></div>
     <form id="passwordForm">
-            {% csrf_token %}
-            {{ form.as_p }}
-            <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
-        </form>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="button" onclick="setPasswordAndRegisterWebAuthn()">Set Password and Register WebAuthn</button>
+    </form>
 </div>
-
     <script>
         function showError(message) {
-            const errorPopup = document.getElementById('errorPopup');
-            errorPopup.textContent = message;
-            errorPopup.style.display = 'block';
+            const alertBox = document.getElementById('popupAlert');
+            alertBox.textContent = message
+            alertBox.classList.add('show');
+
+            // Hide the alert after 3 seconds
             setTimeout(() => {
-                errorPopup.style.display = 'none';
-            }, 5000); // Hide after 5 seconds
+                alertBox.classList.remove('show');
+            }, 3000); // Adjusted to 3 seconds
         }
 
         function validatePassword(password) {

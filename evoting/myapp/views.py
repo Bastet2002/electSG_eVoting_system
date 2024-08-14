@@ -131,7 +131,6 @@ def my_account(request):
         'user_role': user_role,
     })
 
-
 @flexible_access('admin', 'candidate', 'voter')
 def user_logout(request):
     if request.method == 'GET':
@@ -477,6 +476,10 @@ def delete_profile(request, profile_id):
         return redirect('view_profiles')
     
     profile = get_object_or_404(Profile, pk=profile_id)
+    if profile.profile_name in ['Admin', 'Candidate']:
+        messages.error(request, 'You do not have permission to delete the permanent profile.')
+        return redirect('view_profiles')
+    
     if request.method == 'POST':
         profile.delete()
         messages.success(request, 'Profile successfully deleted.')
@@ -613,7 +616,7 @@ def singpass_login(request):
             # If the user doesn't have WebAuthn credentials, proceed with normal login
             login(request, user)
             messages.success(request, 'Log in successful.')
-            request.session['singpass_id'] = singpass_id
+            request.session['singpass_id'] = singpass_id 
             return redirect('voter_home')
         else:
             # If authentication fails, return an error message
@@ -782,13 +785,13 @@ def upload_election_poster(request):
         return redirect('candidate_home')
     
 @flexible_access('candidate')
-def delete_election_poster(request, candidate_id):
+def delete_election_poster(request):
     disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the election poster at this time.')
         return redirect('candidate_home')
 
-    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+    candidate_profile = get_object_or_404(CandidateProfile, pk=request.user.user_id)
     if candidate_profile.election_poster:
         candidate_profile.election_poster.delete(save=False)
         candidate_profile.save()
@@ -818,13 +821,13 @@ def upload_profile_picture(request):
         return redirect('candidate_home')
 
 @flexible_access('candidate')
-def delete_profile_picture(request, candidate_id):
+def delete_profile_picture(request):
     disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the profile picture at this time.')
         return redirect('candidate_home')
     
-    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+    candidate_profile = get_object_or_404(CandidateProfile, pk=request.user.user_id)
     if candidate_profile.profile_picture:
         candidate_profile.profile_picture.delete(save=False)
         candidate_profile.save()
@@ -854,13 +857,13 @@ def upload_candidate_statement(request):
         return redirect('candidate_home')
 
 @flexible_access('candidate')
-def delete_candidate_statement(request, candidate_id):
+def delete_candidate_statement(request):
     disable_deletion = is_creation_deletion_disabled()
     if disable_deletion:
         messages.error(request, 'You do not have permission to delete the candidate statement at this time.')
         return redirect('candidate_home')
     
-    candidate_profile = get_object_or_404(CandidateProfile, pk=candidate_id)
+    candidate_profile = get_object_or_404(CandidateProfile, pk=request.user.user_id)
     if candidate_profile.candidate_statement:
         candidate_profile.candidate_statement = None
         candidate_profile.save()
@@ -874,11 +877,9 @@ def delete_candidate_statement(request, candidate_id):
 @flexible_access('public')
 def general_user_home(request):
     announcements = Announcement.objects.all()[:2]  # only get latest 2 announcements
-    districts = District.objects.all()
     active_phase = ElectionPhase.objects.filter(is_active=True).first()
     return render(request, 'generalUser/generalUserPg.html', {
         'announcements': announcements,
-        'districts': districts,
         'active_phase': active_phase,
     })
 
@@ -1336,7 +1337,7 @@ def delete_all_credentials(request, user_id):
         WebauthnCredentials.objects.filter(user=user).delete()
         messages.success(request, f"All WebAuthn credentials for {user.username} have been deleted.")
     
-    return redirect('view_user_accounts')
+    return redirect('view_accounts')
 
 def delete_my_credentials(request):
     if request.method == 'POST':
