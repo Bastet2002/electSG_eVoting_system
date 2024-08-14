@@ -107,13 +107,16 @@ target_link_libraries(rct_server
 
 add_executable(test_rct
     "util/custom_exception.cc"
+    "util/db_util.cc"
+    "src/core.cc"
     "rct/rctOps.cpp"
-    "rct/commitment.cpp"
     "rct/rangeproof.cpp"
+    "rct/commitment.cpp"
     "test/test_hash.cpp"
     "test/test_util.cc"
     "test/test_compute_stealth_address.cpp"
     "test/test_add_keys.cpp"
+    "test/test_integration.cpp"
     "test/test_XOR_signer.cpp"
     "test/test_XOR_receiver.cpp"
     "test/test_compute_commitment_mask.cpp"
@@ -134,4 +137,4 @@ target_link_libraries(test_rct
     fmt::fmt
     nlohmann_json::nlohmann_json
     Catch2::Catch2WithMain
-    )
+    pqxx)
