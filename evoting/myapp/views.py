@@ -117,11 +117,7 @@ def first_login_password_change(request):
 
     return render(request, 'firstLogin.html', {'form': form})
 
-<<<<<<< HEAD
 @flexible_access('admin', 'candidate', 'voter')
-=======
-@flexible_access('admin', 'candidate')
->>>>>>> 2c55d7e ([21] fixed 2 vulnerabilities, first login page msg, added one more admin acc)
 def my_account(request):
     if isinstance(request.user, UserAccount):
         user_role = 'admin' if request.user.role.profile_name == 'Admin' else 'candidate' if request.user.role.profile_name == 'Candidate' else 'user'
@@ -134,7 +130,6 @@ def my_account(request):
         'password_form': password_form,
         'user_role': user_role,
     })
-
 
 @flexible_access('admin', 'candidate', 'voter')
 def user_logout(request):
@@ -621,7 +616,7 @@ def singpass_login(request):
             # If the user doesn't have WebAuthn credentials, proceed with normal login
             login(request, user)
             messages.success(request, 'Log in successful.')
-            request.session['singpass_id'] = singpass_id
+            request.session['singpass_id'] = singpass_id 
             return redirect('voter_home')
         else:
             # If authentication fails, return an error message
