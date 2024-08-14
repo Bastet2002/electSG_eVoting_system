@@ -47,11 +47,11 @@ urlpatterns = [
     # Candidate
     path('candidate_home/', views.candidate_home, name='candidate_home'),
     path('candidate_home/upload_election_poster', views.upload_election_poster, name='upload_election_poster'),
-    path('candidate_home/delete_election_poster/<int:candidate_id>/', views.delete_election_poster, name='delete_election_poster'),
+    path('candidate_home/delete_election_poster', views.delete_election_poster, name='delete_election_poster'),
     path('candidate_home/upload_profile_picture', views.upload_profile_picture, name='upload_profile_picture'),
-    path('candidate_home/delete_profile_picture/<int:candidate_id>/', views.delete_profile_picture, name='delete_profile_picture'),
+    path('candidate_home/delete_profile_picture', views.delete_profile_picture, name='delete_profile_picture'),
     path('candidate_home/upload_candidate_statement', views.upload_candidate_statement, name='upload_candidate_statement'),
-    path('candidate_home/delete_candidate_statement/<int:candidate_id>/', views.delete_candidate_statement, name='delete_candidate_statement'),
+    path('candidate_home/delete_candidate_statement', views.delete_candidate_statement, name='delete_candidate_statement'),
 
     # Voter
     path('singpass_login/', views.singpass_login, name='singpass_login'),

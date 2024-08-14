@@ -17,7 +17,7 @@ class Command(BaseCommand):
                 username='admin1',
                 full_name='John Doe',
                 date_of_birth='1980-01-01',
-                password=make_password('123'),  
+                password=make_password('Admin1Password$!'),  
                 role=admin_profile[0]
             )
         if not UserAccount.objects.filter(username='admin2').exists():
@@ -25,7 +25,15 @@ class Command(BaseCommand):
             username='admin2',
             full_name='Mary James',
             date_of_birth='1980-01-01',
-            password=make_password('123'),  
+            password=make_password('Admin2Password$!'),  
+            role=admin_profile[0]
+            )
+        if not UserAccount.objects.filter(username='admin2').exists():
+            UserAccount.objects.create(
+            username='admin3',
+            full_name='Chandler',
+            date_of_birth='1980-01-01',
+            password=make_password('Admin3Password$!'),  
             role=admin_profile[0]
             )
 
