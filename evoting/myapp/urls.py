@@ -68,15 +68,15 @@ urlpatterns = [
     path('ongoing-result/<int:district_id>/', views.get_ongoing_result, name='ongoing_result'),
 
     # Web Authentication
-    path('webauthn/register/', views.webauthn_register_view, name='webauthn_register_view'),
+    # path('webauthn/register/', views.webauthn_register_view, name='webauthn_register_view'),
     path('webauthn/register/options/', views.webauthn_register_options, name='webauthn_register_options'),
     path('webauthn/register/verify/', views.webauthn_register_verify, name='webauthn_register_verify'),
-    path('webauthn/login/', views.webauthn_login_view, name='webauthn_login_view'),
+    # path('webauthn/login/', views.webauthn_login_view, name='webauthn_login_view'),
     path('webauthn/login/options/', views.webauthn_login_options, name='webauthn_login_options'),
     path('webauthn/login/verify/', views.webauthn_login_verify, name='webauthn_login_verify'),
     path('webauthn/verify/', views.webauthn_verify_view, name='webauthn_verify'),
     path('delete-all-credentials/<int:user_id>/', views.delete_all_credentials, name='delete_all_credentials'),
-    path('delete-all-credentials-temp/', views.delete_all_credentials_temp, name='delete_all_credentials_temp'),
+    path('delete-my-credentials', views.delete_my_credentials, name='delete_my_credentials'),
     path('delete-non-master-credentials/', views.delete_non_master_credentials, name='delete_non_master_credentials'),
     path('my_account/', views.my_account, name='my_account'),
     path('check-current-password/', views.check_current_password, name='check_current_password'),

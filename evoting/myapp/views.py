@@ -62,6 +62,7 @@ def check_current_password(request):
     return JsonResponse({'is_valid': is_valid})
 
 @flexible_access('admin', 'candidate')
+@login_required
 def change_password(request):
     if request.method == 'POST':
         form = PasswordChangeForm(request.user, request.POST)
@@ -69,17 +70,24 @@ def change_password(request):
             user = request.user
             user.set_password(form.cleaned_data['new_password'])
             user.save()
+
+            # Ensure the session variable 'password_changed' is set to True after any password change
+            request.session['password_changed'] = True
+            print(f"Password changed for user {user.username}. Session 'password_changed' set to True.")
+
             messages.success(request, 'Your password has been successfully changed.')
+
+            # Log the user in with the specified backend
             backend = get_backends()[0]
             backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
-            
-            # Log the user in with the specified backend
             login(request, user, backend=backend_path)
+            request.session['password_changed'] = True
+
+            # Redirect based on user role
             if user.role.profile_name == 'Admin':
                 return redirect('admin_home')
             elif user.role.profile_name == 'Candidate':
                 return redirect('candidate_home')
-            messages.success(request, 'Password changed successfully.')
         else:
             return render(request, 'changePassword.html', {'form': form})
     else:
@@ -87,8 +95,10 @@ def change_password(request):
 
     return render(request, 'changePassword.html', {'form': form})
 
+
 def first_login_password_change(request):
     if 'pending_user_id' not in request.session:
+        print("No pending_user_id found in session, redirecting to login.")
         return redirect('login')
 
     user = User.objects.get(user_id=request.session['pending_user_id'])
@@ -96,28 +106,39 @@ def first_login_password_change(request):
     if request.method == 'POST':
         form = FirstLoginPasswordChangeForm(request.POST)
         if form.is_valid():
+            print("Form is valid. Changing password.")
             user.set_password(form.cleaned_data['new_password'])
             user.first_login = False
             user.save()
+            print("Password change successful. User first_login flag set to False and user saved.")
 
-            # Log the user in after setting the password for webaunth registration
+            # Log the user in after setting the password for WebAuthn registration
             backend = get_backends()[0]
             backend_path = f"{backend.__module__}.{backend.__class__.__name__}"
             login(request, user, backend=backend_path)
+            print(f"User logged in.")
 
-            # Set a session variable to indicate the password has been changed
+            # Set session variables to indicate the password has been successfully changed
             request.session['password_changed'] = True
+            request.session['first_registration'] = True
+            print("Session variable 'password_changed' set to True.")
 
             # Return a JSON response indicating success and that WebAuthn registration should be initiated
             return JsonResponse({'status': 'success', 'prompt_webauthn': True})
         else:
+            # If the form is not valid, do not reset 'password_changed'
+            print(f"Form is invalid. Errors: {form.errors}")
             return JsonResponse({'status': 'error', 'errors': form.errors}, status=400)
     else:
+        print("GET request received.")
         form = FirstLoginPasswordChangeForm()
 
+    print("Rendering firstLogin.html template with the form.")
     return render(request, 'firstLogin.html', {'form': form})
 
-# @flexible_access('admin', 'candidate')
+
+
+@flexible_access('admin', 'candidate')
 def my_account(request):
     password_form = PasswordChangeForm(request.user)
     return render(request, 'myAccount.html', {'password_form': password_form})
@@ -981,9 +1002,15 @@ def webauthn_register_options(request):
 @require_http_methods(["POST"])
 def webauthn_register_verify(request):
     try:
-        if not request.session.get('password_changed'):
+        # Check the 'password_changed' flag
+        password_changed = request.session.get('password_changed', False)
+        print(f"Checking session 'password_changed': {password_changed}")
+
+        if not password_changed:
+            print("Password change not confirmed, returning error.")
             return JsonResponse({'status': 'error', 'message': 'Password change not confirmed'}, status=400)
 
+        # Continue with the rest of the WebAuthn registration verification
         registration = WebauthnRegistration.objects.get(user=request.user)
         data = json.loads(request.body)
         
@@ -1064,8 +1091,13 @@ def webauthn_register_verify(request):
             redirect_url = reverse('candidate_home')
         else:
             redirect_url = reverse('')  # Make sure to define a default home URL
-        
-        messages.success(request, 'Logged in Successfully.')
+
+        first_registration = request.session.get('first_registration', False)
+        print(f"Checking session 'password_changed': {first_registration}")
+
+        if first_registration:
+            messages.success(request, 'Logged in Successfully.')
+            request.session['first_registration'] = False
 
         return JsonResponse({'status': 'success', 'redirect_url': redirect_url})
     except WebauthnRegistration.DoesNotExist:
@@ -1200,6 +1232,8 @@ def webauthn_login_verify(request):
             
             # Log the user in with the specified backend
             login(request, user, backend=backend_path)
+            messages.success(request, 'Logged in Successfully.')
+
             
             # Include the user's role in the response
             user_role = user.role.profile_name if hasattr(user, 'role') and hasattr(user.role, 'profile_name') else 'Unknown'
@@ -1237,17 +1271,36 @@ def delete_all_credentials(request, user_id):
     user = get_object_or_404(UserAccount, user_id=user_id)
     
     if request.method == 'POST':
+        # Delete WebAuthn credentials for the user
         WebauthnCredentials.objects.filter(user=user).delete()
         messages.success(request, f"All WebAuthn credentials for {user.username} have been deleted.")
+        
+        # Check if the deleted user is the logged-in user
+        if request.user == user:
+            # Log out the user
+            logout(request)
+            return redirect('login')
     
     return redirect('view_accounts')
 
-def delete_all_credentials_temp(request):
+       
+def delete_my_credentials(request):
     if request.method == 'POST':
-        # Delete all credentials in the system
-        WebauthnCredentials.objects.all().delete()
-        messages.success(request, "All credentials have been deleted.")
-    return redirect('login')  # Redirect to admin index or appropriate page
+        WebauthnCredentials.objects.filter(user=request.user, is_master=False).delete()
+
+        request.session['password_changed'] = False
+        print(f"All non-master credentials for user {request.user.username} have been deleted. Session 'password_changed' set to False.")
+
+        messages.success(request, "All your non-master credentials have been deleted.")
+
+        logout(request)
+
+        # Redirect to the login page
+        return redirect('login')
+
+    # If the request method is not POST, redirect to an appropriate page
+    return redirect('login')
+
 
 def delete_non_master_credentials(request):
     if request.method == 'POST':
