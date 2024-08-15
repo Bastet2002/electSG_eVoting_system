@@ -11,7 +11,7 @@ SCENARIO("Test the consistency of the add key function", "[aK+bH]")
 {
     const string add_keys_file = filesystem::absolute("/app/test/text/add_keys.txt");
 
-    GIVEN("Any inputs to the add key function")
+    GIVEN("The and C1C2 input files and the expected output")
     {
         ifstream infile(add_keys_file);
 
@@ -51,7 +51,7 @@ SCENARIO("Test the consistency of the add key function", "[aK+bH]")
         }
     }
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("The input files and the expected output")
     {
         ifstream infile(add_keys_file);
         REQUIRE(infile.is_open());
@@ -138,7 +138,7 @@ SCENARIO("Test the consistency of the add key base function", "[aG+bH]")
         }
     }
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("The input files and the expected output")
     {
         ifstream infile(add_keys_base_file);
         REQUIRE(infile.is_open());

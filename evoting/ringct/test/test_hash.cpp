@@ -56,7 +56,7 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
     // contain expected output
     const string h2p_file = filesystem::absolute("/app/test/text/h2p.txt");
 
-    GIVEN("Any inputs to the hash to point function")
+    GIVEN("The input files and the expected output")
     {
         ifstream infile(base_file);
 
@@ -102,7 +102,7 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
         }
     }
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("The input files and the expected output")
     {
         ifstream infile(h2p_file);
         REQUIRE(infile.is_open());

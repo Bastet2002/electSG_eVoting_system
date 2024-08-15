@@ -11,7 +11,7 @@ SCENARIO("Test the consistency of the generate blinding factors function", "[bli
     const string input_file = filesystem::absolute("/app/test/text/commitment_simple.txt");
     const string output_file = filesystem::absolute("/app/test/text/blinding_factor.txt");
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("A set of input and expected output blinding factors")
     {
         REQUIRE(filesystem::exists(input_file));
         REQUIRE(filesystem::exists(output_file));
@@ -41,7 +41,7 @@ SCENARIO("Test the consistency of the generate blinding factors function", "[bli
             hex_to_bytearray(expected_blindingFactors[0].data(), bf1_str);
             hex_to_bytearray(expected_blindingFactors[1].data(), bf2_str);
 
-            WHEN("the known input is passed to the function" + to_string(line_count))
+            WHEN("The generateBlindingFactors function is called and compared to the expected blinding factors" + to_string(line_count))
             {
                 // Generate blinding factors
                 memset(fixed_random_seed, 0x4f, sizeof(fixed_random_seed));
@@ -51,7 +51,7 @@ SCENARIO("Test the consistency of the generate blinding factors function", "[bli
                 generateBlindingFactors(computed_blindingFactors, outputCommitmentBf.data());
                 randombytes_set_implementation(NULL);
 
-                THEN("the expected output is matched with output")
+                THEN("The computed blinding factors should match the expected blinding factors")
                 {
                     bool is_equal_bf1 = sodium_memcmp(computed_blindingFactors[0].data(), expected_blindingFactors[0].data(), 32) == 0;
                     bool is_equal_bf2 = sodium_memcmp(computed_blindingFactors[1].data(), expected_blindingFactors[1].data(), 32) == 0;

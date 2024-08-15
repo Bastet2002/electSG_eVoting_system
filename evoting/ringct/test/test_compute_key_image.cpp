@@ -12,7 +12,7 @@ SCENARIO("Test the consistency of the gen_compute_key_image_file function", "[co
     const string input_file = filesystem::absolute("/app/test/text/receiver_test_SA_signer.txt");
     const string output_file = filesystem::absolute("/app/test/text/key_image.txt");
 
-    GIVEN("The input file containing stealth address data and the output file with computed key images")
+    GIVEN("A set of inputs and expected outputs for computing the commitment key image")
     {
         REQUIRE(filesystem::exists(input_file));
         REQUIRE(filesystem::exists(output_file));
@@ -30,7 +30,7 @@ SCENARIO("Test the consistency of the gen_compute_key_image_file function", "[co
                outfile >> out_skS >> out_skV >> out_rG >> out_pkV >> out_pkS >> out_pk >> out_computed_sk >> key_image)
         {
             case_num++;
-            WHEN("The gen_compute_key_image_file function is called for case " + to_string(case_num))
+            WHEN("The gen_compute_key_image_file function is called and compared to the expected output" + to_string(case_num))
             {
                 StealthAddress sa;
                 hex_to_bytearray(sa.rG, rG);
@@ -42,22 +42,22 @@ SCENARIO("Test the consistency of the gen_compute_key_image_file function", "[co
                     sa.set_stealth_address_secretkey(sk);
                 }
 
+                blsagSig blsagSig;
+                string computed_key_image = "N/A";
+
+                if (validity == "valid" && computed_sk != "N/A") {
+                    compute_key_image(blsagSig, sa);
+                    to_string(computed_key_image, blsagSig.key_image, 32);
+                }
+
+                cout << "Test case " << case_num << endl;
+                cout << "Validity: " << validity << endl;
+                cout << "Computed SK: " << computed_sk << endl;
+                cout << "Computed key image: " << computed_key_image << endl;
+                cout << "Expected key image: " << key_image << endl;
+
                 THEN("The computed key image should match the expected output")
                 {
-                    blsagSig blsagSig;
-                    string computed_key_image = "N/A";
-
-                    if (validity == "valid" && computed_sk != "N/A") {
-                        compute_key_image(blsagSig, sa);
-                        to_string(computed_key_image, blsagSig.key_image, 32);
-                    }
-
-                    cout << "Test case " << case_num << endl;
-                    cout << "Validity: " << validity << endl;
-                    cout << "Computed SK: " << computed_sk << endl;
-                    cout << "Computed key image: " << computed_key_image << endl;
-                    cout << "Expected key image: " << key_image << endl;
-
                     REQUIRE(computed_key_image == key_image);
                 }
             }

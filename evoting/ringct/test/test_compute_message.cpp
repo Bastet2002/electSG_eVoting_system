@@ -10,7 +10,7 @@ SCENARIO("Test the consistency of the compute message function", "[compute_messa
 {
     const std::string compute_message_file = std::filesystem::absolute("/app/test/text/messages.txt");
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("A set of inputs and expected outputs for computing the message")
     {
         std::ifstream infile(compute_message_file);
         REQUIRE(infile.is_open());
@@ -42,11 +42,11 @@ SCENARIO("Test the consistency of the compute message function", "[compute_messa
 
             i++;
 
-            WHEN("the known input is passed to the function" + std::to_string(i))
+            WHEN("The compute message function is called" + std::to_string(i))
             {
                 compute_message(blsag, sa, commitment);
 
-                THEN("the expected output is matched with output")
+                THEN("The computed output should match the expected output")
                 {
                     std::string computed_m;
                     to_string(computed_m, blsag.m, 32);

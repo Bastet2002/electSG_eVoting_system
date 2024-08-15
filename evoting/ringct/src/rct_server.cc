@@ -9,7 +9,6 @@
 #include "../test/text/gen_hash.cpp"
 #include "../test/text/gen_add_keys.cpp"
 #include "../test/text/gen_computeSA.cpp"
-#include "../test/text/gen_compute_message.cpp"
 #include "../test/text/gen_compute_key_image.cpp"
 #include "../test/text/gen_XOR_signer.cpp"
 #include "../test/text/gen_XOR_receiver.cpp"
@@ -22,6 +21,12 @@
 #include "../test/text/gen_blindingFactors.cpp"
 #include "../test/text/gen_c1c2.cpp"
 #include "../test/text/gen_borromean.cpp"
+#include "../test/text/gen_bool_borromean.cpp"
+#include "../test/text/gen_rangeproof.cpp"
+#include "../test/text/gen_compute_message.cpp"
+#include "../test/text/gen_blsag.cpp"
+
+
 
 
 
@@ -310,10 +315,6 @@ int main(int argc, char **argv)
     // string output_path = filesystem::absolute("./test/text/stealth_address.txt");
     // gen_compute_stealth_address_file(output_path, input_path);
 
-    // string input_path = filesystem::absolute("./test/text/hash_infile");
-    // string output_path = filesystem::absolute("./test/text/messages.txt");
-    // gen_compute_message_file(output_path, input_path); // not done
-
     // string input_path = filesystem::absolute("./test/text/stealth_address.txt");
     // string output_path = filesystem::absolute("./test/text/XOR_signer.txt");
     // gen_XOR_amount_mask_signer_file(output_path, input_path);
@@ -377,7 +378,35 @@ int main(int argc, char **argv)
     string input_path2 = filesystem::absolute("./test/text/c1c2.txt");
     string output_path = filesystem::absolute("./test/text/borromean.txt");
     gen_borromean_file(output_path, input_path, input_path2);
+
+    // string input_path1 = filesystem::absolute("./test/text/c1c2.txt");
+    // string input_path2 = filesystem::absolute("./test/text/borromean.txt");
+    // string output_path = filesystem::absolute("./test/text/borromean_bool.txt");
+    // validate_borromean_from_files(input_path1, input_path2, output_path);
+
+    // string commitment_input_file = filesystem::absolute("./test/text/commitment_simple.txt");
+    // string output_file = filesystem::absolute("./test/text/rangeproof_output.txt");
+    // gen_rangeproof_file(output_file, commitment_input_file);
     
+    // string input_path1 = filesystem::absolute("./test/text/key_image.txt");
+    // string input_path2 = filesystem::absolute("./test/text/commitment_simple.txt");
+    // string output_path = filesystem::absolute("./test/text/messages.txt");
+    // gen_compute_message_file(output_path, input_path1, input_path2);
+
+    // string input_path = filesystem::absolute("./test/text/hash_infile");
+    // string output_path = filesystem::absolute("./test/text/stealth_address_decoy.txt");
+    // gen_compute_stealth_address_file(output_path, input_path);
+
+    // string input_path = filesystem::absolute("./test/text/stealth_address_decoy.txt");
+    // string output_path = filesystem::absolute("./test/text/receiver_test_SA_decoy.txt");
+    // gen_receiver_test_stealth_address_file(output_path, input_path);
+
+    // string signer_input_file = filesystem::absolute("./test/text/stealth_address_signer.txt");
+    // string signer_input_file = filesystem::absolute("./test/text/key_image.txt");
+    // string decoy_input_file = filesystem::absolute("./test/text/stealth_address_decoy.txt");
+    // string output_file = filesystem::absolute("./test/text/blsag_signature.txt");
+    // gen_blsag_simple_file(output_file, signer_input_file, decoy_input_file);
+
     RunServer();
 
     return 0;

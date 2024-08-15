@@ -12,7 +12,7 @@ SCENARIO("Test the consistency of the gen_pseudo_bfs_file function", "[pseudo_bf
     const string input_file = filesystem::absolute("/app/test/text/commitment_mask.txt");
     const string output_file = filesystem::absolute("/app/test/text/pseudoBF.txt");
 
-    GIVEN("The input file containing r, pkV, and yt values")
+    GIVEN("A set of inputs and expected outputs for computing pseudo blinding factors")
     {
         REQUIRE(filesystem::exists(input_file));
         REQUIRE(filesystem::exists(output_file));
@@ -30,7 +30,7 @@ SCENARIO("Test the consistency of the gen_pseudo_bfs_file function", "[pseudo_bf
         {
             case_num++;
 
-            WHEN("The generatePseudoBfs function is called for case " + to_string(case_num))
+            WHEN("The generatePseudoBfs function is called and compared to the expected output" + to_string(case_num))
             {
                 Commitment commitment;
                 
@@ -49,18 +49,18 @@ SCENARIO("Test the consistency of the gen_pseudo_bfs_file function", "[pseudo_bf
                 // Reset random number generation to default implementation
                 randombytes_set_implementation(NULL);
 
+                string bf_generated;
+                to_string(bf_generated, commitment.pseudoouts_blindingfactor_masks[0].data(), crypto_core_ed25519_SCALARBYTES);
+
+                cout << "Test case " << case_num << endl;
+                cout << "Input r: " << r << endl;
+                cout << "Input pkV: " << pkV << endl;
+                cout << "Input yt: " << yt_hex << endl;
+                cout << "Generated bf: " << bf_generated << endl;
+                cout << "Expected bf: " << bf_out << endl;
+
                 THEN("The generated pseudo blinding factor should match the expected output")
                 {
-                    string bf_generated;
-                    to_string(bf_generated, commitment.pseudoouts_blindingfactor_masks[0].data(), crypto_core_ed25519_SCALARBYTES);
-
-                    cout << "Test case " << case_num << endl;
-                    cout << "Input r: " << r << endl;
-                    cout << "Input pkV: " << pkV << endl;
-                    cout << "Input yt: " << yt_hex << endl;
-                    cout << "Generated bf: " << bf_generated << endl;
-                    cout << "Expected bf: " << bf_out << endl;
-
                     REQUIRE(yt_hex == yt_out);
                     REQUIRE(bf_generated == bf_out);
                 }

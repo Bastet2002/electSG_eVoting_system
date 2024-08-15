@@ -10,7 +10,7 @@ SCENARIO("Test the consistency of the compute commitment mask function", "[commi
 {
     const string test_cases_file = filesystem::absolute("/app/test/text/commitment_mask.txt");
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("A set of inputs and expected outputs for computing the commitment mask")
     {
         ifstream infile(test_cases_file);
         REQUIRE(infile.is_open());
@@ -37,12 +37,12 @@ SCENARIO("Test the consistency of the compute commitment mask function", "[commi
 
             i++;
 
-            WHEN("the known input is passed to the function for case " + to_string(i))
+            WHEN("compute_commitment_mask is called with the given r and pkV for case " + to_string(i))
             {
                 BYTE computed_yt[32];
                 compute_commitment_mask(computed_yt, r_bytes, pkv_bytes, 0);
 
-                THEN("the expected output is matched with the computed output")
+                THEN("the computed commitment mask should match the expected mask")
                 {
                     bool is_equal_yt = sodium_memcmp(computed_yt, expected_yt_bytes, 32) == 0;
                     

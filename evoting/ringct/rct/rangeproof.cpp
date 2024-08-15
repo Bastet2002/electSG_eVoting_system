@@ -171,6 +171,16 @@ bool checkBorromean(const vector<array<BYTE, crypto_core_ed25519_BYTES>> &C1,
         BYTE chash[crypto_core_ed25519_SCALARBYTES];
         hash_to_scalar(chash, LL, crypto_core_ed25519_SCALARBYTES);
 
+    // cout << "chash: ";
+    // for (int k = 0; k < crypto_core_ed25519_SCALARBYTES; ++k) {
+    //     cout << hex << static_cast<int>(chash[k]);
+    // }
+    // cout << " | C2[" << i << "]: ";
+    // for (int k = 0; k < crypto_core_ed25519_BYTES; ++k) {
+    //     cout << hex << static_cast<int>(C2[i].data()[k]);
+    // }
+    // cout << dec << endl;
+
         BYTE chashC2[crypto_core_ed25519_BYTES];
         if (crypto_scalarmult_ed25519_noclamp(chashC2, chash, C2[i].data()) != 0) {
             throw runtime_error("Failed to compute chash * C2");
