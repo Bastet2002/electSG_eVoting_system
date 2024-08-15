@@ -163,10 +163,6 @@ class TestUrls(SimpleTestCase):
         url = reverse('view_all_announcements')
         self.assertEquals(resolve(url).func, views.view_announcements)
 
-    def test_webauthn_register_view_url(self):
-        url = reverse('webauthn_register_view')
-        self.assertEquals(resolve(url).func, views.webauthn_register_view)
-
     def test_webauthn_register_options_url(self):
         url = reverse('webauthn_register_options')
         self.assertEquals(resolve(url).func, views.webauthn_register_options)
@@ -174,10 +170,6 @@ class TestUrls(SimpleTestCase):
     def test_webauthn_register_verify_url(self):
         url = reverse('webauthn_register_verify')
         self.assertEquals(resolve(url).func, views.webauthn_register_verify)
-
-    def test_webauthn_login_view_url(self):
-        url = reverse('webauthn_login_view')
-        self.assertEquals(resolve(url).func, views.webauthn_login_view)
 
     def test_webauthn_login_options_url(self):
         url = reverse('webauthn_login_options')
@@ -195,9 +187,9 @@ class TestUrls(SimpleTestCase):
         url = reverse('delete_all_credentials', args=[1])
         self.assertEquals(resolve(url).func, views.delete_all_credentials)
 
-    def test_delete_all_credentials_temp_url(self):
-        url = reverse('delete_all_credentials_temp')
-        self.assertEquals(resolve(url).func, views.delete_all_credentials_temp)
+    def test_delete_my_credentials_url(self):
+        url = reverse('delete_my_credentials')
+        self.assertEquals(resolve(url).func, views.delete_my_credentials)
 
     def test_delete_non_master_credentials_url(self):
         url = reverse('delete_non_master_credentials')
