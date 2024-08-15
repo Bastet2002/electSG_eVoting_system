@@ -77,8 +77,7 @@
 
     <div class="container">
         <h1>My Account</h1>
-    
-        {% if password_form %}
+
         <div class="section">
             <h2>Change Password</h2>
             <div id="errorPopup" class="popup-alert"></div>
@@ -88,28 +87,26 @@
                 <button type="button" onclick="validateAndSubmitForm()">Change Password</button>
             </form>
         </div>
-        {% endif %}
+
     
         <div class="sections">
             <h2>WebAuthn Registration</h2>
-            {% if user_role == 'admin' %}
-            <div id="masterDeviceContainer">
+            <div>
                 <input type="checkbox" id="isMasterDevice" name="isMasterDevice" style="margin-bottom: 20px;">
                 <label for="isMasterDevice">Register as master device</label>
             </div>
-            {% endif %}
             <button id="register-button">Register WebAuthn</button>  
         </div>
-    
+
         <div class="section">
-            <h2>Delete My Credentials</h2>
-            <form method="post" action="{% url 'delete_my_credentials' %}">
+            <h2>Delete All Credentials</h2>
+            <form method="post" action="{% url 'delete_all_credentials_temp' %}">
                 {% csrf_token %}
-                <button type="submit" onclick="return confirm('Are you sure you want to delete all your credentials?');">Delete My Credentials</button>
+                <p>This deletes ALL credentials.</p>
+                <button type="submit" onclick="return confirm('Are you sure you want to delete all credentials?');">Delete All Credentials</button>
             </form>
         </div>
-    
-        {% if user_role == 'admin' %}
+
         <div class="section">
             <h2>Delete All Non-master Credentials</h2>
             <form method="post" action="{% url 'delete_non_master_credentials' %}">
@@ -118,7 +115,6 @@
                 <button type="submit" onclick="return confirm('Are you sure you want to delete all non-master credentials?');">Delete All Non-master Credentials</button>
             </form>
         </div>
-        {% endif %}
     </div>
 
     {% if messages %}
@@ -268,13 +264,7 @@
                 }
                 console.log('Credential created:', credential);
         
-                // Only include the isMasterDevice flag if the checkbox is present (i.e., if the user is an Admin)
-                let isMasterDevice = false;
-                const masterDeviceCheckbox = document.getElementById('isMasterDevice');
-                if (masterDeviceCheckbox) {
-                    isMasterDevice = masterDeviceCheckbox.checked;
-                }
-        
+                const isMasterDevice = document.getElementById('isMasterDevice').checked;
                 const credentialData = {
                     id: credential.id,
                     rawId: arrayBufferToBase64(credential.rawId),
@@ -283,7 +273,7 @@
                         attestationObject: arrayBufferToBase64(credential.response.attestationObject),
                         clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON)
                     },
-                    is_master: isMasterDevice  // Include the master device flag if applicable
+                    is_master: isMasterDevice  // Include the master device flag
                 };
                 console.log('Credential data prepared:', credentialData);
         

@@ -324,22 +324,16 @@ class Voter(models.Model):
 
 # WebAuthn register
 class WebauthnRegistration(models.Model):
-    voter = models.OneToOneField(Voter, on_delete=models.CASCADE, null=True, blank=True)
-    user = models.OneToOneField(UserAccount, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.OneToOneField(get_user_model(), on_delete=models.CASCADE)
     challenge = models.CharField(max_length=9000, blank=True, null=True)
 
 # WebAuthn credentials
 class WebauthnCredentials(models.Model):
-    voter = models.ForeignKey(Voter, on_delete=models.CASCADE, null=True, blank=True, related_name="webauthn_credentials")
-    user = models.ForeignKey(UserAccount, on_delete=models.CASCADE, null=True, blank=True, related_name="webauthn_credentials")
+    user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE, related_name="webauthn_credentials")
     credential_id = models.CharField(max_length=9000, blank=True, null=True)
     credential_public_key = models.CharField(max_length=9000, blank=True, null=True)
     current_sign_count = models.IntegerField(default=0)
-    is_master = models.BooleanField(default=False)
+    is_master = models.BooleanField(default=False)  # New to mark a master device
 
     def __str__(self):
-        if self.voter:
-            return f"WebAuthn Credential for Voter {self.voter.voter_id}"
-        elif self.user:
-            return f"WebAuthn Credential for {self.user.username}"
-        return "Unassigned WebAuthn Credential"
+        return f"WebAuthn Credential for {self.user.username}"
