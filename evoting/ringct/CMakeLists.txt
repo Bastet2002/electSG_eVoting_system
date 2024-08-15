@@ -127,8 +127,6 @@ add_executable(test_rct
     "test/test_c1c2.cpp"
     "test/test_borromean.cpp"
     "test/test_blasg.cpp"
-
-
     )
 
 target_link_libraries(test_rct

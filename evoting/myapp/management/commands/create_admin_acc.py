@@ -38,6 +38,5 @@ class Command(BaseCommand):
             )
 
         
-       
         logger.info('Admin account creation completed')
             

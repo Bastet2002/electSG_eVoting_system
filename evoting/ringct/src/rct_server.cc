@@ -6,29 +6,6 @@
 #include "evoting.h"
 #include "core.h"
 #include "../util/custom_exception.h"
-#include "../test/text/gen_hash.cpp"
-#include "../test/text/gen_add_keys.cpp"
-#include "../test/text/gen_computeSA.cpp"
-#include "../test/text/gen_compute_key_image.cpp"
-#include "../test/text/gen_XOR_signer.cpp"
-#include "../test/text/gen_XOR_receiver.cpp"
-#include "../test/text/gen_receiver_test_stealth_address.cpp"
-#include "../test/text/gen_compute_commitment_mask.cpp"
-#include "../test/text/gen_pseudoBF.cpp"
-#include "../test/text/gen_bool_verify_commitment_balancing.cpp"
-#include "../test/text/gen_voting_currency.cpp"
-#include "../test/text/gen_compute_commitment_simple.cpp"
-#include "../test/text/gen_blindingFactors.cpp"
-#include "../test/text/gen_c1c2.cpp"
-#include "../test/text/gen_borromean.cpp"
-#include "../test/text/gen_bool_borromean.cpp"
-#include "../test/text/gen_rangeproof.cpp"
-#include "../test/text/gen_compute_message.cpp"
-#include "../test/text/gen_blsag.cpp"
-
-
-
-
 
 #include <filesystem>
 
@@ -374,10 +351,10 @@ int main(int argc, char **argv)
     // string output_path = filesystem::absolute("./test/text/c1c2.txt");
     // gen_compute_C1C2_file(output_path, input_path);
 
-    string input_path = filesystem::absolute("./test/text/blinding_factor.txt");
-    string input_path2 = filesystem::absolute("./test/text/c1c2.txt");
-    string output_path = filesystem::absolute("./test/text/borromean.txt");
-    gen_borromean_file(output_path, input_path, input_path2);
+    // string input_path = filesystem::absolute("./test/text/blinding_factor.txt");
+    // string input_path2 = filesystem::absolute("./test/text/c1c2.txt");
+    // string output_path = filesystem::absolute("./test/text/borromean.txt");
+    // gen_borromean_file(output_path, input_path, input_path2);
 
     // string input_path1 = filesystem::absolute("./test/text/c1c2.txt");
     // string input_path2 = filesystem::absolute("./test/text/borromean.txt");
@@ -406,6 +383,8 @@ int main(int argc, char **argv)
     // string decoy_input_file = filesystem::absolute("./test/text/stealth_address_decoy.txt");
     // string output_file = filesystem::absolute("./test/text/blsag_signature.txt");
     // gen_blsag_simple_file(output_file, signer_input_file, decoy_input_file);
+
+
 
     RunServer();
 
