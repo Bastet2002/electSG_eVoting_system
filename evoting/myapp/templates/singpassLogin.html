@@ -21,15 +21,15 @@
     </div>
     
     <div class="main-content">
-        <div class="login-container" id="login-container">
+        <div class="login-container">
             <h2>Singpass Login</h2>
-            <form id="singpassLoginForm" method="POST">
+            <form method="POST" action="{% url 'singpass_login' %}">
                 {% csrf_token %}
                 <label for="singpass_id">Singpass ID:</label>
-                <input type="text" id="singpass_id" name="singpass_id" required>
+                <input type="text" id="username" name="singpass_id" required>
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" required>
-                <button type="button" id="singpassLoginBtn">Login</button> <!-- Corrected button ID -->
+                <button type="submit">Login</button>
             </form>
         </div>
     </div>
@@ -51,183 +51,5 @@
             </div>
         </div>
     </footer>
-    <script nonce="{{ request.csp_nonce }}">
-        document.getElementById('singpassLoginBtn').addEventListener('click', startSingpassLogin);
-
-        async function startSingpassLogin(event) {
-            event.preventDefault(); // Prevent default form submission
-        
-            const singpassId = document.getElementById('singpass_id').value;
-            const password = document.getElementById('password').value;
-        
-            try {
-                console.log('Attempting Singpass login...');
-                const loginResponse = await fetch("{% url 'singpass_login' %}", {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded',
-                        'X-CSRFToken': getCookie('csrftoken')
-                    },
-                    body: `singpass_id=${encodeURIComponent(singpassId)}&password=${encodeURIComponent(password)}`
-                });
-        
-                console.log('Login response received:', loginResponse);
-        
-                if (loginResponse.redirected) {
-                    console.log('Redirected to:', loginResponse.url);
-        
-                    // Manually fetch the redirected response
-                    const redirectedResponse = await fetch(loginResponse.url, {
-                        method: 'GET',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRFToken': getCookie('csrftoken')
-                        }
-                    });
-        
-                    console.log('Received redirected response:', redirectedResponse);
-        
-                    const contentType = redirectedResponse.headers.get('Content-Type');
-                    if (contentType && contentType.includes('application/json')) {
-                        // If JSON, handle it as WebAuthn options
-                        const options = await redirectedResponse.json();
-                        console.log('WebAuthn options:', options);
-                        await startWebAuthnVerification(options);
-                    } else {
-                        // If HTML, assume it's a successful login redirect to the home page
-                        console.log('Received HTML response, likely a redirect to a home page.');
-                        window.location.href = loginResponse.url;
-                    }
-                } else {
-                    const loginResult = await loginResponse.json();
-                    console.log('Received login result:', loginResult);
-        
-                    if (loginResponse.ok && loginResult.status === 'success') {
-                        if (loginResult.requires_webauthn) {
-                            console.log('WebAuthn required. Starting WebAuthn verification...');
-                            await startWebAuthnVerification();
-                        } else {
-                            handleRedirect(loginResult);
-                        }
-                    } else {
-                        alert('Login failed. Please check your credentials.');
-                    }
-                }
-            } catch (error) {
-                console.error('Login error:', error);
-                alert('An error occurred during login. Please try again.');
-            }
-        }
-        
-        async function startWebAuthnVerification() {
-            try {
-                const options = await fetchWebAuthnOptions();
-                const credential = await navigator.credentials.get({ publicKey: options });
-                const result = await verifyWebAuthnAssertion(credential);
-                handleRedirect(result);
-            } catch (error) {
-                console.error('WebAuthn verification failed:', error);
-                alert('WebAuthn verification failed: ' + error.message);
-            }
-        }
-        
-        async function fetchWebAuthnOptions() {
-            const response = await fetch('/webauthn/login/options/');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-        
-            const options = await response.json();
-            console.log('Received WebAuthn options:', options);
-        
-            // Convert the challenge and allowCredentials.id to ArrayBuffer
-            options.challenge = base64urlToArrayBuffer(options.challenge);
-            options.allowCredentials = options.allowCredentials.map(cred => ({
-                ...cred,
-                id: base64urlToArrayBuffer(cred.id)
-            }));
-        
-            return options;
-        }
-        
-
-        async function verifyWebAuthnAssertion(credential) {
-            const assertionResponse = {
-                id: credential.id,
-                rawId: arrayBufferToBase64(credential.rawId),
-                type: credential.type,
-                response: {
-                    clientDataJSON: arrayBufferToBase64(credential.response.clientDataJSON),
-                    authenticatorData: arrayBufferToBase64(credential.response.authenticatorData),
-                    signature: arrayBufferToBase64(credential.response.signature),
-                    userHandle: credential.response.userHandle ? arrayBufferToBase64(credential.response.userHandle) : null
-                }
-            };
-
-            const response = await fetch('/webauthn/login/verify/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify(assertionResponse)
-            });
-
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.message || 'Verification failed');
-            }
-
-            return await response.json();
-        }
-
-        function handleRedirect(result) {
-            if (result.status === 'success') {
-                if (result.user_role === 'Admin') {
-                    window.location.href = '/admin_home/';
-                } else if (result.user_role === 'Candidate') {
-                    window.location.href = '/candidate_home/';
-                } else {
-                    window.location.href = '/voter_home/';
-                }
-            } else {
-                alert('Verification failed: ' + (result.message || 'Unknown error'));
-            }
-        }
-
-        // Utility functions
-        function base64urlToArrayBuffer(base64url) {
-            const padding = '='.repeat((4 - base64url.length % 4) % 4);
-            const base64 = (base64url + padding).replace(/-/g, '+').replace(/_/g, '/');
-            const binary = atob(base64);
-            const buffer = new ArrayBuffer(binary.length);
-            const view = new Uint8Array(buffer);
-            for (let i = 0; i < binary.length; i++) {
-                view[i] = binary.charCodeAt(i);
-            }
-            return buffer;
-        }
-
-        function arrayBufferToBase64(buffer) {
-            const binary = String.fromCharCode.apply(null, new Uint8Array(buffer));
-            return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
-        }
-
-        function getCookie(name) {
-            let cookieValue = null;
-            if (document.cookie && document.cookie !== '') {
-                const cookies = document.cookie.split(';');
-                for (let i = 0; i < cookies.length; i++) {
-                    const cookie = cookies[i].trim();
-                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                        break;
-                    }
-                }
-            }
-            return cookieValue;
-        }
-    </script>
-    
 </body>
 </html>
