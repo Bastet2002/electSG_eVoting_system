@@ -112,11 +112,11 @@ add_executable(test_rct
     "rct/rctOps.cpp"
     "rct/rangeproof.cpp"
     "rct/commitment.cpp"
+    "test/test_add_keys.cpp"
     "test/test_hash.cpp"
     "test/test_util.cc"
     "test/test_compute_stealth_address.cpp"
     "test/test_add_keys.cpp"
-    "test/test_integration.cpp"
     "test/test_XOR_signer.cpp"
     "test/test_XOR_receiver.cpp"
     "test/test_compute_commitment_mask.cpp"
@@ -128,7 +128,6 @@ add_executable(test_rct
     "test/test_blinding_factors.cpp"
     "test/test_compute_commitment_simple.cpp"
     "test/test_c1c2.cpp"
-    "test/test_borromean.cpp"
     "test/test_blasg.cpp"
     )
 

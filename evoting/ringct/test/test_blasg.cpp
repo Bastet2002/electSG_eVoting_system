@@ -11,28 +11,27 @@ using namespace std;
 
 SCENARIO ("Test generation and validation of BLSAG signatures based on key images, challenges, and responses", "[blsag]"){
     GIVEN("random voter and random decoy members") {
-        StealthAddress voter_sa; 
-        blsagSig blsag;
-        User voter;
-        compute_stealth_address(voter_sa, voter);
-        receiver_test_stealth_address(voter_sa, voter);
-        compute_key_image(blsag, voter_sa);
-
-        vector<User> decoy_members{10};
-        vector<StealthAddress> decoy_sa;
-        CA_generate_address(decoy_sa, decoy_members);
-
-        BYTE m[32];
-        crypto_core_ed25519_scalar_random(m);
-
-        int secret_index;
-        secret_index_gen(decoy_members.size());
-
-
         for (size_t i = 0; i < 100; ++i) {
-            cout << "Test " << i << ": ";
-
             WHEN("The BLSAG signature is generated and verified " + to_string(i)){
+                cout << "Test " << i << ": ";
+                StealthAddress voter_sa; 
+                blsagSig blsag;
+                User voter;
+                compute_stealth_address(voter_sa, voter);
+                receiver_test_stealth_address(voter_sa, voter);
+                compute_key_image(blsag, voter_sa);
+
+                vector<User> decoy_members{10};
+                vector<StealthAddress> decoy_sa;
+                CA_generate_address(decoy_sa, decoy_members);
+
+                BYTE m[32];
+                crypto_core_ed25519_scalar_random(m);
+
+                cout << "decoy number seized: " << decoy_members.size() << endl;
+                int secret_index = secret_index_gen(decoy_members.size());
+
+                cout << "secret index: " << secret_index << endl;
                 blsag_simple_gen(blsag, m, secret_index, voter_sa, decoy_sa);
                 THEN("The verification should pass"){
                     REQUIRE(blsag_simple_verify(blsag, m));
