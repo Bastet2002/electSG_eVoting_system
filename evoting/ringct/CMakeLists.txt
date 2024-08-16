@@ -107,8 +107,6 @@ target_link_libraries(rct_server
 
 add_executable(test_rct
     "util/custom_exception.cc"
-    "util/db_util.cc"
-    "src/core.cc"
     "rct/rctOps.cpp"
     "rct/rangeproof.cpp"
     "rct/commitment.cpp"
@@ -130,6 +128,16 @@ add_executable(test_rct
     "test/test_c1c2.cpp"
     "test/test_blasg.cpp"
     )
+
+# add_executable(test_rct
+#     "util/custom_exception.cc"
+#     "util/db_util.cc"
+#     "src/core.cc"
+#     "rct/rctOps.cpp"
+#     "rct/rangeproof.cpp"
+#     "rct/commitment.cpp"
+#     "test/test_integration.cpp"
+#     )
 
 target_link_libraries(test_rct
     sodium
