@@ -463,6 +463,7 @@ class ProfileViewsTest(TestCase):
     def setUp(self):
         self.client = Client()
         self.admin_profile = Profile.objects.create(profile_name="Admin", description="Admin Profile")
+        self.delete_profile = Profile.objects.create(profile_name="delete", description="delete Profile")
         self.user = self.create_test_user()
 
         self.election_phase = ElectionPhase.objects.filter(phase_name="Campaigning Day").first()
@@ -596,10 +597,10 @@ class ProfileViewsTest(TestCase):
 
     def test_delete_profile_view_post_successfull(self):
         self.client.login(username='testuser1', password='password')
-        response = self.secure_post(reverse('delete_profile', args=[self.admin_profile.profile_id]))
+        response = self.secure_post(reverse('delete_profile', args=[self.delete_profile.profile_id]))
         self.assertEqual(response.status_code, 302)
 
-        self.assertFalse(Profile.objects.filter(profile_id=self.admin_profile.profile_id).exists())
+        self.assertFalse(Profile.objects.filter(profile_id=self.delete_profile.profile_id).exists())
         messages = list(response.wsgi_request._messages)
         self.assertEqual(len(messages), 1)
         self.assertEqual(str(messages[0]), 'Profile successfully deleted.')
