@@ -11,7 +11,7 @@ SCENARIO("Test commitment balancing for all stealth addresses", "[commitment_bal
     const string stealth_address_file = filesystem::absolute("/app/test/text/stealth_address.txt");
     const string output_file = filesystem::absolute("/app/test/text/commitment_balancing.txt");
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("A set of inputs and expected outputs for testing commitment balancing")
     {
         REQUIRE(filesystem::exists(stealth_address_file));
         REQUIRE(filesystem::exists(output_file));
@@ -46,7 +46,7 @@ SCENARIO("Test commitment balancing for all stealth addresses", "[commitment_bal
 
             i++;
 
-            WHEN("the known input is passed to the function for case " + to_string(i))
+            WHEN("The input is used to construct the components that the function need to compare" + to_string(i))
             {
                 Commitment commitment;
                 BYTE b[32];
@@ -74,7 +74,7 @@ SCENARIO("Test commitment balancing for all stealth addresses", "[commitment_bal
                 add_key(pseudoout_commitment.data(), commitment.pseudoouts_blindingfactor_masks[0].data(), b, H_point);
                 commitment.pseudoouts_commitments.push_back(pseudoout_commitment);
 
-                THEN("the expected output is matched with the computed output")
+                THEN("The verify commitment_balancing is called to compare the outputs and the pseudo outputs")
                 {
                     bool is_balanced = verify_commitment_balancing(commitment.outputs_commitments, commitment.pseudoouts_commitments);
                     
@@ -96,9 +96,11 @@ SCENARIO("Test commitment balancing for all stealth addresses", "[commitment_bal
                     {
                         cout << "Actual and expected output does not match" << endl;
                     }
-                    
-                    REQUIRE(is_balanced);
-                    REQUIRE(output_matches);
+                    THEN("The generated output should match the expected output")
+                    {
+                        REQUIRE(is_balanced);
+                        REQUIRE(output_matches);
+                    }
                 }
             }
         }

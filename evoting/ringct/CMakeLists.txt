@@ -108,18 +108,40 @@ target_link_libraries(rct_server
 add_executable(test_rct
     "util/custom_exception.cc"
     "rct/rctOps.cpp"
-    "rct/commitment.cpp"
     "rct/rangeproof.cpp"
+    "rct/commitment.cpp"
+    "test/test_add_keys.cpp"
     "test/test_hash.cpp"
     "test/test_util.cc"
     "test/test_compute_stealth_address.cpp"
-    "test/test_borromean.cpp"
-
+    "test/test_add_keys.cpp"
+    "test/test_XOR_signer.cpp"
+    "test/test_XOR_receiver.cpp"
+    "test/test_compute_commitment_mask.cpp"
+    "test/test_pseudoBF.cpp"
+    "test/test_verify_commitment_balancing.cpp"
+    "test/test_voting_currency.cpp"
+    "test/test_receiver_test_stealth_address.cpp"
+    "test/test_compute_key_image.cpp"
+    "test/test_blinding_factors.cpp"
+    "test/test_compute_commitment_simple.cpp"
+    "test/test_c1c2.cpp"
+    "test/test_blasg.cpp"
     )
+
+# add_executable(test_rct
+#     "util/custom_exception.cc"
+#     "util/db_util.cc"
+#     "src/core.cc"
+#     "rct/rctOps.cpp"
+#     "rct/rangeproof.cpp"
+#     "rct/commitment.cpp"
+#     "test/test_integration.cpp"
+#     )
 
 target_link_libraries(test_rct
     sodium
     fmt::fmt
     nlohmann_json::nlohmann_json
     Catch2::Catch2WithMain
-    )
+    pqxx)

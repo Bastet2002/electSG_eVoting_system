@@ -13,6 +13,7 @@ variables:
   DOCKER_TLS_CERTDIR: "/certs" # enable tls for docker client and daemon
   WEB_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/evoting-web:$CI_COMMIT_REF_SLUG
   RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:$CI_COMMIT_REF_SLUG
+  # RINGCT_IMAGE_TAG: $CI_REGISTRY/cookanddrum/fyp-24-s2-19/ring-ct:latest
   RINGCT_URL: "ring-ct:50051"
 
 .docker-build: &build_configuration

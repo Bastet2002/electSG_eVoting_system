@@ -13,7 +13,7 @@ SCENARIO("Test the consistency of the compute_commitment_simple function", "[com
     const string input_file_received_commitment = filesystem::absolute("/app/test/text/voting_currency.txt");
     const string expected_output_file = filesystem::absolute("/app/test/text/commitment_simple.txt");
 
-    GIVEN("The input files and expected output")
+    GIVEN("A set of input files containing StealthAddresses, voting currency for comuting a commitment")
     {
         ifstream infile_receiver(input_file_receiver);
         ifstream infile_signer(input_file_signer);
@@ -37,7 +37,7 @@ SCENARIO("Test the consistency of the compute_commitment_simple function", "[com
         {
             line_count++;
 
-            WHEN("processing input line " + to_string(line_count))
+            WHEN("The compute_commitment_simple function is called and compared to the expected output " + to_string(line_count))
             {
                 // Set up StealthAddress objects
                 StealthAddress receiverSA, signerSA;

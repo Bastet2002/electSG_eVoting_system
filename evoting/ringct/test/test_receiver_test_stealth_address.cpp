@@ -10,7 +10,7 @@ SCENARIO("Test the consistency of the receiver_test_stealth_address function", "
 {
     const string test_cases_file = filesystem::absolute("/app/test/text/receiver_test_SA.txt");
 
-    GIVEN("The actual output should match the expected output")
+    GIVEN("A set of inputs and expected outputs for receving the stealth address")
     {
         ifstream infile(test_cases_file);
         REQUIRE(infile.is_open());
@@ -47,7 +47,7 @@ SCENARIO("Test the consistency of the receiver_test_stealth_address function", "
 
             i++;
 
-            WHEN("the known input is passed to the function for case " + to_string(i))
+            WHEN("The the receiver test stealth address function is called and compared to the expected output" + to_string(i))
             {
                 // Calculate the secret key separately
                 BYTE rG_skV[32];
@@ -76,53 +76,53 @@ SCENARIO("Test the consistency of the receiver_test_stealth_address function", "
 
                 // Call function
                 bool result = receiver_test_stealth_address(sa, receiver);
+                                    bool expected_result = (expected_validity == "valid");
 
-                THEN("the expected output is matched with the computed output")
-                {
-                    bool expected_result = (expected_validity == "valid");
+                string computed_sk;
+                if (result) {
+                    to_string(computed_sk, sa.sk, 32);
+                } else {
+                    computed_sk = "N/A";
+                }
 
-                    string computed_sk;
-                    if (result) {
-                        to_string(computed_sk, sa.sk, 32);
-                    } else {
-                        computed_sk = "N/A";
-                    }
+                // Detailed output for debugging
+                cout << "Test case " << i << ":" << endl;
+                cout << "Input skS: " << skS << endl;
+                cout << "Input skV: " << skV << endl;
+                cout << "Input rG: " << rG << endl;
+                cout << "Input pkV: " << pkV << endl;
+                cout << "Input pkS: " << pkS << endl;
+                cout << "Input pk: " << pk << endl;
+                cout << "Expected SK: " << expected_computed_sk << endl;
+                cout << "Calculated SK: " << calculated_sk << endl;
 
-                    // Detailed output for debugging
-                    cout << "Test case " << i << ":" << endl;
-                    cout << "Input skS: " << skS << endl;
-                    cout << "Input skV: " << skV << endl;
-                    cout << "Input rG: " << rG << endl;
-                    cout << "Input pkV: " << pkV << endl;
-                    cout << "Input pkS: " << pkS << endl;
-                    cout << "Input pk: " << pk << endl;
-                    cout << "Expected SK: " << expected_computed_sk << endl;
-                    cout << "Calculated SK: " << calculated_sk << endl;
+                // Additional debug information
+                string receiver_pkS, receiver_pkV, receiver_skS, receiver_skV, sa_rG, sa_pk;
+                to_string(receiver_pkS, receiver.pkS, 32);
+                to_string(receiver_pkV, receiver.pkV, 32);
+                to_string(receiver_skS, receiver.skS, 64);
+                to_string(receiver_skV, receiver.skV, 64);
+                to_string(sa_rG, sa.rG, 32);
+                to_string(sa_pk, sa.pk, 32);
 
-                    // Additional debug information
-                    string receiver_pkS, receiver_pkV, receiver_skS, receiver_skV, sa_rG, sa_pk;
-                    to_string(receiver_pkS, receiver.pkS, 32);
-                    to_string(receiver_pkV, receiver.pkV, 32);
-                    to_string(receiver_skS, receiver.skS, 64);
-                    to_string(receiver_skV, receiver.skV, 64);
-                    to_string(sa_rG, sa.rG, 32);
-                    to_string(sa_pk, sa.pk, 32);
+                cout << "Receiver pkS: " << receiver_pkS << endl;
+                cout << "Receiver pkV: " << receiver_pkV << endl;
+                cout << "Receiver skS: " << receiver_skS << endl;
+                cout << "Receiver skV: " << receiver_skV << endl;
+                cout << "SA rG: " << sa_rG << endl;
+                cout << "SA pk: " << sa_pk << endl;
 
-                    cout << "Receiver pkS: " << receiver_pkS << endl;
-                    cout << "Receiver pkV: " << receiver_pkV << endl;
-                    cout << "Receiver skS: " << receiver_skS << endl;
-                    cout << "Receiver skV: " << receiver_skV << endl;
-                    cout << "SA rG: " << sa_rG << endl;
-                    cout << "SA pk: " << sa_pk << endl;
+                // Check if the calculated SK matches the expected SK
+                bool sk_match = (calculated_sk == expected_computed_sk);
 
-                    // Check if the calculated SK matches the expected SK
-                    bool sk_match = (calculated_sk == expected_computed_sk);
+                // The test passes if either:
+                // 1. The function returns the expected result and the calculated SK matches the expected SK
+                // 2. The function returns false but the calculated SK still matches the expected SK
+                bool test_pass = (result == expected_result && sk_match) || (!result && sk_match);
 
-                    // The test passes if either:
-                    // 1. The function returns the expected result and the calculated SK matches the expected SK
-                    // 2. The function returns false but the calculated SK still matches the expected SK
-                    bool test_pass = (result == expected_result && sk_match) || (!result && sk_match);
 
+                THEN("The computed output should match the expected output")
+                { 
                     CHECK(test_pass);
 
                     if (!test_pass) {

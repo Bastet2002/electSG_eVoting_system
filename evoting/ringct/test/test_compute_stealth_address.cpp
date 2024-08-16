@@ -10,7 +10,7 @@ SCENARIO("Test the consistency of the compute stealth address function", "[steal
 {
     const string stealth_address_file = filesystem::absolute("/app/test/text/stealth_address.txt");
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("A set of inputs and expected outputs for computing the commitment mask")
     {
         ifstream infile(stealth_address_file);
         REQUIRE(infile.is_open());
@@ -39,7 +39,7 @@ SCENARIO("Test the consistency of the compute stealth address function", "[steal
 
             i++;
 
-            WHEN("the known input is passed to the function" + to_string(i))
+            WHEN("The compute stealth address function is called" + to_string(i))
             {
                 memset(fixed_random_seed, 0x4f, sizeof(fixed_random_seed));
                 counter = 0;
@@ -48,7 +48,7 @@ SCENARIO("Test the consistency of the compute stealth address function", "[steal
                 StealthAddress computed_sa;
                 compute_stealth_address(computed_sa, user);
 
-                THEN("the expected output is matched with output")
+                THEN("The computed output should match the expected output")
                 {
                     bool is_equal_r = sodium_memcmp(computed_sa.r, expected_r, 32) == 0;
                     bool is_equal_rG = sodium_memcmp(computed_sa.rG, expected_rG, 32) == 0;

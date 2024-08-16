@@ -2,6 +2,7 @@ from diagrams import Diagram, Cluster, Edge
 from diagrams.aws.compute import ECS
 from diagrams.aws.network import ELB, Route53, VPC, PrivateSubnet, PublicSubnet
 from diagrams.aws.database import RDS
+from diagrams.aws.security import WAF
 from diagrams.aws.storage import S3
 from diagrams.aws.management import Cloudwatch
 
@@ -20,6 +21,7 @@ private_subnets = ["subnet-0245f136b4ccbf00a", "subnet-09b75374054a5de3c"]
 with Diagram("AWS Copilot Architecture with VPC", show=False):
     dns = Route53("DNS")
     lb = ELB("Load Balancer")
+    waf = WAF("WAF")
 
     with Cluster("VPC"):
         vpc = VPC("VPC")
@@ -42,7 +44,7 @@ with Diagram("AWS Copilot Architecture with VPC", show=False):
         s3 = S3("S3 Bucket")
         alarm = Cloudwatch("Rollback Alarm")
 
-        dns >> lb >> [public_subnet1, public_subnet2] >> django_server
+        dns >> waf >> lb >> [public_subnet1, public_subnet2] >> django_server
         django_server >> private_subnet1 >> db
         django_server >> s3
         django_server >> ringct_service

@@ -55,13 +55,10 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
     const string base_file = filesystem::absolute("/app/test/text/hash_infile");
     // contain expected output
     const string h2p_file = filesystem::absolute("/app/test/text/h2p.txt");
-
-    GIVEN("Any inputs to the hash to point function")
+    GIVEN("The input files and the expected output")
     {
         ifstream infile(base_file);
-
         REQUIRE(infile.is_open());
-
         string aline;
         int i = 0;
         while (getline(infile, aline))
@@ -69,10 +66,9 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
             vector<BYTE> input_hex_byte;
             input_hex_byte.resize(aline.size() / 2);
 
-            if (aline == "x")
-            {
+            if (aline == "x"){
                 input_hex_byte.resize(0);
-            }
+                }
             else
             {
                 hex_to_bytearray(input_hex_byte.data(), aline);
@@ -88,7 +84,6 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
                 {
                     REQUIRE(crypto_core_ed25519_is_valid_point(h2p) == 1);
                 }
-
                 WHEN("the same input is recomputed again " + to_string(i))
                 {
                     BYTE h2p_recomputed[32];
@@ -102,7 +97,7 @@ SCENARIO("Test the consistency of the hash to point function", "[hash]")
         }
     }
 
-    GIVEN("The actual output should match the expected input")
+    GIVEN("The input files and the expected output")
     {
         ifstream infile(h2p_file);
         REQUIRE(infile.is_open());

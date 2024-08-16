@@ -6,121 +6,94 @@
 #include <filesystem>
 #include "../test_util.h"
 
-void gen_compute_message_file(const string &output_file, const string &input_file_ki, const string &input_file_vc)
+void gen_compute_message_file(const std::string &output_file, const std::string &key_image_file, const std::string &commitment_input_file)
 {
-    ifstream infile_ki(input_file_ki);
-    ifstream infile_vc(input_file_vc);
-    ofstream outfile(output_file);
+    std::ifstream infile_key_image(key_image_file);
+    std::ifstream infile_commitment(commitment_input_file);
+    std::ofstream outfile(output_file);
 
     try
     {
-        if (infile_ki.is_open() && infile_vc.is_open() && outfile.is_open())
+        if (infile_key_image.is_open() && infile_commitment.is_open() && outfile.is_open())
         {
-            cout << "Successfully opened input files: " << input_file_ki << " and " << input_file_vc << endl;
-            cout << "Successfully opened output file: " << output_file << endl;
+            std::cout << "Successfully opened input files and output file" << std::endl;
 
-            string validity, skS, skV, rG, pkV, pkS, pk, computed_sk, key_image;
-            string input_commitment, output_commitment, pseudo_output_commitment, amount_mask, sa_r, receiver_pkV;
+            std::string skS_str, skV_str, rG_str, pkV_str, pkS_str, pk_str, computed_sk_str, key_image_str;
+            std::string pseudout_commitment_str, amount_mask_str, output_blindingfactor_mask_str, output_commitment_str;
             int line_count = 0;
 
-            while (infile_ki >> validity >> skS >> skV >> rG >> pkV >> pkS >> pk >> computed_sk >> key_image &&
-                   infile_vc >> input_commitment >> output_commitment >> pseudo_output_commitment >> amount_mask >> sa_r >> receiver_pkV)
+            while (infile_key_image >> skS_str >> skV_str >> rG_str >> pkV_str >> pkS_str >> pk_str >> computed_sk_str >> key_image_str &&
+                   infile_commitment >> pseudout_commitment_str >> amount_mask_str >> output_blindingfactor_mask_str >> output_commitment_str)
             {
                 line_count++;
-                cout << "Processing line " << line_count << endl;
+                std::cout << "Processing line " << line_count << std::endl;
 
-                // Create StealthAddress object
-                StealthAddress sa;
-                hex_to_bytearray(sa.rG, rG);
-                hex_to_bytearray(sa.pk, pk);
-                hex_to_bytearray(sa.r, sa_r);
+                try {
+                    // Set up StealthAddress using values from the key image file
+                    StealthAddress sa;
+                    hex_to_bytearray(sa.rG, rG_str);
+                    hex_to_bytearray(sa.pk, pk_str);
 
-                // Debugging output for input values
-                cout << "Validity: " << validity << endl;
-                cout << "skS: " << skS << endl;
-                cout << "skV: " << skV << endl;
-                cout << "rG: " << rG << endl;
-                cout << "pkV: " << pkV << endl;
-                cout << "pkS: " << pkS << endl;
-                cout << "pk: " << pk << endl;
-                cout << "Computed SK: " << computed_sk << endl;
-                cout << "Key Image: " << key_image << endl;
-
-                // Set the SK if it's valid
-                if (validity == "valid" && computed_sk != "N/A") {
-                    BYTE sk[32];
-                    hex_to_bytearray(sk, computed_sk);
-                    sa.set_stealth_address_secretkey(sk);
-                    cout << "SK set for valid stealth address" << endl;
-                }
-
-                // Set up Commitment
-                Commitment commitment;
-                array<BYTE, 32> input_commitment_arr, output_commitment_arr, pseudo_output_commitment_arr, output_blindingfactor_mask;
-                array<BYTE, 8> amount_mask_arr;
-                hex_to_bytearray(input_commitment_arr.data(), input_commitment);
-                hex_to_bytearray(output_commitment_arr.data(), output_commitment);
-                hex_to_bytearray(pseudo_output_commitment_arr.data(), pseudo_output_commitment);
-                hex_to_bytearray(amount_mask_arr.data(), amount_mask);
-                hex_to_bytearray(output_blindingfactor_mask.data(), computed_sk); // Assuming output_blindingfactor_mask is the same as computed_sk
-
-                commitment.inputs_commitments.push_back(input_commitment_arr);
-                commitment.outputs_commitments.push_back(output_commitment_arr);
-                commitment.pseudoouts_commitments.push_back(pseudo_output_commitment_arr);
-                commitment.amount_masks.push_back(amount_mask_arr);
-                commitment.outputs_blindingfactor_masks.push_back(output_blindingfactor_mask);
-
-                // Compute the message
-                blsagSig blsagSig;
-                hex_to_bytearray(blsagSig.key_image, key_image);
-                string message = "N/A";
-
-                if (validity == "valid" && computed_sk != "N/A") {
-                    try
-                    {
-                        compute_message(blsagSig, sa, commitment);
-                        to_string(message, blsagSig.m, 32);
-                        cout << "Message computed successfully" << endl;
+                    if (computed_sk_str != "N/A") {
+                        BYTE sk[32];
+                        hex_to_bytearray(sk, computed_sk_str);
+                        sa.set_stealth_address_secretkey(sk);
                     }
-                    catch (const exception &e)
-                    {
-                        cerr << "Failed to compute message for line " << line_count << ": " << e.what() << endl;
-                    }
-                } else {
-                    cout << "Skipping message computation for invalid or incomplete stealth address" << endl;
-                }
 
-                // Write results to the output file
-                outfile << validity << " "
-                        << skS << " "
-                        << skV << " "
-                        << rG << " "
-                        << pkV << " "
-                        << pkS << " "
-                        << pk << " "
-                        << computed_sk << " "
-                        << key_image << " "
-                        << message << "\n";
-                
-                cout << "Line " << line_count << " processed and written to output file" << endl;
+                    // Set up Commitment using the provided structure
+                    Commitment commitment;
+
+                    // Instead of resizing, use push_back
+                    array<BYTE, 32> pseudoout_commitment;
+                    array<BYTE, 32> output_commitment;
+                    array<BYTE, 32> output_blindingfactor_mask;
+                    array<BYTE, 8> amount_mask;
+
+                    hex_to_bytearray(pseudoout_commitment.data(), pseudout_commitment_str);
+                    hex_to_bytearray(amount_mask.data(), amount_mask_str);
+                    hex_to_bytearray(output_blindingfactor_mask.data(), output_blindingfactor_mask_str);
+                    hex_to_bytearray(output_commitment.data(), output_commitment_str);
+
+                    // Add elements to the vectors
+                    commitment.pseudoouts_commitments.push_back(pseudoout_commitment);
+                    commitment.outputs_commitments.push_back(output_commitment);
+                    commitment.outputs_blindingfactor_masks.push_back(output_blindingfactor_mask);
+                    commitment.amount_masks.push_back(amount_mask);
+
+                    // Set up blsagSig
+                    blsagSig blsag;
+                    hex_to_bytearray(blsag.key_image, key_image_str);  // Use the key image from the input file
+
+                    // Compute the message
+                    compute_message(blsag, sa, commitment);
+
+                    // Convert the result to a string and write to the output file
+                    std::string message_str;
+                    to_string(message_str, blsag.m, 32);
+                    outfile << message_str << "\n";
+
+                    std::cout << "Line " << line_count << " processed and written to output file" << std::endl;
+                }
+                catch (const std::exception &e)
+                {
+                    std::cerr << "Error processing line " << line_count << ": " << e.what() << std::endl;
+                }
             }
 
-            infile_ki.close();
-            infile_vc.close();
+            infile_key_image.close();
+            infile_commitment.close();
             outfile.close();
 
-            cout << "Processed " << line_count << " lines" << endl;
-            cout << "Messages computed and written to " << output_file << endl;
+            std::cout << "Processed " << line_count << " lines" << std::endl;
+            std::cout << "Messages computed and written to " << output_file << std::endl;
         }
         else
         {
-            if (!infile_ki.is_open()) cerr << "Failed to open input key image file: " << input_file_ki << endl;
-            if (!infile_vc.is_open()) cerr << "Failed to open input voting currency file: " << input_file_vc << endl;
-            if (!outfile.is_open()) cerr << "Failed to open output file: " << output_file << endl;
+            std::cerr << "Failed to open one or more input files or the output file" << std::endl;
         }
     }
-    catch (const exception &e)
+    catch (const std::exception &e)
     {
-        cerr << "Exception: " << e.what() << endl;
+        std::cerr << "Exception: " << e.what() << std::endl;
     }
 }

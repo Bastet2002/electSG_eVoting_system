@@ -10,7 +10,7 @@ SCENARIO("Test the consistency of the XOR_amount_mask_receiver function", "[XOR_
 {
     const string test_cases_file = filesystem::absolute("/app/test/text/XOR_receiver.txt");
 
-    GIVEN("The actual output should match the expected output")
+    GIVEN("A set of inputs and expected outputs for testing the XOR amout mask receiver")
     {
         ifstream infile(test_cases_file);
         REQUIRE(infile.is_open());
@@ -46,7 +46,7 @@ SCENARIO("Test the consistency of the XOR_amount_mask_receiver function", "[XOR_
 
             i++;
 
-            WHEN("the known input is passed to the function for case " + to_string(i))
+            WHEN("The XOR_amount_mask_receiver is called and compared to the expected outputs " + to_string(i))
             {
                 // Call function
                 BYTE out[8];
@@ -56,17 +56,18 @@ SCENARIO("Test the consistency of the XOR_amount_mask_receiver function", "[XOR_
                 string computed_out_hex;
                 to_string(computed_out_hex, out, 8);
 
-                THEN("the expected output is matched with the computed output")
+                
+                // Debug output
+                cout << "Test case " << i << ":" << endl;
+                cout << "Input rG: " << rG << endl;
+                cout << "Input skV: " << skV << endl;
+                cout << "Computed out: " << computed_out_hex << endl;
+                cout << "Expected out: " << expected_out_hex << endl;
+                cout << endl;
+
+                THEN("The generated output should match the expected outputs")
                 {
                     REQUIRE(computed_out_hex == expected_out_hex);
-
-                    // Debug output
-                    cout << "Test case " << i << ":" << endl;
-                    cout << "Input rG: " << rG << endl;
-                    cout << "Input skV: " << skV << endl;
-                    cout << "Computed out: " << computed_out_hex << endl;
-                    cout << "Expected out: " << expected_out_hex << endl;
-                    cout << endl;
                 }
             }
         }

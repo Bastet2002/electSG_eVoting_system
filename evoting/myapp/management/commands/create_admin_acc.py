@@ -28,7 +28,7 @@ class Command(BaseCommand):
             password=make_password('Admin2Password$!'),  
             role=admin_profile[0]
             )
-        if not UserAccount.objects.filter(username='admin2').exists():
+        if not UserAccount.objects.filter(username='admin3').exists():
             UserAccount.objects.create(
             username='admin3',
             full_name='Chandler',
@@ -38,6 +38,5 @@ class Command(BaseCommand):
             )
 
         
-       
         logger.info('Admin account creation completed')
             
