@@ -1,6 +1,6 @@
 districts_mocked = ['CLEMENTI', 'JURONG EAST', 'CENTRAL']
-voternum_per_district = 50 # for stress test
-# voternum_per_district = 20 # for normal deployment
+# voternum_per_district = 50 # for stress test
+voternum_per_district = 20 # for normal deployment
 # voternum_per_district = 500 # for sql performance test
 candidate_num_total = 15
 randomseed = 9
