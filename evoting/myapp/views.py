@@ -44,6 +44,7 @@ def user_login(request):
             
             # Store the user ID in the session for WebAuthn verification
             request.session['pending_user_id'] = user.user_id
+            request.session['password_changed'] = True  
             
             return JsonResponse({
                 'status': 'success',
@@ -1292,6 +1293,7 @@ def delete_my_credentials(request):
         print(f"All non-master credentials for user {request.user.username} have been deleted. Session 'password_changed' set to False.")
 
         messages.success(request, "All your non-master credentials have been deleted.")
+
 
         logout(request)
 
