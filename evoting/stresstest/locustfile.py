@@ -113,6 +113,14 @@ class SingpassUser(HttpUser):
         # self.client.cookies.update(self.session_cookies)
         response = self.client.get("/voter_home/ballot_paper/")
 
+        weights = {
+            "CLEMENTI": [.1, 0, .8, .05, .05],
+            "JURONG EAST": [.5, .2, .1, .17, .03],
+            "CENTRAL": [.1, .7, .1, 0, .1],
+            "SEMBAWANG": [.1, .7, .2],
+            "ANG MO KIO": [.8, .2],
+        }
+
         if response.status_code == 200 and 'Ballot Paper' in response.text:
             print(f'Voter {self.singpass_id} in district {self.district} is viewing ballot paper')
 
@@ -124,9 +132,11 @@ class SingpassUser(HttpUser):
             self.client.headers.update({"X-CSRFToken":voting_csrf_token})
             self.client.cookies.update({"csrftoken":voting_csrf_token})
 
-            # # print(f'After update cookies: {self.client.cookies}')
 
-            candidate_choice = random.choice(CANDIDATE_IN_DISTRICT[self.district])
+            # candidate_choice = random.choice(CANDIDATE_IN_DISTRICT[self.district])
+            candidate_choice = random.choices(CANDIDATE_IN_DISTRICT[self.district], weights=weights[self.district])[0]
+
+
             header = {"X-CSRFToken":voting_csrf_token, "Referer": self.client.base_url + "/voter_home/ballot_paper/",\
                     "Origin": self.client.base_url, "X-Locust-Test":"true"}
             data = {"csrfmiddlewaretoken":voting_csrf_token, "candidate": [candidate_choice]}
